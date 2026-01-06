@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import Logo from "@/components/ui/Logo";
 import { HomeMap } from "@/components/map";
 import { JoinSharedRideDrawer } from "@/components/map/JoinSharedRideDrawer";
-import { MapPin, Navigation, Bus, Zap, Users, Crown, Calendar } from "lucide-react";
+import { MapPin, Navigation, Bus, Users, Crown, Calendar, Search } from "lucide-react";
 import { useBusMode } from "@/hooks/useBusMode";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -147,12 +147,12 @@ const Index = () => {
       <div className="px-4 pb-4 space-y-3">
         {/* Main CTA */}
         <Button 
-          className="w-full h-16 text-lg font-bold rounded-2xl elevated pulse-ring hover-scale"
+          className="w-full h-16 text-lg font-bold rounded-2xl elevated hover-scale"
           size="lg"
           onClick={() => navigate("/signal")}
         >
-          <Zap className="w-6 h-6 mr-3" />
-          Lancer un Signal
+          <Search className="w-6 h-6 mr-3" />
+          Où allons-nous ?
         </Button>
         
         {/* Secondary Actions Grid */}
