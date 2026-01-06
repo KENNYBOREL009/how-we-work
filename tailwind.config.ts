@@ -13,6 +13,10 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['Satoshi', 'system-ui', 'sans-serif'],
+        display: ['Satoshi', 'system-ui', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -56,6 +60,13 @@ export default {
           "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
+        },
+        lokebo: {
+          yellow: "hsl(var(--lokebo-yellow))",
+          dark: "hsl(var(--lokebo-dark))",
+          gray: "hsl(var(--lokebo-gray))",
+          success: "hsl(var(--lokebo-success))",
+          warning: "hsl(var(--lokebo-warning))",
         },
       },
       borderRadius: {
