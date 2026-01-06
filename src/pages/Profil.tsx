@@ -42,25 +42,24 @@ const Profil = () => {
   const { isBusModeEnabled, toggleBusMode } = useBusMode();
 
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Edit form
-  const [firstName, setFirstName] = useState("");
+  const [firstName, setFirstName] = useState("Utilisateur");
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
 
   useEffect(() => {
     if (user) {
       fetchProfile();
-    } else {
-      setLoading(false);
     }
   }, [user]);
 
   const fetchProfile = async () => {
     if (!user) return;
+    setLoading(true);
 
     const { data, error } = await supabase
       .from("profiles")
@@ -72,7 +71,7 @@ const Profil = () => {
       console.error("Error fetching profile:", error);
     } else if (data) {
       setProfile(data);
-      setFirstName(data.first_name || "");
+      setFirstName(data.first_name || "Utilisateur");
       setLastName(data.last_name || "");
       setPhoneNumber(data.phone_number || "");
     }
@@ -80,7 +79,10 @@ const Profil = () => {
   };
 
   const handleSaveProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      toast.info("Connectez-vous pour sauvegarder votre profil");
+      return;
+    }
 
     setSaving(true);
     const { error } = await supabase
@@ -105,39 +107,10 @@ const Profil = () => {
   const handleSignOut = async () => {
     await signOut();
     toast.success("Déconnexion réussie");
-    navigate("/auth");
+    navigate("/");
   };
 
-  if (!authLoading && !user) {
-    return (
-      <MobileLayout>
-        <div className="flex flex-col items-center justify-center min-h-[80vh] px-4">
-          <div className="w-20 h-20 rounded-full gradient-lokebo flex items-center justify-center mb-6 shadow-lg">
-            <User className="w-10 h-10 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl font-bold mb-2">Profil</h1>
-          <p className="text-muted-foreground text-center mb-6">
-            Connectez-vous pour gérer votre profil.
-          </p>
-          <Button onClick={() => navigate("/auth")} className="rounded-xl">
-            Se connecter
-          </Button>
-        </div>
-      </MobileLayout>
-    );
-  }
-
-  if (authLoading || loading) {
-    return (
-      <MobileLayout>
-        <div className="flex items-center justify-center min-h-[80vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </MobileLayout>
-    );
-  }
-
-  const initials = `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase() || "U";
+  const initials = `${firstName?.charAt(0) || "U"}${lastName?.charAt(0) || ""}`.toUpperCase();
 
   return (
     <MobileLayout>
@@ -159,8 +132,14 @@ const Profil = () => {
         <h2 className="text-xl font-bold">
           {firstName || lastName ? `${firstName} ${lastName}`.trim() : "Utilisateur"}
         </h2>
-        <p className="text-sm text-muted-foreground">{user?.email || phoneNumber}</p>
+        <p className="text-sm text-muted-foreground">{user?.email || phoneNumber || "Mode démo"}</p>
       </div>
+
+      {loading && (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      )}
 
       {/* Profile Form */}
       <div className="px-4 space-y-4">
@@ -250,8 +229,18 @@ const Profil = () => {
             </div>
           </div>
 
-          {/* Addresses */}
+          {/* Addresses - Only show if logged in */}
           {user && <AddressManager userId={user.id} />}
+
+          {!user && (
+            <div className="p-4 rounded-xl bg-muted/50 border border-border text-center">
+              <MapPin className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Mes Adresses</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Connectez-vous pour gérer vos adresses
+              </p>
+            </div>
+          )}
 
           {/* Reservations */}
           <Button
@@ -305,15 +294,25 @@ const Profil = () => {
           </Button>
         </div>
 
-        {/* Sign Out */}
-        <Button
-          variant="destructive"
-          className="w-full h-14 rounded-xl mt-6"
-          onClick={handleSignOut}
-        >
-          <LogOut className="w-5 h-5 mr-2" />
-          Se déconnecter
-        </Button>
+        {/* Sign Out / Sign In */}
+        {user ? (
+          <Button
+            variant="destructive"
+            className="w-full h-14 rounded-xl mt-6"
+            onClick={handleSignOut}
+          >
+            <LogOut className="w-5 h-5 mr-2" />
+            Se déconnecter
+          </Button>
+        ) : (
+          <Button
+            className="w-full h-14 rounded-xl mt-6"
+            onClick={() => navigate("/auth")}
+          >
+            <User className="w-5 h-5 mr-2" />
+            Se connecter
+          </Button>
+        )}
       </div>
     </MobileLayout>
   );
