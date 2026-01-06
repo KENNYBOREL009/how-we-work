@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Loader2,
   Save,
+  History,
 } from "lucide-react";
 
 interface Profile {
@@ -244,6 +245,19 @@ const Profil = () => {
               <span className="text-sm">{phoneNumber || "Non renseigné"}</span>
             </div>
           </div>
+
+          {/* History */}
+          <Button
+            variant="outline"
+            className="w-full justify-between h-14 rounded-xl"
+            onClick={() => navigate("/history")}
+          >
+            <span className="flex items-center gap-3">
+              <History className="w-5 h-5" />
+              Historique des trajets
+            </span>
+            <ChevronRight className="w-5 h-5" />
+          </Button>
 
           {/* Security */}
           <Button

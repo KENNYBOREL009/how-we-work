@@ -1,15 +1,29 @@
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/ui/Logo";
-import { MapboxMap } from "@/components/map";
-import { MapPin, Navigation, Car, Bus, Zap, Users, Crown } from "lucide-react";
+import { HomeMap } from "@/components/map";
+import { MapPin, Navigation, Bus, Zap, Users, Crown } from "lucide-react";
 import { useBusMode } from "@/hooks/useBusMode";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { Vehicle } from "@/hooks/useVehicles";
+import { toast } from "sonner";
 
 const Index = () => {
   const { isBusModeEnabled, toggleBusMode } = useBusMode();
   const navigate = useNavigate();
+
+  const handleVehicleClick = (vehicle: Vehicle) => {
+    toast.info(`🚕 ${vehicle.plate_number}`, {
+      description: vehicle.destination 
+        ? `Direction: ${vehicle.destination}` 
+        : 'Destination libre - Cliquez pour réserver',
+      action: {
+        label: 'Réserver',
+        onClick: () => navigate('/signal', { state: { selectedVehicle: vehicle } }),
+      },
+    });
+  };
 
   return (
     <MobileLayout>
@@ -42,9 +56,12 @@ const Index = () => {
         </p>
       </header>
 
-      {/* Interactive Map */}
+      {/* Interactive Map with Taxis */}
       <div className="relative flex-1 mx-4 mb-4 min-h-[340px]">
-        <MapboxMap className="w-full min-h-[340px] border border-border card-shadow" />
+        <HomeMap 
+          className="w-full min-h-[340px] border border-border card-shadow" 
+          onVehicleClick={handleVehicleClick}
+        />
 
         {/* Floating Legend */}
         <div className="absolute bottom-4 left-4 right-4 glass rounded-xl p-3 border border-border/50 z-10">
