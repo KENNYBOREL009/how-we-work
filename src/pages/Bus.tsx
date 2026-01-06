@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import BusMap from "@/components/map/BusMap";
 import SchedulePanel from "@/components/bus/SchedulePanel";
-import VehicleList from "@/components/bus/VehicleList";
+import BusList from "@/components/bus/BusList";
 import { useVehicles, Vehicle, BusStop } from "@/hooks/useVehicles";
 import { useBusSchedule } from "@/hooks/useBusSchedule";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -14,14 +14,14 @@ import { toast } from "sonner";
 
 const BusPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"map" | "schedule" | "vehicles">("map");
+  const [activeTab, setActiveTab] = useState<"map" | "schedule" | "buses">("map");
   const { vehicles, busStops, isLoading: vehiclesLoading } = useVehicles();
   const { schedules, isLoading: schedulesLoading } = useBusSchedule();
   const { addFavoriteStop, unreadCount } = useNotifications();
 
-  const handleVehicleClick = (vehicle: Vehicle) => {
-    toast.info(`${vehicle.vehicle_type === 'bus' ? '🚌' : '🚕'} ${vehicle.plate_number}`, {
-      description: vehicle.destination ? `Direction: ${vehicle.destination}` : 'Destination non définie',
+  const handleBusClick = (vehicle: Vehicle) => {
+    toast.info(`🚌 ${vehicle.plate_number}`, {
+      description: vehicle.destination ? `Direction: ${vehicle.destination}` : 'Itinéraire non défini',
     });
   };
 
@@ -62,7 +62,7 @@ const BusPage = () => {
         </div>
       </header>
 
-      {/* Tabs */}
+      {/* Tabs - Bus uniquement */}
       <Tabs
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as typeof activeTab)}
@@ -77,37 +77,37 @@ const BusPage = () => {
             <Clock className="w-4 h-4" />
             <span className="hidden sm:inline">Horaires</span>
           </TabsTrigger>
-          <TabsTrigger value="vehicles" className="flex items-center gap-1.5">
+          <TabsTrigger value="buses" className="flex items-center gap-1.5">
             <List className="w-4 h-4" />
-            <span className="hidden sm:inline">Véhicules</span>
+            <span className="hidden sm:inline">Bus</span>
           </TabsTrigger>
         </TabsList>
 
-        {/* Map Tab */}
+        {/* Map Tab - Bus uniquement */}
         <TabsContent value="map" className="flex-1 flex flex-col mt-0 data-[state=inactive]:hidden">
           <div className="relative min-h-[340px] h-[340px] rounded-2xl overflow-hidden border border-border">
             <BusMap
               vehicles={vehicles}
               busStops={busStops}
               className="absolute inset-0"
-              onVehicleClick={handleVehicleClick}
+              onVehicleClick={handleBusClick}
               onStopClick={handleStopClick}
             />
 
-            {/* Floating Legend */}
+            {/* Légende Bus uniquement */}
             <div className="absolute bottom-4 left-4 right-4 glass rounded-xl p-3 border border-border/50 z-10">
               <div className="flex items-center justify-around text-xs font-medium">
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-lokebo-success animate-pulse" />
-                  <span className="text-foreground">Libre</span>
+                  <span className="w-3 h-3 rounded bg-lokebo-success animate-pulse" />
+                  <span className="text-foreground">En service</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-lokebo-warning" />
+                  <span className="w-3 h-3 rounded bg-lokebo-warning" />
                   <span className="text-foreground">Complet</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-primary" />
-                  <span className="text-foreground">Privé</span>
+                  <span className="w-3 h-3 rounded-full border-2 border-primary bg-lokebo-dark" />
+                  <span className="text-foreground">Arrêt</span>
                 </div>
               </div>
             </div>
@@ -121,19 +121,19 @@ const BusPage = () => {
           </div>
         </TabsContent>
 
-        {/* Vehicles Tab */}
-        <TabsContent value="vehicles" className="flex-1 flex flex-col mt-0 overflow-hidden">
+        {/* Buses Tab - Bus uniquement */}
+        <TabsContent value="buses" className="flex-1 flex flex-col mt-0 overflow-hidden">
           <div className="flex-1 rounded-2xl border border-border bg-card overflow-hidden">
-            <VehicleList
+            <BusList
               vehicles={vehicles}
               isLoading={vehiclesLoading}
-              onVehicleClick={handleVehicleClick}
+              onVehicleClick={handleBusClick}
             />
           </div>
         </TabsContent>
       </Tabs>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - Bus uniquement */}
       <div className="px-4 pb-4 space-y-3">
         <Button
           className="w-full h-14 text-base font-semibold rounded-xl shadow-lg bg-lokebo-dark hover:bg-lokebo-dark/90"

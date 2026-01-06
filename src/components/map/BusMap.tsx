@@ -16,7 +16,6 @@ interface BusMapProps {
 const statusColors: Record<string, string> = {
   available: '#22c55e',
   full: '#f59e0b',
-  private: '#FFD42F',
   offline: '#6b7280',
 };
 
@@ -33,6 +32,9 @@ const BusMap: React.FC<BusMapProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+
+  // Filtrer uniquement les bus
+  const buses = vehicles.filter(v => v.vehicle_type === 'bus');
 
   useEffect(() => {
     const fetchToken = async () => {
@@ -99,22 +101,21 @@ const BusMap: React.FC<BusMapProps> = ({
       markersRef.current.push(marker);
     });
 
-    // Add vehicle markers
-    vehicles.forEach((vehicle) => {
+    // Add only BUS markers (pas de taxis)
+    buses.forEach((vehicle) => {
       if (!vehicle.latitude || !vehicle.longitude) return;
 
-      const isBus = vehicle.vehicle_type === 'bus';
       const color = statusColors[vehicle.status] || statusColors.offline;
 
       const el = document.createElement('div');
       el.className = 'vehicle-marker';
       el.innerHTML = `
         <div style="
-          width: ${isBus ? 36 : 28}px;
-          height: ${isBus ? 36 : 28}px;
+          width: 36px;
+          height: 36px;
           background: ${color};
           border: 3px solid #fff;
-          border-radius: ${isBus ? '8px' : '50%'};
+          border-radius: 8px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -123,15 +124,9 @@ const BusMap: React.FC<BusMapProps> = ({
           transform: rotate(${vehicle.heading || 0}deg);
           transition: transform 0.3s ease;
         ">
-          ${isBus ? `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#414042" stroke-width="2">
-              <path d="M8 6v2m8-2v2M4 9h16M6 18v2m12-2v2M4 6h16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z"/>
-            </svg>
-          ` : `
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#414042" stroke-width="2">
-              <path d="M7 17m-2 0a2 2 0 1 0 4 0 2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0 2 2 0 1 0 -4 0M5 17h-3v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2"/>
-            </svg>
-          `}
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#414042" stroke-width="2">
+            <path d="M8 6v2m8-2v2M4 9h16M6 18v2m12-2v2M4 6h16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z"/>
+          </svg>
         </div>
       `;
 
@@ -149,7 +144,7 @@ const BusMap: React.FC<BusMapProps> = ({
             <strong style="color: #414042;">${vehicle.plate_number}</strong>
           </div>
           <p style="margin: 0; font-size: 12px; color: #666;">
-            ${isBus ? '🚌 Bus' : '🚕 Taxi'} • ${vehicle.capacity} places
+            🚌 Bus • ${vehicle.capacity} places
           </p>
           ${vehicle.destination ? `
             <p style="margin: 4px 0 0; font-size: 12px; color: #414042;">
@@ -171,7 +166,7 @@ const BusMap: React.FC<BusMapProps> = ({
 
       markersRef.current.push(marker);
     });
-  }, [vehicles, busStops, onVehicleClick, onStopClick, clearMarkers]);
+  }, [buses, busStops, onVehicleClick, onStopClick, clearMarkers]);
 
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
@@ -228,7 +223,7 @@ const BusMap: React.FC<BusMapProps> = ({
     if (map.current && !isLoading) {
       addMarkers();
     }
-  }, [vehicles, busStops, isLoading, addMarkers]);
+  }, [buses, busStops, isLoading, addMarkers]);
 
   if (error) {
     return (

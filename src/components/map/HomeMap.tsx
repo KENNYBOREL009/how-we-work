@@ -9,6 +9,8 @@ interface HomeMapProps {
   onLocationFound?: (coords: { lat: number; lng: number }) => void;
   onVehicleClick?: (vehicle: Vehicle) => void;
   className?: string;
+  /** Rayon en km pour filtrer les taxis visibles (défaut: 2km) */
+  visibilityRadius?: number;
 }
 
 const statusColors: Record<string, string> = {
@@ -18,14 +20,41 @@ const statusColors: Record<string, string> = {
   offline: '#6b7280',
 };
 
-const HomeMap: React.FC<HomeMapProps> = ({ onLocationFound, onVehicleClick, className = '' }) => {
+// Calcule la distance entre deux points en km (formule Haversine)
+const calculateDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number => {
+  const R = 6371; // Rayon de la Terre en km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+const HomeMap: React.FC<HomeMapProps> = ({ 
+  onLocationFound, 
+  onVehicleClick, 
+  className = '',
+  visibilityRadius = 2, // 2km par défaut
+}) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const radiusCircleRef = useRef<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   
   const { vehicles } = useVehicles();
 
@@ -49,13 +78,93 @@ const HomeMap: React.FC<HomeMapProps> = ({ onLocationFound, onVehicleClick, clas
     markersRef.current = [];
   }, []);
 
+  // Dessine le cercle de visibilité sur la carte
+  const drawRadiusCircle = useCallback(() => {
+    if (!map.current || !userLocation) return;
+
+    const sourceId = 'visibility-radius';
+    const layerId = 'visibility-radius-layer';
+    const borderLayerId = 'visibility-radius-border';
+
+    // Supprime l'ancien cercle s'il existe
+    if (map.current.getLayer(borderLayerId)) {
+      map.current.removeLayer(borderLayerId);
+    }
+    if (map.current.getLayer(layerId)) {
+      map.current.removeLayer(layerId);
+    }
+    if (map.current.getSource(sourceId)) {
+      map.current.removeSource(sourceId);
+    }
+
+    // Crée un cercle GeoJSON
+    const points = 64;
+    const coords: [number, number][] = [];
+    for (let i = 0; i <= points; i++) {
+      const angle = (i / points) * 2 * Math.PI;
+      const dx = (visibilityRadius / 111.32) * Math.cos(angle);
+      const dy = (visibilityRadius / (111.32 * Math.cos((userLocation.lat * Math.PI) / 180))) * Math.sin(angle);
+      coords.push([userLocation.lng + dy, userLocation.lat + dx]);
+    }
+
+    map.current.addSource(sourceId, {
+      type: 'geojson',
+      data: {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'Polygon',
+          coordinates: [coords],
+        },
+      },
+    });
+
+    map.current.addLayer({
+      id: layerId,
+      type: 'fill',
+      source: sourceId,
+      paint: {
+        'fill-color': '#FFD42F',
+        'fill-opacity': 0.08,
+      },
+    });
+
+    map.current.addLayer({
+      id: borderLayerId,
+      type: 'line',
+      source: sourceId,
+      paint: {
+        'line-color': '#FFD42F',
+        'line-width': 2,
+        'line-opacity': 0.5,
+        'line-dasharray': [3, 2],
+      },
+    });
+
+    radiusCircleRef.current = sourceId;
+  }, [userLocation, visibilityRadius]);
+
   const addVehicleMarkers = useCallback(() => {
     if (!map.current || !mapReady) return;
 
     clearMarkers();
 
-    // Filter to show only taxis on main map
-    const taxis = vehicles.filter(v => v.vehicle_type === 'taxi' && v.latitude && v.longitude);
+    // Filtre les taxis par zone géographique
+    let taxis = vehicles.filter(v => v.vehicle_type === 'taxi' && v.latitude && v.longitude);
+    
+    // Si on a la position utilisateur, filtre par distance
+    if (userLocation) {
+      taxis = taxis.filter(vehicle => {
+        if (!vehicle.latitude || !vehicle.longitude) return false;
+        const distance = calculateDistance(
+          userLocation.lat,
+          userLocation.lng,
+          vehicle.latitude,
+          vehicle.longitude
+        );
+        return distance <= visibilityRadius;
+      });
+    }
 
     taxis.forEach((vehicle) => {
       if (!vehicle.latitude || !vehicle.longitude) return;
@@ -162,7 +271,7 @@ const HomeMap: React.FC<HomeMapProps> = ({ onLocationFound, onVehicleClick, clas
 
       markersRef.current.push(marker);
     });
-  }, [vehicles, mapReady, onVehicleClick, clearMarkers]);
+  }, [vehicles, mapReady, onVehicleClick, clearMarkers, userLocation, visibilityRadius]);
 
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
@@ -213,6 +322,7 @@ const HomeMap: React.FC<HomeMapProps> = ({ onLocationFound, onVehicleClick, clas
 
     geolocateControl.on('geolocate', (e: GeolocationPosition) => {
       const coords = { lat: e.coords.latitude, lng: e.coords.longitude };
+      setUserLocation(coords);
       onLocationFound?.(coords);
     });
 
@@ -223,7 +333,14 @@ const HomeMap: React.FC<HomeMapProps> = ({ onLocationFound, onVehicleClick, clas
     };
   }, [mapboxToken, onLocationFound, clearMarkers]);
 
-  // Update markers when vehicles change
+  // Dessine le cercle quand la position change
+  useEffect(() => {
+    if (mapReady && userLocation) {
+      drawRadiusCircle();
+    }
+  }, [mapReady, userLocation, drawRadiusCircle]);
+
+  // Update markers when vehicles or location change
   useEffect(() => {
     addVehicleMarkers();
   }, [addVehicleMarkers]);
@@ -244,6 +361,13 @@ const HomeMap: React.FC<HomeMapProps> = ({ onLocationFound, onVehicleClick, clas
         </div>
       )}
       <div ref={mapContainer} className="absolute inset-0" />
+      
+      {/* Indicateur de zone */}
+      {userLocation && (
+        <div className="absolute top-4 left-4 glass rounded-lg px-3 py-2 z-10 text-xs font-medium text-foreground">
+          🎯 Zone: {visibilityRadius} km
+        </div>
+      )}
     </div>
   );
 };
