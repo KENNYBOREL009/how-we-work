@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Logo from "@/components/ui/Logo";
 import { toast } from "sonner";
 import { Mail, Phone, Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
@@ -123,14 +124,13 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="safe-top px-6 pt-8 pb-4">
-        <h1 className="text-3xl font-bold tracking-tight text-center">
-          <span className="text-primary">LOKEBO</span>
-          <span className="text-foreground"> DRIVE</span>
-        </h1>
-        <p className="text-center text-muted-foreground mt-2">
-          {isLogin ? "Bon retour parmi nous !" : "Créez votre compte"}
-        </p>
+      <header className="safe-top px-6 pt-10 pb-6">
+        <div className="flex flex-col items-center">
+          <Logo variant="full" size="lg" className="mb-4" />
+          <p className="text-center text-muted-foreground">
+            {isLogin ? "Bon retour parmi nous !" : "Créez votre compte"}
+          </p>
+        </div>
       </header>
 
       <main className="flex-1 px-6 py-8">
