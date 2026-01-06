@@ -1,19 +1,23 @@
 import MobileLayout from "@/components/layout/MobileLayout";
-import { Bus, MapPin, Clock, Bell, List, Map as MapIcon } from "lucide-react";
+import { Bus, MapPin, Clock, Bell, List, Map as MapIcon, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BusMap from "@/components/map/BusMap";
 import SchedulePanel from "@/components/bus/SchedulePanel";
 import VehicleList from "@/components/bus/VehicleList";
 import { useVehicles, Vehicle, BusStop } from "@/hooks/useVehicles";
 import { useBusSchedule } from "@/hooks/useBusSchedule";
+import { useNotifications } from "@/hooks/useNotifications";
 import { toast } from "sonner";
 
 const BusPage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"map" | "schedule" | "vehicles">("map");
   const { vehicles, busStops, isLoading: vehiclesLoading } = useVehicles();
   const { schedules, isLoading: schedulesLoading } = useBusSchedule();
+  const { addFavoriteStop, unreadCount } = useNotifications();
 
   const handleVehicleClick = (vehicle: Vehicle) => {
     toast.info(`${vehicle.vehicle_type === 'bus' ? '🚌' : '🚕'} ${vehicle.plate_number}`, {
@@ -24,6 +28,10 @@ const BusPage = () => {
   const handleStopClick = (stop: BusStop) => {
     toast.info(`📍 ${stop.name}`, {
       description: stop.address || 'Arrêt de bus',
+      action: {
+        label: '⭐ Favori',
+        onClick: () => addFavoriteStop(stop.id),
+      },
     });
   };
 
@@ -38,8 +46,18 @@ const BusPage = () => {
             </h1>
             <p className="text-sm text-muted-foreground">Suivez les bus en temps réel</p>
           </div>
-          <Button size="icon" variant="outline" className="rounded-full">
+          <Button 
+            size="icon" 
+            variant="outline" 
+            className="rounded-full relative"
+            onClick={() => navigate("/notifications")}
+          >
             <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
           </Button>
         </div>
       </header>
@@ -120,19 +138,28 @@ const BusPage = () => {
         <Button
           className="w-full h-14 text-base font-semibold rounded-xl shadow-lg bg-lokebo-dark hover:bg-lokebo-dark/90"
           size="lg"
+          onClick={() => setActiveTab("schedule")}
         >
           <MapPin className="w-5 h-5 mr-2" />
           Trouver un arrêt
         </Button>
 
         <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" className="h-12 rounded-xl">
+          <Button 
+            variant="outline" 
+            className="h-12 rounded-xl"
+            onClick={() => setActiveTab("schedule")}
+          >
             <Clock className="w-4 h-4 mr-2" />
             Horaires
           </Button>
-          <Button variant="outline" className="h-12 rounded-xl">
-            <Bell className="w-4 h-4 mr-2" />
-            Alertes
+          <Button 
+            variant="outline" 
+            className="h-12 rounded-xl"
+            onClick={() => navigate("/notifications")}
+          >
+            <Star className="w-4 h-4 mr-2" />
+            Favoris
           </Button>
         </div>
       </div>

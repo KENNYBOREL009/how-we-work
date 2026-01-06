@@ -71,6 +71,41 @@ export type Database = {
         }
         Relationships: []
       }
+      favorite_stops: {
+        Row: {
+          created_at: string
+          id: string
+          notify_on_approach: boolean | null
+          notify_radius_meters: number | null
+          stop_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notify_on_approach?: boolean | null
+          notify_radius_meters?: number | null
+          stop_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notify_on_approach?: boolean | null
+          notify_radius_meters?: number | null
+          stop_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_stops_stop_id_fkey"
+            columns: ["stop_id"]
+            isOneToOne: false
+            referencedRelation: "bus_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nearby_contacts: {
         Row: {
           contact_phone: string | null
@@ -97,6 +132,39 @@ export type Database = {
           id?: string
           is_favorite?: boolean | null
           nickname?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          is_read: boolean | null
+          message: string
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          type?: string
           user_id?: string
         }
         Relationships: []
