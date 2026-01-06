@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useBusMode } from "@/hooks/useBusMode";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import AddressManager from "@/components/profile/AddressManager";
 import {
   User,
   LogOut,
@@ -24,6 +25,7 @@ import {
   History,
   Calendar,
   Car,
+  MapPin,
 } from "lucide-react";
 
 interface Profile {
@@ -247,6 +249,9 @@ const Profil = () => {
               <span className="text-sm">{phoneNumber || "Non renseigné"}</span>
             </div>
           </div>
+
+          {/* Addresses */}
+          {user && <AddressManager userId={user.id} />}
 
           {/* Reservations */}
           <Button
