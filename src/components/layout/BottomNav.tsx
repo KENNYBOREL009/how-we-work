@@ -1,15 +1,19 @@
-import { MapPin, Wallet, Search, User } from "lucide-react";
+import { MapPin, Wallet, Search, User, Bus } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-
-const navItems = [
-  { icon: MapPin, label: "Carte", path: "/" },
-  { icon: Search, label: "Signal", path: "/signal" },
-  { icon: Wallet, label: "Wallet", path: "/wallet" },
-  { icon: User, label: "Profil", path: "/profil" },
-];
+import { useBusMode } from "@/hooks/useBusMode";
 
 const BottomNav = () => {
+  const { isBusModeEnabled } = useBusMode();
+
+  const navItems = [
+    { icon: MapPin, label: "Carte", path: "/" },
+    { icon: Search, label: "Signal", path: "/signal" },
+    ...(isBusModeEnabled ? [{ icon: Bus, label: "Bus", path: "/bus" }] : []),
+    { icon: Wallet, label: "Wallet", path: "/wallet" },
+    { icon: User, label: "Profil", path: "/profil" },
+  ];
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border safe-bottom">
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
