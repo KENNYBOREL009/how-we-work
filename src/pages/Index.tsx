@@ -43,8 +43,8 @@ const Index = () => {
       </header>
 
       {/* Interactive Map */}
-      <div className="relative flex-1 mx-4 mb-4">
-        <MapboxMap className="w-full h-full border border-border card-shadow" />
+      <div className="relative flex-1 mx-4 mb-4 min-h-[340px]">
+        <MapboxMap className="w-full min-h-[340px] border border-border card-shadow" />
 
         {/* Floating Legend */}
         <div className="absolute bottom-4 left-4 right-4 glass rounded-xl p-3 border border-border/50 z-10">

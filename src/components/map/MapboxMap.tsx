@@ -12,7 +12,6 @@ interface MapboxMapProps {
 const MapboxMap: React.FC<MapboxMapProps> = ({ onLocationFound, className = '' }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const userMarker = useRef<mapboxgl.Marker | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
@@ -36,47 +35,53 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ onLocationFound, className = '' }
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
 
-    // Initialize map
     mapboxgl.accessToken = mapboxToken;
 
-    map.current = new mapboxgl.Map({
+    const mapInstance = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/dark-v11',
-      center: [9.7043, 4.0511], // Douala coordinates
+      center: [9.7043, 4.0511],
       zoom: 13,
       pitch: 45,
     });
 
-    // Add navigation controls
-    map.current.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true,
-      }),
+    map.current = mapInstance;
+
+    mapInstance.addControl(
+      new mapboxgl.NavigationControl({ visualizePitch: true }),
       'top-right'
     );
 
-    // Add geolocate control
     const geolocateControl = new mapboxgl.GeolocateControl({
-      positionOptions: {
-        enableHighAccuracy: true
-      },
+      positionOptions: { enableHighAccuracy: true },
       trackUserLocation: true,
-      showUserHeading: true
+      showUserHeading: true,
     });
 
-    map.current.addControl(geolocateControl, 'top-right');
+    mapInstance.addControl(geolocateControl, 'top-right');
 
-    map.current.on('load', () => {
+    const resizeObserver = new ResizeObserver(() => {
+      mapInstance.resize();
+    });
+    resizeObserver.observe(mapContainer.current);
+
+    mapInstance.on('error', (e) => {
+      // Useful when WebGL/canvas sizing breaks silently
+      console.error('Mapbox error:', (e as any)?.error ?? e);
+    });
+
+    mapInstance.on('load', () => {
       setIsLoading(false);
 
-      // Add atmosphere effect
-      map.current?.setFog({
+      // Ensure correct sizing after first paint
+      setTimeout(() => mapInstance.resize(), 0);
+
+      mapInstance.setFog({
         color: 'rgb(30, 30, 40)',
         'high-color': 'rgb(20, 20, 30)',
         'horizon-blend': 0.1,
       });
 
-      // Trigger geolocation
       geolocateControl.trigger();
     });
 
@@ -85,9 +90,9 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ onLocationFound, className = '' }
       onLocationFound?.(coords);
     });
 
-    // Cleanup
     return () => {
-      map.current?.remove();
+      resizeObserver.disconnect();
+      mapInstance.remove();
     };
   }, [mapboxToken, onLocationFound]);
 
