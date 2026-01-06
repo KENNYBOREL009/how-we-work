@@ -49,7 +49,7 @@ const Signal = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
-  // Check for pre-selected vehicle from map
+  // Check for pre-selected vehicle or mode from navigation
   useEffect(() => {
     if (location.state?.selectedVehicle) {
       setSelectedVehicle(location.state.selectedVehicle);
@@ -61,14 +61,18 @@ const Signal = () => {
         setShowDestinationDrawer(false);
       }
     }
+    // Handle preselected mode from home buttons
+    if (location.state?.preselectedMode) {
+      setSelectedMode(location.state.preselectedMode as RideMode);
+    }
   }, [location.state]);
 
   const handleDestinationSelect = (dest: { name: string; distance: number }) => {
     setDestination(dest);
     setShowDestinationDrawer(false);
-    // Pre-select the most popular mode
+    // Pre-select the mode if not already selected
     if (!selectedMode) {
-      setSelectedMode("reservation");
+      setSelectedMode(location.state?.preselectedMode || "reservation");
     }
   };
 
@@ -108,23 +112,43 @@ const Signal = () => {
     setIsConfirming(true);
 
     try {
-      const { error } = await supabase.from("trips").insert({
+      const isSharedRide = selectedMode === "confort-partage";
+      
+      const { data: tripData, error } = await supabase.from("trips").insert({
         user_id: user.id,
         trip_type: selectedMode,
         origin,
         destination: destination.name,
         fare: calculatePrice(),
         status: "pending",
+        current_status: "searching",
+        is_shared_ride: isSharedRide,
         started_at: new Date().toISOString(),
-      });
+      }).select().single();
 
       if (error) throw error;
+
+      // Pour les courses partagées, ajouter l'utilisateur comme passager
+      if (isSharedRide && tripData) {
+        const { error: passengerError } = await supabase.from("shared_ride_passengers").insert({
+          trip_id: tripData.id,
+          user_id: user.id,
+          fare_amount: calculatePrice(),
+          pickup_location: origin,
+          dropoff_location: destination.name,
+        });
+        
+        if (passengerError) {
+          console.error("Error adding passenger:", passengerError);
+        }
+      }
 
       setShowSuccess(true);
       
       setTimeout(() => {
         setShowSuccess(false);
-        navigate("/");
+        // Navigate to active trip page instead of home
+        navigate("/trip");
         toast.success("Course confirmée!", {
           description: `Un chauffeur vers ${destination.name} arrive bientôt.`,
         });

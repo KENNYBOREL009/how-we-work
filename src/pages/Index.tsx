@@ -160,6 +160,7 @@ const Index = () => {
           <Button 
             variant="outline" 
             className="h-14 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2"
+            onClick={() => navigate("/signal", { state: { preselectedMode: "reservation" } })}
           >
             <Users className="w-5 h-5 text-primary" />
             <span className="text-sm font-semibold">Réserver Place</span>
@@ -167,6 +168,7 @@ const Index = () => {
           <Button 
             variant="outline" 
             className="h-14 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2"
+            onClick={() => navigate("/signal", { state: { preselectedMode: "confort-partage" } })}
           >
             <Crown className="w-5 h-5 text-primary" />
             <span className="text-sm font-semibold">Mode Confort</span>
