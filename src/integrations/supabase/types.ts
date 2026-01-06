@@ -71,6 +71,36 @@ export type Database = {
         }
         Relationships: []
       }
+      client_signals: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          latitude: number
+          longitude: number
+          people_count: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          latitude: number
+          longitude: number
+          people_count?: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          people_count?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       driver_availability: {
         Row: {
           created_at: string
