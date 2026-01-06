@@ -370,6 +370,7 @@ export type Database = {
         Row: {
           capacity: number | null
           created_at: string
+          current_passengers: number | null
           current_route_id: string | null
           destination: string | null
           driver_id: string | null
@@ -377,6 +378,9 @@ export type Database = {
           is_active: boolean | null
           operator: string | null
           plate_number: string
+          ride_mode: string | null
+          shared_ride_fare_per_km: number | null
+          shared_ride_origin: string | null
           status: string
           updated_at: string
           vehicle_type: string
@@ -384,6 +388,7 @@ export type Database = {
         Insert: {
           capacity?: number | null
           created_at?: string
+          current_passengers?: number | null
           current_route_id?: string | null
           destination?: string | null
           driver_id?: string | null
@@ -391,6 +396,9 @@ export type Database = {
           is_active?: boolean | null
           operator?: string | null
           plate_number: string
+          ride_mode?: string | null
+          shared_ride_fare_per_km?: number | null
+          shared_ride_origin?: string | null
           status?: string
           updated_at?: string
           vehicle_type: string
@@ -398,6 +406,7 @@ export type Database = {
         Update: {
           capacity?: number | null
           created_at?: string
+          current_passengers?: number | null
           current_route_id?: string | null
           destination?: string | null
           driver_id?: string | null
@@ -405,6 +414,9 @@ export type Database = {
           is_active?: boolean | null
           operator?: string | null
           plate_number?: string
+          ride_mode?: string | null
+          shared_ride_fare_per_km?: number | null
+          shared_ride_origin?: string | null
           status?: string
           updated_at?: string
           vehicle_type?: string
