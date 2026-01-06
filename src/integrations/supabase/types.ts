@@ -330,6 +330,7 @@ export type Database = {
           driver_id: string | null
           id: string
           is_active: boolean | null
+          operator: string | null
           plate_number: string
           status: string
           updated_at: string
@@ -343,6 +344,7 @@ export type Database = {
           driver_id?: string | null
           id?: string
           is_active?: boolean | null
+          operator?: string | null
           plate_number: string
           status?: string
           updated_at?: string
@@ -356,6 +358,7 @@ export type Database = {
           driver_id?: string | null
           id?: string
           is_active?: boolean | null
+          operator?: string | null
           plate_number?: string
           status?: string
           updated_at?: string

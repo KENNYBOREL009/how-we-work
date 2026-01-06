@@ -1,5 +1,5 @@
 import { Vehicle } from '@/hooks/useVehicles';
-import { Bus, MapPin, Users } from 'lucide-react';
+import { Bus, MapPin, Users, Building2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
@@ -104,6 +104,12 @@ const BusCard = ({
         </div>
 
         <div className="flex items-center gap-3 mt-0.5">
+          {vehicle.operator && (
+            <span className="text-xs text-primary font-medium flex items-center gap-1">
+              <Building2 className="w-3 h-3 shrink-0" />
+              {vehicle.operator}
+            </span>
+          )}
           {vehicle.destination && (
             <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
               <MapPin className="w-3 h-3 shrink-0" />
