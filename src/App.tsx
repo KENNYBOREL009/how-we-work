@@ -18,6 +18,9 @@ import ActiveTrip from "./pages/ActiveTrip";
 import ScheduleTrip from "./pages/ScheduleTrip";
 import Reservations from "./pages/Reservations";
 import DriverPlanning from "./pages/DriverPlanning";
+import Assistance from "./pages/Assistance";
+import BecomeDriver from "./pages/BecomeDriver";
+import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +47,9 @@ const App = () => (
                 <Route path="/schedule" element={<ScheduleTrip />} />
                 <Route path="/reservations" element={<Reservations />} />
                 <Route path="/driver/planning" element={<DriverPlanning />} />
+                <Route path="/assistance" element={<Assistance />} />
+                <Route path="/become-driver" element={<BecomeDriver />} />
+                <Route path="/about" element={<About />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
