@@ -51,27 +51,13 @@ const ActiveTrip = () => {
     serviceId => extraServices.find(s => s.id === serviceId)
   ).filter(Boolean) || [];
 
-  // Simuler la fin de course pour demo (faster for private rides demo)
-  useEffect(() => {
-    // For demo mode (no activeTrip), auto-show payment after delay
-    if (!activeTrip && tripState) {
-      const timer = setTimeout(() => {
-        setTripCompleted(true);
-        setShowPaymentDialog(true);
-      }, 10000); // 10 secondes pour demo
-      
-      return () => clearTimeout(timer);
+  // Handler called when trip completes via ActiveTripView
+  const handleTripComplete = () => {
+    if (!tripCompleted) {
+      setTripCompleted(true);
+      setShowPaymentDialog(true);
     }
-    
-    if (activeTrip?.current_status === 'in_progress') {
-      const timer = setTimeout(() => {
-        setTripCompleted(true);
-        setShowPaymentDialog(true);
-      }, 30000); // 30 secondes pour demo
-      
-      return () => clearTimeout(timer);
-    }
-  }, [activeTrip?.current_status, tripState]);
+  };
 
   const handlePaymentConfirm = async () => {
     // For demo mode without real trip
@@ -184,6 +170,7 @@ const ActiveTrip = () => {
         passengers={passengers}
         onCancel={handleCancel}
         onEmergency={handleEmergency}
+        onTripComplete={handleTripComplete}
       />
 
       {/* Payment Confirmation Dialog */}
