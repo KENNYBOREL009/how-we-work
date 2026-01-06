@@ -70,16 +70,20 @@ const AddressManager = ({ userId }: AddressManagerProps) => {
   }, [userId]);
 
   const fetchAddresses = async () => {
-    const { data, error } = await supabase
-      .from("user_addresses")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("user_addresses" as any)
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error fetching addresses:", error);
-    } else {
-      setAddresses(data || []);
+      if (error) {
+        console.error("Error fetching addresses:", error);
+      } else {
+        setAddresses((data as unknown as UserAddress[]) || []);
+      }
+    } catch (err) {
+      console.error("Error fetching addresses:", err);
     }
     setLoading(false);
   };
@@ -91,7 +95,7 @@ const AddressManager = ({ userId }: AddressManagerProps) => {
     }
 
     setSaving(true);
-    const { error } = await supabase.from("user_addresses").insert({
+    const { error } = await supabase.from("user_addresses" as any).insert({
       user_id: userId,
       label: label.trim(),
       address: address.trim(),
@@ -115,7 +119,7 @@ const AddressManager = ({ userId }: AddressManagerProps) => {
   const handleDeleteAddress = async (id: string) => {
     setDeleting(id);
     const { error } = await supabase
-      .from("user_addresses")
+      .from("user_addresses" as any)
       .delete()
       .eq("id", id);
 
@@ -132,13 +136,13 @@ const AddressManager = ({ userId }: AddressManagerProps) => {
   const handleSetDefault = async (id: string) => {
     // First, unset all defaults
     await supabase
-      .from("user_addresses")
+      .from("user_addresses" as any)
       .update({ is_default: false })
       .eq("user_id", userId);
 
     // Then set the new default
     const { error } = await supabase
-      .from("user_addresses")
+      .from("user_addresses" as any)
       .update({ is_default: true })
       .eq("id", id);
 
