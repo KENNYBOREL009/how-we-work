@@ -110,13 +110,30 @@
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground font-sans antialiased;
-  }
-
-  /* Smooth scrolling */
+  /* Theme transition for smooth color changes */
   html {
     scroll-behavior: smooth;
+  }
+
+  html,
+  html *,
+  html *::before,
+  html *::after {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+
+  /* Disable transitions on elements that need instant updates */
+  html input,
+  html textarea,
+  html select,
+  html [data-no-theme-transition] {
+    transition-property: none;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
   }
 
   /* Mobile-first touch optimizations */
