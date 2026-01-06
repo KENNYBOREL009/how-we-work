@@ -13,6 +13,7 @@ import Bus from "./pages/Bus";
 import Auth from "./pages/Auth";
 import TripsHistory from "./pages/TripsHistory";
 import Notifications from "./pages/Notifications";
+import ActiveTrip from "./pages/ActiveTrip";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,8 @@ const App = () => (
               <Route path="/bus" element={<Bus />} />
               <Route path="/history" element={<TripsHistory />} />
               <Route path="/notifications" element={<Notifications />} />
+              <Route path="/trip" element={<ActiveTrip />} />
+              <Route path="*" element={<NotFound />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
