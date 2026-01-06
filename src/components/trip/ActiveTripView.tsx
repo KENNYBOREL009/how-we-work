@@ -19,6 +19,8 @@ import {
 import { Vehicle } from "@/hooks/useVehicles";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import LiveTripMap, { TripMapStatus } from "./LiveTripMap";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 interface Passenger {
   id: string;
@@ -64,25 +66,75 @@ export const ActiveTripView = ({
   const [tripEta, setTripEta] = useState(8);
   const [progress, setProgress] = useState(0);
 
+  const { 
+    notifyDriverArriving, 
+    notifyDriverArrived, 
+    notifyTripStarted, 
+    notifyTripCompleted 
+  } = usePushNotifications();
+
+  // Map status conversion
+  const getMapStatus = (): TripMapStatus => {
+    switch (tripStatus) {
+      case 'driver_assigned':
+      case 'driver_arriving':
+        return 'approaching';
+      case 'driver_arrived':
+        return 'picked_up';
+      case 'picked_up':
+      case 'in_progress':
+        return 'in_progress';
+      case 'arriving_destination':
+        return 'arriving';
+      case 'arrived':
+        return 'arrived';
+      default:
+        return 'approaching';
+    }
+  };
+
   // Simulation réaliste du trajet complet
   useEffect(() => {
-    const stages: { status: TripStatus; delay: number; message?: string }[] = [
+    const stages: { status: TripStatus; delay: number; message?: string; notify?: () => void }[] = [
       { status: 'driver_assigned', delay: 0 },
-      { status: 'driver_arriving', delay: 2000, message: "🚗 Le chauffeur est en route" },
-      { status: 'driver_arrived', delay: 4000, message: "📍 Le chauffeur est arrivé !" },
-      { status: 'picked_up', delay: 6000, message: "✅ Vous êtes à bord" },
+      { 
+        status: 'driver_arriving', 
+        delay: 2000, 
+        message: "🚗 Le chauffeur est en route",
+        notify: () => notifyDriverArriving(vehicle.operator || 'Chauffeur', 3)
+      },
+      { 
+        status: 'driver_arrived', 
+        delay: 4000, 
+        message: "📍 Le chauffeur est arrivé !",
+        notify: () => notifyDriverArrived(vehicle.operator || 'Chauffeur', vehicle.plate_number)
+      },
+      { 
+        status: 'picked_up', 
+        delay: 6000, 
+        message: "✅ Vous êtes à bord",
+        notify: () => notifyTripStarted(destination)
+      },
       { status: 'in_progress', delay: 7000 },
       { status: 'arriving_destination', delay: 11000, message: "🏁 Arrivée imminente" },
-      { status: 'arrived', delay: 13000, message: "🎉 Vous êtes arrivé !" },
+      { 
+        status: 'arrived', 
+        delay: 13000, 
+        message: "🎉 Vous êtes arrivé !",
+        notify: () => notifyTripCompleted(fare, destination)
+      },
     ];
 
     const timeouts: NodeJS.Timeout[] = [];
 
-    stages.forEach(({ status, delay, message }) => {
+    stages.forEach(({ status, delay, message, notify }) => {
       const timeout = setTimeout(() => {
         setTripStatus(status);
         if (message) {
           toast.info(message);
+        }
+        if (notify) {
+          notify();
         }
         if (status === 'arrived' && onTripComplete) {
           setTimeout(onTripComplete, 500);
@@ -211,30 +263,21 @@ export const ActiveTripView = ({
         </div>
       </div>
 
-      {/* Carte placeholder avec animation */}
-      <div className="flex-1 bg-muted relative min-h-[200px] overflow-hidden">
-        {/* Animated background for driving effect */}
-        <div className={cn(
-          "absolute inset-0 flex items-center justify-center",
-          tripStatus === 'in_progress' && "animate-pulse"
-        )}>
-          <div className="text-center text-muted-foreground">
-            <Navigation className={cn(
-              "w-12 h-12 mx-auto mb-2 transition-transform duration-500",
-              tripStatus === 'in_progress' && "text-primary animate-bounce"
-            )} />
-            <p className="text-sm font-medium">
-              {isBeforePickup ? "Chauffeur en approche..." : "En direction de votre destination"}
-            </p>
-          </div>
-        </div>
+      {/* Carte GPS temps réel */}
+      <div className="flex-1 relative min-h-[200px] overflow-hidden">
+        <LiveTripMap
+          status={getMapStatus()}
+          originCoords={{ lat: 4.0511, lng: 9.7043 }}
+          destinationCoords={{ lat: 4.0611, lng: 9.7243 }}
+          className="absolute inset-0"
+        />
         
         {/* ETA Badge */}
         <div className={cn(
-          "absolute top-4 left-4 rounded-xl px-4 py-2 shadow-lg transition-all",
+          "absolute top-4 left-4 z-10 rounded-xl px-4 py-2 shadow-lg transition-all",
           tripStatus === 'arrived' 
             ? "bg-green-500 text-white" 
-            : "bg-background"
+            : "bg-background/95 backdrop-blur-sm"
         )}>
           <div className="flex items-center gap-2">
             {tripStatus === 'arrived' ? (
@@ -259,7 +302,7 @@ export const ActiveTripView = ({
           <Button
             variant="destructive"
             size="sm"
-            className="absolute top-4 right-4 rounded-xl"
+            className="absolute top-4 right-4 z-10 rounded-xl"
             onClick={onEmergency}
           >
             <AlertTriangle className="w-4 h-4 mr-1" />
@@ -269,7 +312,7 @@ export const ActiveTripView = ({
 
         {/* Driver arrived visual cue */}
         {tripStatus === 'driver_arrived' && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg animate-bounce">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg animate-bounce">
             <span className="flex items-center gap-2 text-sm font-semibold">
               <MapPin className="w-4 h-4" />
               Le chauffeur vous attend !
