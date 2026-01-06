@@ -71,6 +71,44 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          rating: number
+          trip_id: string | null
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          rating: number
+          trip_id?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          rating?: number
+          trip_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_ratings_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       favorite_stops: {
         Row: {
           created_at: string
@@ -244,6 +282,53 @@ export type Database = {
           },
         ]
       }
+      shared_ride_passengers: {
+        Row: {
+          avatar_url: string | null
+          dropoff_location: string | null
+          fare_amount: number
+          first_name: string | null
+          id: string
+          joined_at: string
+          pickup_location: string | null
+          status: string | null
+          trip_id: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          dropoff_location?: string | null
+          fare_amount: number
+          first_name?: string | null
+          id?: string
+          joined_at?: string
+          pickup_location?: string | null
+          status?: string | null
+          trip_id: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          dropoff_location?: string | null
+          fare_amount?: number
+          first_name?: string | null
+          id?: string
+          joined_at?: string
+          pickup_location?: string | null
+          status?: string | null
+          trip_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_ride_passengers_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transport_budgets: {
         Row: {
           created_at: string
@@ -293,40 +378,78 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
+          current_status: string | null
           destination: string | null
+          driver_comment: string | null
+          driver_rating: number | null
           fare: number | null
           id: string
+          is_shared_ride: boolean | null
           origin: string | null
+          payment_confirmed_at: string | null
+          payment_status: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          pickup_location: string | null
           started_at: string | null
           status: string
           trip_type: string
           user_id: string
+          vehicle_id: string | null
         }
         Insert: {
           completed_at?: string | null
           created_at?: string
+          current_status?: string | null
           destination?: string | null
+          driver_comment?: string | null
+          driver_rating?: number | null
           fare?: number | null
           id?: string
+          is_shared_ride?: boolean | null
           origin?: string | null
+          payment_confirmed_at?: string | null
+          payment_status?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          pickup_location?: string | null
           started_at?: string | null
           status?: string
           trip_type: string
           user_id: string
+          vehicle_id?: string | null
         }
         Update: {
           completed_at?: string | null
           created_at?: string
+          current_status?: string | null
           destination?: string | null
+          driver_comment?: string | null
+          driver_rating?: number | null
           fare?: number | null
           id?: string
+          is_shared_ride?: boolean | null
           origin?: string | null
+          payment_confirmed_at?: string | null
+          payment_status?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          pickup_location?: string | null
           started_at?: string | null
           status?: string
           trip_type?: string
           user_id?: string
+          vehicle_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "trips_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vehicle_positions: {
         Row: {
@@ -495,7 +618,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_driver_avg_rating: { Args: { p_driver_id: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never
