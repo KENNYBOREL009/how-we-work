@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,9 @@ import {
   Clock,
   CheckCircle2,
   Loader2,
-  Navigation
+  Navigation,
+  Minus,
+  Plus
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,9 +31,10 @@ const Signal = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
+  const [peopleCount, setPeopleCount] = useState(1);
   const [isSignaling, setIsSignaling] = useState(false);
   const [signalSent, setSignalSent] = useState(false);
-  const [signalCount, setSignalCount] = useState(0);
+  const [zoneSignals, setZoneSignals] = useState(0);
   const [nearbyDrivers, setNearbyDrivers] = useState<NearbyDriver[]>([]);
   const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -45,49 +48,79 @@ const Signal = () => {
     }
   }, []);
 
-  // Simuler le compteur de signaux dans la zone
+  // Charger les signaux actifs dans la zone
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSignalCount(prev => Math.max(0, prev + Math.floor(Math.random() * 3) - 1));
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+    const fetchZoneSignals = async () => {
+      if (!currentPosition) return;
+      
+      const { data } = await supabase
+        .from('client_signals')
+        .select('people_count')
+        .gte('expires_at', new Date().toISOString());
+      
+      if (data) {
+        const total = data.reduce((sum, s) => sum + (s.people_count || 1), 0);
+        setZoneSignals(total);
+      }
+    };
+
+    fetchZoneSignals();
+    
+    // Écouter les nouveaux signaux en temps réel
+    const channel = supabase
+      .channel('signals-realtime')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'client_signals'
+      }, () => {
+        fetchZoneSignals();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentPosition]);
 
   const handleSignal = async () => {
+    if (!currentPosition) {
+      toast.error("Position non disponible");
+      return;
+    }
+
     setIsSignaling(true);
 
-    // Simuler l'envoi du signal
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      // Enregistrer le signal en base
+      const { error } = await supabase.from('client_signals').insert({
+        user_id: user?.id || null,
+        latitude: currentPosition.lat,
+        longitude: currentPosition.lng,
+        people_count: peopleCount,
+      });
 
-    // Simuler les chauffeurs à proximité alertés
-    const mockDrivers: NearbyDriver[] = [
-      { id: '1', plate_number: 'LT 1234 A', destination: 'Akwa', distance: 0.3, eta: 2 },
-      { id: '2', plate_number: 'LT 5678 B', destination: 'Bonanjo', distance: 0.5, eta: 3 },
-      { id: '3', plate_number: 'LT 9012 C', destination: null, distance: 0.8, eta: 5 },
-    ];
+      if (error) throw error;
 
-    setNearbyDrivers(mockDrivers);
-    setSignalSent(true);
-    setIsSignaling(false);
-    setSignalCount(prev => prev + 1);
+      // Simuler les chauffeurs alertés (en prod: query real nearby drivers)
+      const mockDrivers: NearbyDriver[] = [
+        { id: '1', plate_number: 'LT 1234 A', destination: 'Akwa', distance: 0.3, eta: 2 },
+        { id: '2', plate_number: 'LT 5678 B', destination: 'Bonanjo', distance: 0.5, eta: 3 },
+        { id: '3', plate_number: 'LT 9012 C', destination: null, distance: 0.8, eta: 5 },
+      ];
 
-    toast.success("Signal envoyé !", {
-      description: `${mockDrivers.length} chauffeurs alertés dans votre zone`,
-    });
+      setNearbyDrivers(mockDrivers);
+      setSignalSent(true);
+      setZoneSignals(prev => prev + peopleCount);
 
-    // TODO: Enregistrer le signal en base pour la heatmap
-    if (user && currentPosition) {
-      try {
-        await supabase.from("notifications").insert({
-          user_id: user.id,
-          type: "signal_sent",
-          title: "Signal envoyé",
-          message: `Signal de présence envoyé à ${currentPosition.lat.toFixed(4)}, ${currentPosition.lng.toFixed(4)}`,
-          data: { lat: currentPosition.lat, lng: currentPosition.lng },
-        });
-      } catch (error) {
-        console.error("Error logging signal:", error);
-      }
+      toast.success("Signal envoyé !", {
+        description: `${peopleCount} personne${peopleCount > 1 ? 's' : ''} • ${mockDrivers.length} chauffeurs alertés`,
+      });
+    } catch (error) {
+      console.error("Signal error:", error);
+      toast.error("Erreur lors de l'envoi du signal");
+    } finally {
+      setIsSignaling(false);
     }
   };
 
@@ -131,10 +164,10 @@ const Signal = () => {
             <h1 className="text-lg font-bold">Signal</h1>
             <p className="text-xs text-muted-foreground">Alertez les taxis de votre présence</p>
           </div>
-          {signalCount > 0 && (
+          {zoneSignals > 0 && (
             <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30">
               <Users className="w-3 h-3 text-amber-500" />
-              <span className="text-xs font-semibold text-amber-600">{signalCount}</span>
+              <span className="text-xs font-semibold text-amber-600">{zoneSignals}</span>
             </div>
           )}
         </header>
@@ -176,11 +209,36 @@ const Signal = () => {
                 </button>
               </div>
 
+              {/* Sélecteur nombre de personnes */}
+              <div className="flex items-center gap-4 mb-6 p-3 rounded-2xl bg-card border border-border">
+                <Users className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm font-medium flex-1">Nous sommes</span>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setPeopleCount(Math.max(1, peopleCount - 1))}
+                    className="w-8 h-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+                    disabled={peopleCount <= 1}
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="w-8 text-center font-bold text-lg">{peopleCount}</span>
+                  <button
+                    onClick={() => setPeopleCount(Math.min(10, peopleCount + 1))}
+                    className="w-8 h-8 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-colors"
+                  >
+                    <Plus className="w-4 h-4 text-primary-foreground" />
+                  </button>
+                </div>
+              </div>
+
               {/* Instructions */}
               <div className="text-center max-w-xs">
                 <h2 className="text-xl font-bold mb-2">Signalez votre présence</h2>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Un signal sera envoyé aux taxis à proximité pour leur indiquer qu'un client attend ici.
+                <p className="text-sm text-muted-foreground mb-4">
+                  {peopleCount > 1 
+                    ? `Signal pour ${peopleCount} personnes • Attire plus de taxis`
+                    : "Un signal sera envoyé aux taxis à proximité"
+                  }
                 </p>
                 
                 {/* Position indicator */}
