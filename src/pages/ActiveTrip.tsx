@@ -59,7 +59,7 @@ const ActiveTrip = () => {
     }
   };
 
-  const handlePaymentConfirm = async () => {
+  const handlePaymentConfirm = async (paymentMethod: 'wallet' | 'cash') => {
     // For demo mode without real trip
     if (!activeTrip && tripState) {
       setShowPaymentDialog(false);
@@ -68,12 +68,21 @@ const ActiveTrip = () => {
     }
     
     if (!activeTrip) return false;
-    const success = await confirmPayment(activeTrip.id, activeTrip.fare || 0);
-    if (success) {
+    
+    // Only deduct from wallet if paying with wallet
+    if (paymentMethod === 'wallet') {
+      const success = await confirmPayment(activeTrip.id, activeTrip.fare || 0);
+      if (success) {
+        setShowPaymentDialog(false);
+        setShowRatingDialog(true);
+      }
+      return success;
+    } else {
+      // Cash payment - just mark as confirmed without wallet deduction
       setShowPaymentDialog(false);
       setShowRatingDialog(true);
+      return true;
     }
-    return success;
   };
 
   const handleRatingSubmit = async (rating: number, comment: string) => {
