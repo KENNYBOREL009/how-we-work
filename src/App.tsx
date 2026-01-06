@@ -14,6 +14,9 @@ import Auth from "./pages/Auth";
 import TripsHistory from "./pages/TripsHistory";
 import Notifications from "./pages/Notifications";
 import ActiveTrip from "./pages/ActiveTrip";
+import ScheduleTrip from "./pages/ScheduleTrip";
+import Reservations from "./pages/Reservations";
+import DriverPlanning from "./pages/DriverPlanning";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,7 +39,9 @@ const App = () => (
               <Route path="/history" element={<TripsHistory />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/trip" element={<ActiveTrip />} />
-              <Route path="*" element={<NotFound />} />
+              <Route path="/schedule" element={<ScheduleTrip />} />
+              <Route path="/reservations" element={<Reservations />} />
+              <Route path="/driver/planning" element={<DriverPlanning />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

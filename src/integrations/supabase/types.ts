@@ -71,6 +71,51 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_availability: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          destination_zone: string | null
+          driver_id: string
+          end_time: string
+          id: string
+          is_recurring: boolean | null
+          origin_zone: string
+          specific_date: string | null
+          start_time: string
+          updated_at: string
+          vehicle_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          destination_zone?: string | null
+          driver_id: string
+          end_time: string
+          id?: string
+          is_recurring?: boolean | null
+          origin_zone: string
+          specific_date?: string | null
+          start_time: string
+          updated_at?: string
+          vehicle_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          destination_zone?: string | null
+          driver_id?: string
+          end_time?: string
+          id?: string
+          is_recurring?: boolean | null
+          origin_zone?: string
+          specific_date?: string | null
+          start_time?: string
+          updated_at?: string
+          vehicle_type?: string | null
+        }
+        Relationships: []
+      }
       driver_ratings: {
         Row: {
           comment: string | null
@@ -108,6 +153,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      driver_reliability_scores: {
+        Row: {
+          acceptance_rate: number | null
+          blocked_until: string | null
+          completed_trips: number | null
+          created_at: string
+          driver_id: string
+          id: string
+          is_scheduling_blocked: boolean | null
+          late_count: number | null
+          no_show_count: number | null
+          punctuality_score: number | null
+          reliability_score: number | null
+          total_scheduled_trips: number | null
+          updated_at: string
+        }
+        Insert: {
+          acceptance_rate?: number | null
+          blocked_until?: string | null
+          completed_trips?: number | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          is_scheduling_blocked?: boolean | null
+          late_count?: number | null
+          no_show_count?: number | null
+          punctuality_score?: number | null
+          reliability_score?: number | null
+          total_scheduled_trips?: number | null
+          updated_at?: string
+        }
+        Update: {
+          acceptance_rate?: number | null
+          blocked_until?: string | null
+          completed_trips?: number | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          is_scheduling_blocked?: boolean | null
+          late_count?: number | null
+          no_show_count?: number | null
+          punctuality_score?: number | null
+          reliability_score?: number | null
+          total_scheduled_trips?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       favorite_stops: {
         Row: {
@@ -281,6 +374,72 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scheduled_trips: {
+        Row: {
+          cancelled_at: string | null
+          cancelled_by: string | null
+          client_id: string
+          client_notes: string | null
+          created_at: string
+          destination: string
+          driver_accepted_at: string | null
+          driver_id: string | null
+          driver_notes: string | null
+          estimated_fare: number
+          id: string
+          matched_at: string | null
+          origin: string
+          penalty_amount: number | null
+          scheduled_at: string
+          security_deposit: number | null
+          status: string
+          updated_at: string
+          vehicle_type: string | null
+        }
+        Insert: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          client_id: string
+          client_notes?: string | null
+          created_at?: string
+          destination: string
+          driver_accepted_at?: string | null
+          driver_id?: string | null
+          driver_notes?: string | null
+          estimated_fare: number
+          id?: string
+          matched_at?: string | null
+          origin: string
+          penalty_amount?: number | null
+          scheduled_at: string
+          security_deposit?: number | null
+          status?: string
+          updated_at?: string
+          vehicle_type?: string | null
+        }
+        Update: {
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          client_id?: string
+          client_notes?: string | null
+          created_at?: string
+          destination?: string
+          driver_accepted_at?: string | null
+          driver_id?: string | null
+          driver_notes?: string | null
+          estimated_fare?: number
+          id?: string
+          matched_at?: string | null
+          origin?: string
+          penalty_amount?: number | null
+          scheduled_at?: string
+          security_deposit?: number | null
+          status?: string
+          updated_at?: string
+          vehicle_type?: string | null
+        }
+        Relationships: []
       }
       shared_ride_passengers: {
         Row: {

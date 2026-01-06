@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import Logo from "@/components/ui/Logo";
 import { HomeMap } from "@/components/map";
 import { JoinSharedRideDrawer } from "@/components/map/JoinSharedRideDrawer";
-import { MapPin, Navigation, Bus, Zap, Users, Crown } from "lucide-react";
+import { MapPin, Navigation, Bus, Zap, Users, Crown, Calendar } from "lucide-react";
 import { useBusMode } from "@/hooks/useBusMode";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -156,22 +156,30 @@ const Index = () => {
         </Button>
         
         {/* Secondary Actions Grid */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-2">
           <Button 
             variant="outline" 
-            className="h-14 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2"
+            className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2"
             onClick={() => navigate("/signal", { state: { preselectedMode: "reservation" } })}
           >
             <Users className="w-5 h-5 text-primary" />
-            <span className="text-sm font-semibold">Réserver Place</span>
+            <span className="text-xs font-semibold">Réserver</span>
           </Button>
           <Button 
             variant="outline" 
-            className="h-14 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2"
+            className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2"
             onClick={() => navigate("/signal", { state: { preselectedMode: "confort-partage" } })}
           >
             <Crown className="w-5 h-5 text-primary" />
-            <span className="text-sm font-semibold">Mode Confort</span>
+            <span className="text-xs font-semibold">Confort</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2 border-amber-500/50 bg-amber-500/5"
+            onClick={() => navigate("/schedule")}
+          >
+            <Calendar className="w-5 h-5 text-amber-500" />
+            <span className="text-xs font-semibold text-amber-600">Programmer</span>
           </Button>
         </div>
       </div>
