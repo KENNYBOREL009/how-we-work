@@ -1,7 +1,7 @@
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/ui/Logo";
-import MapboxMap from "@/components/map/MapboxMap";
+import { MapboxMap } from "@/components/map";
 import { MapPin, Navigation, Car, Bus, Zap, Users, Crown } from "lucide-react";
 import { useBusMode } from "@/hooks/useBusMode";
 import { cn } from "@/lib/utils";
