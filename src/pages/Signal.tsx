@@ -6,11 +6,12 @@ import { cn } from "@/lib/utils";
 import { 
   MapPin, 
   Clock, 
-  Loader2, 
   ChevronDown,
   Car,
   X,
-  ChevronLeft
+  ChevronLeft,
+  Crown,
+  Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +27,7 @@ import { DestinationSearch } from "@/components/signal/DestinationSearch";
 import { RideOptions, RideMode, rideModes } from "@/components/signal/RideOptions";
 import { PassengerSelector } from "@/components/signal/PassengerSelector";
 import { DriverSearchAnimation } from "@/components/signal/DriverSearchAnimation";
+import { PrivateRideOptions, vehicleClasses, extraServices } from "@/components/signal/PrivateRideOptions";
 
 const Signal = () => {
   const location = useLocation();
@@ -37,6 +39,10 @@ const Signal = () => {
   const [destination, setDestination] = useState<{ name: string; distance: number } | null>(null);
   const [selectedMode, setSelectedMode] = useState<RideMode | null>(null);
   const [passengerCount, setPassengerCount] = useState(1);
+  
+  // Private ride state
+  const [selectedVehicleClass, setSelectedVehicleClass] = useState("berline");
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
   
   // UI state
   const [showDestinationDrawer, setShowDestinationDrawer] = useState(true);
@@ -74,7 +80,23 @@ const Signal = () => {
     if (!selectedMode || !destination) return 0;
     const mode = rideModes.find(m => m.id === selectedMode);
     if (!mode) return 0;
-    const baseTotal = mode.basePrice + Math.round(destination.distance * mode.pricePerKm);
+    
+    let baseTotal = mode.basePrice + Math.round(destination.distance * mode.pricePerKm);
+    
+    // Apply vehicle class multiplier for private rides
+    if (selectedMode === "privatisation") {
+      const vehicleClass = vehicleClasses.find(v => v.id === selectedVehicleClass);
+      if (vehicleClass) {
+        baseTotal = Math.round(baseTotal * vehicleClass.multiplier);
+      }
+      // Add extra services
+      const servicesTotal = selectedServices.reduce((sum, serviceId) => {
+        const service = extraServices.find(s => s.id === serviceId);
+        return sum + (service?.price || 0);
+      }, 0);
+      baseTotal += servicesTotal;
+    }
+    
     if (mode.isShared && passengerCount > 1) {
       return Math.round(baseTotal / passengerCount);
     }
@@ -85,7 +107,21 @@ const Signal = () => {
     if (!selectedMode || !destination) return 0;
     const mode = rideModes.find(m => m.id === selectedMode);
     if (!mode) return 0;
-    return mode.basePrice + Math.round(destination.distance * mode.pricePerKm);
+    let total = mode.basePrice + Math.round(destination.distance * mode.pricePerKm);
+    
+    if (selectedMode === "privatisation") {
+      const vehicleClass = vehicleClasses.find(v => v.id === selectedVehicleClass);
+      if (vehicleClass) {
+        total = Math.round(total * vehicleClass.multiplier);
+      }
+      const servicesTotal = selectedServices.reduce((sum, serviceId) => {
+        const service = extraServices.find(s => s.id === serviceId);
+        return sum + (service?.price || 0);
+      }, 0);
+      total += servicesTotal;
+    }
+    
+    return total;
   };
 
   const currentMode = rideModes.find(m => m.id === selectedMode);
@@ -232,6 +268,20 @@ const Signal = () => {
               </div>
             )}
 
+            {/* Private ride options */}
+            {selectedMode === "privatisation" && (
+              <div className="mt-4">
+                <PrivateRideOptions
+                  selectedClass={selectedVehicleClass}
+                  onClassChange={setSelectedVehicleClass}
+                  selectedServices={selectedServices}
+                  onServicesChange={setSelectedServices}
+                  basePrice={rideModes.find(m => m.id === "privatisation")!.basePrice + 
+                    Math.round(destination.distance * rideModes.find(m => m.id === "privatisation")!.pricePerKm)}
+                />
+              </div>
+            )}
+
             {/* Trip summary */}
             {selectedMode && currentMode && (
               <div className="mt-4 p-4 rounded-2xl bg-muted/30 border border-border">
@@ -276,16 +326,27 @@ const Signal = () => {
 
         {/* Bottom CTA */}
         {destination && selectedMode && (
-          <div className="p-4 bg-background border-t border-border">
+          <div className={cn(
+            "p-4 border-t",
+            selectedMode === "privatisation" 
+              ? "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/30" 
+              : "bg-background border-border"
+          )}>
             <Button
-              className="w-full h-14"
+              className={cn(
+                "w-full h-14",
+                selectedMode === "privatisation" && "bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white border-0"
+              )}
               size="lg"
               onClick={handleConfirm}
             >
+              {selectedMode === "privatisation" && <Crown className="w-5 h-5 mr-2" />}
               Commander • {calculatePrice().toLocaleString()} FCFA
             </Button>
             <p className="text-xs text-muted-foreground text-center mt-2">
-              Paiement via Wallet ou espèces
+              {selectedMode === "privatisation" 
+                ? "Service premium • Véhicule dédié" 
+                : "Paiement via Wallet ou espèces"}
             </p>
           </div>
         )}
