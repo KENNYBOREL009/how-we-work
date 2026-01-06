@@ -5,7 +5,7 @@ export type RideModeType = 'standard' | 'confort-partage' | 'privatisation';
 
 export interface Vehicle {
   id: string;
-  vehicle_type: 'bus' | 'taxi';
+  vehicle_type: 'bus' | 'taxi' | 'vtc';
   plate_number: string;
   capacity: number;
   destination: string | null;
@@ -68,7 +68,7 @@ export const useVehicles = () => {
 
         return {
           id: vehicle.id,
-          vehicle_type: vehicle.vehicle_type as 'bus' | 'taxi',
+          vehicle_type: vehicle.vehicle_type as 'bus' | 'taxi' | 'vtc',
           plate_number: vehicle.plate_number,
           capacity: vehicle.capacity || 4,
           destination: vehicle.destination,
@@ -86,7 +86,62 @@ export const useVehicles = () => {
       })
     );
 
-    setVehicles(vehiclesWithPositions);
+    // Ajouter des VTC partagés simulés pour la démo
+    const mockSharedVTCs: Vehicle[] = [
+      {
+        id: 'vtc-shared-1',
+        vehicle_type: 'vtc',
+        plate_number: 'CE 234 LT',
+        capacity: 4,
+        destination: 'Bonanjo',
+        status: 'available',
+        operator: 'VTC Premium',
+        ride_mode: 'confort-partage',
+        current_passengers: 2,
+        shared_ride_origin: 'Akwa',
+        shared_ride_fare_per_km: 180,
+        latitude: 4.0531,
+        longitude: 9.7083,
+        heading: 45,
+        speed: 25,
+      },
+      {
+        id: 'vtc-shared-2',
+        vehicle_type: 'vtc',
+        plate_number: 'CE 567 LT',
+        capacity: 4,
+        destination: 'Bonapriso',
+        status: 'available',
+        operator: 'VTC Confort',
+        ride_mode: 'confort-partage',
+        current_passengers: 1,
+        shared_ride_origin: 'Deido',
+        shared_ride_fare_per_km: 200,
+        latitude: 4.0481,
+        longitude: 9.7123,
+        heading: 180,
+        speed: 30,
+      },
+      {
+        id: 'vtc-shared-3',
+        vehicle_type: 'vtc',
+        plate_number: 'CE 891 LT',
+        capacity: 4,
+        destination: 'Makepe',
+        status: 'available',
+        operator: 'Elite Ride',
+        ride_mode: 'confort-partage',
+        current_passengers: 3,
+        shared_ride_origin: 'Akwa Nord',
+        shared_ride_fare_per_km: 150,
+        latitude: 4.0551,
+        longitude: 9.6983,
+        heading: 90,
+        speed: 20,
+      },
+    ];
+
+    setVehicles([...vehiclesWithPositions, ...mockSharedVTCs]);
   };
 
   const fetchBusStops = async () => {
