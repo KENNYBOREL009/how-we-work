@@ -160,12 +160,19 @@ const HomeMap: React.FC<HomeMapProps> = ({
 
     clearMarkers();
 
-    // Filtre les taxis par zone géographique
-    let taxis = vehicles.filter(v => v.vehicle_type === 'taxi' && v.latitude && v.longitude);
+    // Filtre les véhicules visibles : taxis jaunes + VTC en mode partagé
+    let visibleVehicles = vehicles.filter(v => {
+      if (!v.latitude || !v.longitude) return false;
+      // Taxis jaunes (tous les modes)
+      if (v.vehicle_type === 'taxi') return true;
+      // VTC en mode confort partagé uniquement
+      if (v.vehicle_type === 'vtc' && v.ride_mode === 'confort-partage') return true;
+      return false;
+    });
     
     // Si on a la position utilisateur, filtre par distance
     if (userLocation) {
-      taxis = taxis.filter(vehicle => {
+      visibleVehicles = visibleVehicles.filter(vehicle => {
         if (!vehicle.latitude || !vehicle.longitude) return false;
         const distance = calculateDistance(
           userLocation.lat,
@@ -177,7 +184,7 @@ const HomeMap: React.FC<HomeMapProps> = ({
       });
     }
 
-    taxis.forEach((vehicle) => {
+    visibleVehicles.forEach((vehicle) => {
       if (!vehicle.latitude || !vehicle.longitude) return;
 
       const isSharedRide = vehicle.ride_mode === 'confort-partage';
