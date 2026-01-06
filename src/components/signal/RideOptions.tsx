@@ -1,14 +1,14 @@
 import { cn } from "@/lib/utils";
-import { Hand, Calendar, Users, Crown, ChevronRight, Check } from "lucide-react";
+import { Calendar, Users, Crown, Check } from "lucide-react";
 
-export type RideMode = "ligne-visuelle" | "reservation" | "confort-partage" | "privatisation";
+export type RideMode = "reservation" | "confort-partage" | "privatisation";
 
 export interface RideModeOption {
   id: RideMode;
   name: string;
   shortName: string;
   description: string;
-  icon: typeof Hand;
+  icon: typeof Calendar;
   basePrice: number;
   pricePerKm: number;
   maxPassengers?: number;
@@ -18,20 +18,10 @@ export interface RideModeOption {
 
 export const rideModes: RideModeOption[] = [
   {
-    id: "ligne-visuelle",
-    name: "Ligne Visuelle",
-    shortName: "Taxi",
-    description: "Hélez en temps réel",
-    icon: Hand,
-    basePrice: 0,
-    pricePerKm: 100,
-    eta: "2-5 min",
-  },
-  {
     id: "reservation",
     name: "Réservation Place",
     shortName: "Réserver",
-    description: "Place garantie",
+    description: "Réservez une place dans un taxi",
     icon: Calendar,
     basePrice: 100,
     pricePerKm: 100,

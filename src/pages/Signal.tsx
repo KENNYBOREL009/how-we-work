@@ -68,7 +68,7 @@ const Signal = () => {
     setShowDestinationDrawer(false);
     // Pre-select the most popular mode
     if (!selectedMode) {
-      setSelectedMode("ligne-visuelle");
+      setSelectedMode("reservation");
     }
   };
 
