@@ -15,8 +15,10 @@ interface PaymentConfirmDialogProps {
   onConfirm: () => Promise<boolean>;
   amount: number;
   walletBalance: number;
-  tripType: 'taxi' | 'bus' | 'confort-partage';
+  tripType: 'taxi' | 'bus' | 'confort-partage' | 'privatisation';
   destination: string;
+  isPrivate?: boolean;
+  vehicleClassName?: string;
 }
 
 export const PaymentConfirmDialog = ({
@@ -27,6 +29,8 @@ export const PaymentConfirmDialog = ({
   walletBalance,
   tripType,
   destination,
+  isPrivate = false,
+  vehicleClassName,
 }: PaymentConfirmDialogProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -38,6 +42,7 @@ export const PaymentConfirmDialog = ({
     taxi: 'Course Taxi',
     bus: 'Ticket Bus',
     'confort-partage': 'Confort Partagé',
+    'privatisation': vehicleClassName ? `VIP ${vehicleClassName}` : 'Course Privée VIP',
   };
 
   const handleConfirm = async () => {
@@ -61,7 +66,7 @@ export const PaymentConfirmDialog = ({
       <DialogContent className="max-w-sm mx-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-primary" />
+            <Wallet className={`w-5 h-5 ${isPrivate ? 'text-amber-500' : 'text-primary'}`} />
             Confirmer le paiement
           </DialogTitle>
           <DialogDescription>
@@ -71,11 +76,18 @@ export const PaymentConfirmDialog = ({
 
         <div className="space-y-4 py-4">
           {/* Montant */}
-          <div className="text-center p-6 rounded-2xl bg-primary/10 border border-primary/20">
+          <div className={`text-center p-6 rounded-2xl border ${
+            isPrivate 
+              ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/10 border-amber-500/30' 
+              : 'bg-primary/10 border-primary/20'
+          }`}>
             <p className="text-sm text-muted-foreground mb-1">Montant à payer</p>
-            <p className="text-4xl font-bold text-primary">
+            <p className={`text-4xl font-bold ${isPrivate ? 'text-amber-500' : 'text-primary'}`}>
               {amount.toLocaleString()} <span className="text-xl">FCFA</span>
             </p>
+            {isPrivate && vehicleClassName && (
+              <p className="text-xs text-amber-600 mt-2">✨ Service {vehicleClassName}</p>
+            )}
           </div>
 
           {/* Solde wallet */}

@@ -30,6 +30,9 @@ interface ActiveTripViewProps {
   origin: string;
   fare: number;
   isSharedRide?: boolean;
+  isPrivate?: boolean;
+  vehicleClassName?: string;
+  selectedServices?: string[];
   passengers?: Passenger[];
   onCancel: () => void;
   onEmergency: () => void;
@@ -41,6 +44,9 @@ export const ActiveTripView = ({
   origin,
   fare,
   isSharedRide = false,
+  isPrivate = false,
+  vehicleClassName,
+  selectedServices = [],
   passengers = [],
   onCancel,
   onEmergency,
@@ -85,7 +91,7 @@ export const ActiveTripView = ({
   return (
     <div className="flex flex-col h-full">
       {/* Header avec statut */}
-      <div className="p-4 bg-primary text-primary-foreground">
+      <div className={`p-4 ${isPrivate ? 'bg-gradient-to-r from-amber-500 to-orange-600' : 'bg-primary'} text-primary-foreground`}>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <div className={cn(
@@ -93,6 +99,7 @@ export const ActiveTripView = ({
               tripStatus === 'in_progress' ? "bg-green-400" : "bg-white"
             )} />
             <span className="font-semibold">{statusMessages[tripStatus]}</span>
+            {isPrivate && <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">VIP</span>}
           </div>
           <Button 
             variant="ghost" 
@@ -144,12 +151,28 @@ export const ActiveTripView = ({
 
       {/* Détails du trajet */}
       <div className="p-4 space-y-4 bg-background border-t border-border">
+        {/* Private ride badge */}
+        {isPrivate && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+              <Star className="w-4 h-4 text-white fill-white" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-sm text-amber-600">Course Privée VIP</p>
+              <p className="text-xs text-muted-foreground">
+                {vehicleClassName && `${vehicleClassName} • `}
+                {selectedServices.length > 0 ? selectedServices.join(', ') : 'Véhicule dédié'}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Itinéraire */}
         <div className="flex items-start gap-3">
           <div className="flex flex-col items-center">
             <div className="w-3 h-3 rounded-full bg-green-500" />
             <div className="w-0.5 h-8 bg-border" />
-            <div className="w-3 h-3 rounded-full bg-primary" />
+            <div className={`w-3 h-3 rounded-full ${isPrivate ? 'bg-amber-500' : 'bg-primary'}`} />
           </div>
           <div className="flex-1 space-y-4">
             <div>
@@ -163,15 +186,19 @@ export const ActiveTripView = ({
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Tarif</p>
-            <p className="font-bold text-primary">{fare.toLocaleString()} FCFA</p>
+            <p className={`font-bold ${isPrivate ? 'text-amber-500' : 'text-primary'}`}>{fare.toLocaleString()} FCFA</p>
           </div>
         </div>
 
         {/* Info chauffeur */}
-        <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50 border border-border">
+        <div className={`flex items-center justify-between p-3 rounded-xl border ${
+          isPrivate 
+            ? 'bg-gradient-to-r from-amber-500/5 to-orange-500/5 border-amber-500/20' 
+            : 'bg-muted/50 border-border'
+        }`}>
           <div className="flex items-center gap-3">
-            <Avatar className="w-12 h-12 border-2 border-primary">
-              <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+            <Avatar className={`w-12 h-12 border-2 ${isPrivate ? 'border-amber-500' : 'border-primary'}`}>
+              <AvatarFallback className={`font-bold ${isPrivate ? 'bg-gradient-to-br from-amber-500 to-orange-600 text-white' : 'bg-primary text-primary-foreground'}`}>
                 {vehicle.plate_number.slice(0, 2)}
               </AvatarFallback>
             </Avatar>
@@ -179,7 +206,7 @@ export const ActiveTripView = ({
               <p className="font-semibold">{vehicle.plate_number}</p>
               <div className="flex items-center gap-1 text-sm text-muted-foreground">
                 <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                <span>4.8</span>
+                <span>{isPrivate ? '4.9' : '4.8'}</span>
                 <span>•</span>
                 <span>{vehicle.operator || 'Taxi'}</span>
               </div>
