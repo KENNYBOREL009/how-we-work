@@ -1,6 +1,7 @@
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/ui/Logo";
+import MapboxMap from "@/components/map/MapboxMap";
 import { MapPin, Navigation, Car, Bus, Zap, Users, Crown } from "lucide-react";
 import { useBusMode } from "@/hooks/useBusMode";
 import { cn } from "@/lib/utils";
@@ -41,20 +42,12 @@ const Index = () => {
         </p>
       </header>
 
-      {/* Map Placeholder */}
-      <div className="relative flex-1 mx-4 mb-4 rounded-2xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 border border-border card-shadow">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-20 h-20 rounded-2xl gradient-lokebo flex items-center justify-center mx-auto mb-4 elevated rotate-3 hover:rotate-0 transition-transform duration-300">
-              <Car className="w-10 h-10 text-primary-foreground" />
-            </div>
-            <p className="text-foreground font-semibold text-lg">Carte interactive</p>
-            <p className="text-sm text-muted-foreground">Bientôt disponible</p>
-          </div>
-        </div>
+      {/* Interactive Map */}
+      <div className="relative flex-1 mx-4 mb-4">
+        <MapboxMap className="w-full h-full border border-border card-shadow" />
 
         {/* Floating Legend */}
-        <div className="absolute bottom-4 left-4 right-4 glass rounded-xl p-3 border border-border/50">
+        <div className="absolute bottom-4 left-4 right-4 glass rounded-xl p-3 border border-border/50 z-10">
           <div className="flex items-center justify-around text-xs font-medium">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-lokebo-success animate-pulse" />
