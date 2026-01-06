@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Logo from "@/components/ui/Logo";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import { toast } from "sonner";
 import { Mail, Phone, Eye, EyeOff, Loader2, ArrowRight, Sparkles } from "lucide-react";
 import { z } from "zod";
@@ -134,6 +135,11 @@ const Auth = () => {
         <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-primary/5 blur-3xl animate-[fade-in_1.4s_ease-out]" />
       </div>
 
+      {/* Theme Toggle */}
+      <div className="absolute top-6 right-6 z-20 opacity-0 animate-[fade-in_0.5s_ease-out_0.2s_forwards]">
+        <ThemeToggle />
+      </div>
+
       {/* Header */}
       <header className="safe-top px-6 pt-12 pb-8 relative z-10">
         <div className="flex flex-col items-center">
@@ -142,7 +148,7 @@ const Auth = () => {
             <Logo variant="full" size="lg" className="relative z-10" />
           </div>
           
-          <div 
+          <div
             className="flex items-center gap-2 mb-3 opacity-0 animate-[fade-in_0.5s_ease-out_0.2s_forwards]"
           >
             <Sparkles className="w-4 h-4 text-primary" />
