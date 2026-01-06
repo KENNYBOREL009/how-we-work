@@ -244,6 +244,51 @@ export type Database = {
           },
         ]
       }
+      transport_budgets: {
+        Row: {
+          created_at: string
+          daily_cost: number
+          end_date: string
+          id: string
+          is_active: boolean
+          locked_amount: number
+          name: string
+          start_date: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+          working_days: number
+        }
+        Insert: {
+          created_at?: string
+          daily_cost: number
+          end_date: string
+          id?: string
+          is_active?: boolean
+          locked_amount?: number
+          name?: string
+          start_date?: string
+          total_amount: number
+          updated_at?: string
+          user_id: string
+          working_days?: number
+        }
+        Update: {
+          created_at?: string
+          daily_cost?: number
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          locked_amount?: number
+          name?: string
+          start_date?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+          working_days?: number
+        }
+        Relationships: []
+      }
       trips: {
         Row: {
           completed_at: string | null

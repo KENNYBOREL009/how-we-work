@@ -1,6 +1,8 @@
 import MobileLayout from "@/components/layout/MobileLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useWallet } from "@/hooks/useWallet";
+import { useTransportBudget } from "@/hooks/useTransportBudget";
+import { TransportBudgetCard } from "@/components/wallet/TransportBudgetCard";
 import { Button } from "@/components/ui/button";
 import { Wallet as WalletIcon, Plus, ArrowUpRight, ArrowDownLeft, History, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +13,7 @@ const Wallet = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { wallet, transactions, loading: walletLoading } = useWallet();
+  const { activeBudget, createBudget, loading: budgetLoading } = useTransportBudget();
 
   // Redirect to auth if not logged in
   if (!authLoading && !user) {
@@ -32,7 +35,7 @@ const Wallet = () => {
     );
   }
 
-  if (authLoading || walletLoading) {
+  if (authLoading || walletLoading || budgetLoading) {
     return (
       <MobileLayout>
         <div className="flex items-center justify-center min-h-[80vh]">
@@ -60,6 +63,15 @@ const Wallet = () => {
             {wallet?.balance.toLocaleString("fr-FR") || 0} <span className="text-xl">FCFA</span>
           </p>
         </div>
+      </div>
+
+      {/* Transport Budget */}
+      <div className="px-4 mb-6">
+        <TransportBudgetCard 
+          activeBudget={activeBudget}
+          onCreateBudget={createBudget}
+          walletBalance={wallet?.balance || 0}
+        />
       </div>
 
       {/* Quick Actions */}
