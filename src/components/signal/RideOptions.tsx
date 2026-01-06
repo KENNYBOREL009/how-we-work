@@ -13,6 +13,7 @@ export interface RideModeOption {
   pricePerKm: number;
   maxPassengers?: number;
   isShared?: boolean;
+  isPremium?: boolean;
   eta: string;
 }
 
@@ -43,11 +44,12 @@ export const rideModes: RideModeOption[] = [
     id: "privatisation",
     name: "Privatisation",
     shortName: "VTC Privé",
-    description: "VTC exclusif premium",
+    description: "Service exclusif • véhicule au choix",
     icon: Crown,
     basePrice: 2000,
     pricePerKm: 250,
     eta: "3-7 min",
+    isPremium: true,
   },
 ];
 
@@ -81,35 +83,57 @@ export const RideOptions = ({ selectedMode, onSelect, distance, passengerCount =
             className={cn(
               "w-full p-4 rounded-2xl border-2 transition-all duration-200 text-left relative overflow-hidden",
               isSelected
-                ? "border-primary bg-primary/5"
+                ? mode.isPremium 
+                  ? "border-amber-500 bg-gradient-to-r from-amber-500/10 to-orange-500/10"
+                  : "border-primary bg-primary/5"
                 : "border-border bg-card hover:border-primary/50"
             )}
           >
+            {/* Premium badge */}
+            {mode.isPremium && (
+              <div className="absolute top-0 right-0 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold rounded-bl-lg">
+                PREMIUM
+              </div>
+            )}
+            
             {/* Selection indicator */}
             {isSelected && (
-              <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                <Check className="w-4 h-4 text-primary-foreground" />
+              <div className={cn(
+                "absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center",
+                mode.isPremium ? "bg-amber-500" : "bg-primary"
+              )}>
+                <Check className="w-4 h-4 text-white" />
               </div>
             )}
             
             <div className="flex items-center gap-4">
               <div className={cn(
                 "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0",
-                isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                isSelected 
+                  ? mode.isPremium 
+                    ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white" 
+                    : "bg-primary text-primary-foreground" 
+                  : "bg-muted text-foreground"
               )}>
                 <Icon className="w-7 h-7" />
               </div>
               
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2 mb-0.5">
-                  <h3 className="font-bold text-foreground">{mode.name}</h3>
+                  <h3 className={cn(
+                    "font-bold",
+                    mode.isPremium && isSelected ? "text-amber-700 dark:text-amber-400" : "text-foreground"
+                  )}>{mode.name}</h3>
                   <span className="text-xs text-muted-foreground">{mode.eta}</span>
                 </div>
                 <p className="text-sm text-muted-foreground">{mode.description}</p>
               </div>
               
               <div className="text-right shrink-0">
-                <p className="text-lg font-bold text-foreground">
+                <p className={cn(
+                  "text-lg font-bold",
+                  mode.isPremium && isSelected ? "text-amber-700 dark:text-amber-400" : "text-foreground"
+                )}>
                   {price > 0 ? `${price.toLocaleString()}` : "Gratuit"}
                 </p>
                 {price > 0 && <p className="text-xs text-muted-foreground">FCFA</p>}
