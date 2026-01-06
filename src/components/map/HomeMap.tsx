@@ -181,81 +181,133 @@ const HomeMap: React.FC<HomeMapProps> = ({
       if (!vehicle.latitude || !vehicle.longitude) return;
 
       const isSharedRide = vehicle.ride_mode === 'confort-partage';
+      const isPrivate = vehicle.ride_mode === 'privatisation';
       const availableSeats = (vehicle.capacity || 4) - (vehicle.current_passengers || 0);
       const canJoin = isSharedRide && availableSeats > 0 && vehicle.destination;
+      const hasDestination = Boolean(vehicle.destination);
       
       // Couleur basée sur le mode de course
-      const color = isSharedRide 
-        ? rideModeColors['confort-partage']
-        : statusColors[vehicle.status] || statusColors.offline;
+      const markerColor = isSharedRide 
+        ? '#8b5cf6'
+        : isPrivate 
+        ? '#f59e0b'
+        : '#FFD42F';
 
       const el = document.createElement('div');
-      el.className = 'taxi-marker';
+      el.className = 'taxi-marker-enhanced';
       el.innerHTML = `
         <div style="
           position: relative;
           display: flex;
           flex-direction: column;
           align-items: center;
+          filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
         ">
-          ${isSharedRide ? `
+          ${hasDestination ? `
             <div style="
               position: absolute;
-              top: -8px;
-              right: -8px;
-              background: #22c55e;
-              color: white;
-              font-size: 10px;
+              bottom: 100%;
+              left: 50%;
+              transform: translateX(-50%);
+              margin-bottom: 4px;
+              background: linear-gradient(135deg, ${isSharedRide ? '#8b5cf6' : '#1a1a2e'} 0%, ${isSharedRide ? '#7c3aed' : '#414042'} 100%);
+              color: ${isSharedRide ? '#fff' : '#FFD42F'};
+              font-size: 11px;
               font-weight: 700;
-              width: 18px;
-              height: 18px;
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              border: 2px solid white;
-              z-index: 10;
+              padding: 6px 10px;
+              border-radius: 10px;
+              white-space: nowrap;
+              max-width: 140px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+              border: 2px solid ${isSharedRide ? '#a78bfa' : '#FFD42F'};
+              animation: float 2s ease-in-out infinite;
             ">
-              ${availableSeats}
+              <span style="display: flex; align-items: center; gap: 4px;">
+                ${isSharedRide ? '<span style="font-size: 12px;">👥</span>' : '<span style="font-size: 12px;">📍</span>'}
+                ${vehicle.destination}
+              </span>
             </div>
+            <div style="
+              width: 0;
+              height: 0;
+              border-left: 6px solid transparent;
+              border-right: 6px solid transparent;
+              border-top: 8px solid ${isSharedRide ? '#8b5cf6' : '#1a1a2e'};
+              margin-bottom: -2px;
+            "></div>
           ` : ''}
+          
           <div style="
-            width: 32px;
-            height: 32px;
-            background: ${color};
-            border: 3px solid ${isSharedRide ? '#8b5cf6' : '#fff'};
+            position: relative;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(145deg, ${markerColor}, ${isSharedRide ? '#7c3aed' : isPrivate ? '#d97706' : '#e6c029'});
+            border: 3px solid #fff;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.4);
-            transform: rotate(${vehicle.heading || 0}deg);
-            transition: transform 0.3s ease;
+            box-shadow: 
+              0 4px 15px rgba(0,0,0,0.3),
+              inset 0 2px 4px rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
           ">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${isSharedRide ? '#fff' : '#414042'}" stroke-width="2.5">
-              <path d="M7 17m-2 0a2 2 0 1 0 4 0 2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0 2 2 0 1 0 -4 0M5 17h-3v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2"/>
+            ${isSharedRide ? `
+              <div style="
+                position: absolute;
+                top: -6px;
+                right: -6px;
+                background: linear-gradient(135deg, #22c55e, #16a34a);
+                color: white;
+                font-size: 11px;
+                font-weight: 800;
+                width: 22px;
+                height: 22px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid white;
+                z-index: 10;
+                box-shadow: 0 2px 8px rgba(34, 197, 94, 0.5);
+              ">
+                ${availableSeats}
+              </div>
+            ` : ''}
+            
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${isSharedRide ? '#fff' : '#1a1a2e'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0H3m4 0h10m0 0a2 2 0 104 0m-4 0a2 2 0 114 0m0 0h2M3 11l2-5h9l4 5h1a2 2 0 012 2v4h-2"/>
             </svg>
           </div>
-          ${vehicle.destination ? `
+          
+          ${!hasDestination ? `
             <div style="
               margin-top: 4px;
-              background: ${isSharedRide ? '#8b5cf6' : '#414042'};
-              color: ${isSharedRide ? '#fff' : '#FFD42F'};
-              font-size: 10px;
-              font-weight: 600;
-              padding: 2px 6px;
-              border-radius: 4px;
-              white-space: nowrap;
-              max-width: 100px;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+              background: rgba(34, 197, 94, 0.9);
+              color: white;
+              font-size: 9px;
+              font-weight: 700;
+              padding: 3px 8px;
+              border-radius: 6px;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
             ">
-              ${isSharedRide ? '👥 ' : '→ '}${vehicle.destination}
+              Libre
             </div>
           ` : ''}
         </div>
+        <style>
+          @keyframes float {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-3px); }
+          }
+          .taxi-marker-enhanced:hover > div > div:last-of-type {
+            transform: scale(1.1);
+          }
+        </style>
       `;
 
       el.addEventListener('click', () => onVehicleClick?.(vehicle));
@@ -286,45 +338,93 @@ const HomeMap: React.FC<HomeMapProps> = ({
       ` : '';
 
       const popupContent = `
-        <div style="padding: 10px; min-width: 180px;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-            <span style="
-              width: 12px;
-              height: 12px;
-              border-radius: 50%;
-              background: ${color};
-            "></span>
-            <strong style="color: #414042; font-size: 14px;">${vehicle.plate_number}</strong>
+        <div style="padding: 12px; min-width: 200px; font-family: system-ui, sans-serif;">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <div style="
+              width: 40px;
+              height: 40px;
+              border-radius: 12px;
+              background: linear-gradient(135deg, ${markerColor}, ${isSharedRide ? '#7c3aed' : '#e6c029'});
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            ">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${isSharedRide ? '#fff' : '#1a1a2e'}" stroke-width="2.5">
+                <path d="M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0H3m4 0h10m0 0a2 2 0 104 0m-4 0a2 2 0 114 0m0 0h2M3 11l2-5h9l4 5h1a2 2 0 012 2v4h-2"/>
+              </svg>
+            </div>
+            <div>
+              <strong style="color: #1a1a2e; font-size: 15px; display: block;">${vehicle.plate_number}</strong>
+              <span style="font-size: 11px; color: #666;">
+                ${isSharedRide ? '👥 Confort Partagé' : isPrivate ? '⭐ Privé' : '🚕 Taxi Standard'}
+              </span>
+            </div>
           </div>
-          <p style="margin: 0; font-size: 12px; color: #666;">
-            🚕 Taxi • ${vehicle.capacity} places
-          </p>
           ${vehicle.destination ? `
-            <p style="margin: 6px 0 0; font-size: 13px; color: #414042; font-weight: 500;">
-              → <strong>${vehicle.destination}</strong>
-            </p>
-          ` : '<p style="margin: 6px 0 0; font-size: 12px; color: #888;">Destination libre</p>'}
+            <div style="
+              background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+              border-radius: 10px;
+              padding: 10px;
+              margin-bottom: 10px;
+            ">
+              <p style="margin: 0; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
+                Destination
+              </p>
+              <p style="margin: 4px 0 0; font-size: 14px; color: #1a1a2e; font-weight: 700;">
+                📍 ${vehicle.destination}
+              </p>
+            </div>
+          ` : `
+            <div style="
+              background: linear-gradient(135deg, #d4edda, #c3e6cb);
+              border-radius: 10px;
+              padding: 10px;
+              margin-bottom: 10px;
+              text-align: center;
+            ">
+              <p style="margin: 0; font-size: 13px; color: #155724; font-weight: 600;">
+                ✅ Disponible
+              </p>
+            </div>
+          `}
+          
+          <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+            <div style="flex: 1; text-align: center; padding: 8px; background: #f8f9fa; border-radius: 8px;">
+              <p style="margin: 0; font-size: 10px; color: #888;">Places</p>
+              <p style="margin: 2px 0 0; font-size: 14px; font-weight: 700; color: #1a1a2e;">${vehicle.capacity || 4}</p>
+            </div>
+            ${isSharedRide ? `
+              <div style="flex: 1; text-align: center; padding: 8px; background: #8b5cf610; border-radius: 8px; border: 1px solid #8b5cf630;">
+                <p style="margin: 0; font-size: 10px; color: #8b5cf6;">Dispo</p>
+                <p style="margin: 2px 0 0; font-size: 14px; font-weight: 700; color: #8b5cf6;">${availableSeats}</p>
+              </div>
+            ` : ''}
+            ${vehicle.speed ? `
+              <div style="flex: 1; text-align: center; padding: 8px; background: #f8f9fa; border-radius: 8px;">
+                <p style="margin: 0; font-size: 10px; color: #888;">Vitesse</p>
+                <p style="margin: 2px 0 0; font-size: 14px; font-weight: 700; color: #1a1a2e;">${Math.round(vehicle.speed)} km/h</p>
+              </div>
+            ` : ''}
+          </div>
+          
           ${sharedInfo}
-          ${vehicle.speed ? `
-            <p style="margin: 4px 0 0; font-size: 11px; color: #888;">
-              ${Math.round(vehicle.speed)} km/h
-            </p>
-          ` : ''}
+          
           <button 
             onclick="window.dispatchEvent(new CustomEvent('selectTaxi', { detail: JSON.stringify({ id: '${vehicle.id}', canJoin: ${canJoin} }) }))"
             style="
-              margin-top: 8px;
               width: 100%;
-              padding: 8px;
-              background: ${isSharedRide ? '#8b5cf6' : '#FFD42F'};
-              color: ${isSharedRide ? '#fff' : '#414042'};
+              padding: 12px;
+              background: linear-gradient(135deg, ${isSharedRide ? '#8b5cf6' : '#FFD42F'}, ${isSharedRide ? '#7c3aed' : '#e6c029'});
+              color: ${isSharedRide ? '#fff' : '#1a1a2e'};
               border: none;
-              border-radius: 8px;
-              font-weight: 600;
+              border-radius: 12px;
+              font-weight: 700;
+              font-size: 14px;
               cursor: pointer;
+              box-shadow: 0 4px 12px ${isSharedRide ? 'rgba(139, 92, 246, 0.4)' : 'rgba(255, 212, 47, 0.4)'};
             "
           >
-            ${canJoin ? 'Rejoindre la course' : 'Choisir ce taxi'}
+            ${canJoin ? '👥 Rejoindre la course' : '🚕 Choisir ce taxi'}
           </button>
         </div>
       `;
