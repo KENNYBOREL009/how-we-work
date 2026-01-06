@@ -21,6 +21,7 @@ import DriverPlanning from "./pages/DriverPlanning";
 import Assistance from "./pages/Assistance";
 import BecomeDriver from "./pages/BecomeDriver";
 import About from "./pages/About";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/signal" element={<Signal />} />
                 <Route path="/wallet" element={<Wallet />} />
