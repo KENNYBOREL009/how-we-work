@@ -14,10 +14,12 @@ import Bus from "./pages/Bus";
 import Auth from "./pages/Auth";
 import TripsHistory from "./pages/TripsHistory";
 import Notifications from "./pages/Notifications";
+import NotificationSettings from "./pages/NotificationSettings";
 import ActiveTrip from "./pages/ActiveTrip";
 import ScheduleTrip from "./pages/ScheduleTrip";
 import Reservations from "./pages/Reservations";
 import DriverPlanning from "./pages/DriverPlanning";
+import DriverDashboard from "./pages/DriverDashboard";
 import Assistance from "./pages/Assistance";
 import BecomeDriver from "./pages/BecomeDriver";
 import About from "./pages/About";
@@ -45,10 +47,12 @@ const App = () => (
                 <Route path="/bus" element={<Bus />} />
                 <Route path="/history" element={<TripsHistory />} />
                 <Route path="/notifications" element={<Notifications />} />
+                <Route path="/notifications/settings" element={<NotificationSettings />} />
                 <Route path="/trip" element={<ActiveTrip />} />
                 <Route path="/schedule" element={<ScheduleTrip />} />
                 <Route path="/reservations" element={<Reservations />} />
                 <Route path="/driver/planning" element={<DriverPlanning />} />
+                <Route path="/driver/dashboard" element={<DriverDashboard />} />
                 <Route path="/assistance" element={<Assistance />} />
                 <Route path="/become-driver" element={<BecomeDriver />} />
                 <Route path="/about" element={<About />} />
