@@ -15,39 +15,45 @@ const BottomNav = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 safe-bottom">
-      <div className="flex items-center justify-around h-18 max-w-lg mx-auto py-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
+      <div className="flex items-center justify-around h-20 max-w-lg mx-auto px-2">
         {navItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-2xl transition-all duration-300 min-w-[64px]",
+                "flex flex-col items-center justify-center gap-1.5 py-2 px-3 rounded-2xl transition-all duration-200 min-w-[60px]",
                 isActive
-                  ? "text-primary bg-accent"
-                  : "text-muted-foreground hover:text-foreground active:scale-95"
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
               )
             }
           >
             {({ isActive }) => (
               <>
-                <div className={cn(
-                  "p-2 rounded-xl transition-all duration-300",
-                  isActive && "bg-primary"
-                )}>
+                <div
+                  className={cn(
+                    "flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200",
+                    isActive
+                      ? "bg-primary shadow-md"
+                      : "bg-transparent"
+                  )}
+                >
                   <item.icon
                     className={cn(
-                      "w-6 h-6 transition-all duration-300",
-                      isActive && "text-primary-foreground scale-110"
+                      "w-5 h-5 transition-all duration-200",
+                      isActive && "text-primary-foreground"
                     )}
                     strokeWidth={isActive ? 2.5 : 2}
                   />
                 </div>
-                <span className={cn(
-                  "text-xs font-semibold transition-all",
-                  isActive && "text-primary"
-                )}>
+                <span
+                  className={cn(
+                    "text-[11px] font-semibold transition-all",
+                    isActive && "text-primary"
+                  )}
+                >
                   {item.label}
                 </span>
               </>
