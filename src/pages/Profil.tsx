@@ -6,19 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
-import { useBusMode } from "@/hooks/useBusMode";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import AddressManager from "@/components/profile/AddressManager";
 import {
   User,
   LogOut,
-  Edit2,
-  Phone,
-  Mail,
-  Bus,
-  Shield,
   ChevronRight,
   Loader2,
   Save,
@@ -26,6 +19,9 @@ import {
   Calendar,
   Car,
   MapPin,
+  HelpCircle,
+  Info,
+  X,
 } from "lucide-react";
 
 interface Profile {
@@ -38,8 +34,7 @@ interface Profile {
 
 const Profil = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading, signOut } = useAuth();
-  const { isBusModeEnabled, toggleBusMode } = useBusMode();
+  const { user, signOut } = useAuth();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
@@ -114,205 +109,195 @@ const Profil = () => {
 
   return (
     <MobileLayout>
-      <header className="safe-top px-4 pt-4 pb-2">
-        <h1 className="text-2xl font-bold tracking-tight">
-          <span className="text-primary">Mon</span>
-          <span className="text-foreground"> Profil</span>
-        </h1>
-      </header>
-
-      {/* Avatar & Name */}
-      <div className="flex flex-col items-center py-6">
-        <Avatar className="w-24 h-24 mb-4 border-4 border-primary">
-          <AvatarImage src={profile?.avatar_url || undefined} />
-          <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
-        <h2 className="text-xl font-bold">
-          {firstName || lastName ? `${firstName} ${lastName}`.trim() : "Utilisateur"}
-        </h2>
-        <p className="text-sm text-muted-foreground">{user?.email || phoneNumber || "Mode démo"}</p>
-      </div>
-
-      {loading && (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      <div className="flex-1 overflow-auto">
+        {/* Profile Header */}
+        <div className="px-4 pt-6 pb-4">
+          <div className="flex items-center gap-4">
+            <Avatar className="w-16 h-16 border-2 border-primary">
+              <AvatarImage src={profile?.avatar_url || undefined} />
+              <AvatarFallback className="bg-primary text-primary-foreground text-xl font-bold">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <h1 className="text-xl font-bold">
+                {firstName || lastName ? `${firstName} ${lastName}`.trim() : "Utilisateur"}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {user?.email || phoneNumber || "Mode démo"}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full"
+              onClick={() => setEditing(!editing)}
+            >
+              {editing ? <X className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+            </Button>
+          </div>
         </div>
-      )}
 
-      {/* Profile Form */}
-      <div className="px-4 space-y-4">
-        {editing ? (
-          <div className="space-y-4 p-4 rounded-xl bg-muted/50 border border-border">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">Prénom</Label>
-                <Input
-                  id="firstName"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                />
+        {/* Edit Form */}
+        {editing && (
+          <div className="px-4 pb-4">
+            <div className="space-y-4 p-4 rounded-xl bg-muted/50 border border-border animate-fade-in">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">Prénom</Label>
+                  <Input
+                    id="firstName"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Nom</Label>
+                  <Input
+                    id="lastName"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Nom</Label>
+                <Label htmlFor="phone">Téléphone</Label>
                 <Input
-                  id="lastName"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  id="phone"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="+237 6XX XXX XXX"
                 />
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Téléphone</Label>
-              <Input
-                id="phone"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="+237 6XX XXX XXX"
-              />
-            </div>
-            <div className="flex gap-3">
               <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setEditing(false)}
-              >
-                Annuler
-              </Button>
-              <Button
-                className="flex-1"
+                className="w-full"
                 onClick={handleSaveProfile}
-                disabled={saving}
+                disabled={saving || !user}
               >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <Save className="w-4 h-4 mr-2" />
+                )}
                 Enregistrer
               </Button>
             </div>
           </div>
-        ) : (
-          <Button
-            variant="outline"
-            className="w-full justify-between h-14 rounded-xl"
-            onClick={() => setEditing(true)}
-          >
-            <span className="flex items-center gap-3">
-              <Edit2 className="w-5 h-5" />
-              Modifier le profil
-            </span>
-            <ChevronRight className="w-5 h-5" />
-          </Button>
         )}
 
-        {/* Settings */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-muted-foreground px-1">Paramètres</h3>
-
-          {/* Bus Mode Toggle */}
-          <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border">
-            <span className="flex items-center gap-3">
-              <Bus className="w-5 h-5 text-lokebo-dark" />
-              Mode Bus
-            </span>
-            <Switch checked={isBusModeEnabled} onCheckedChange={toggleBusMode} />
+        {loading && (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
+        )}
 
-          {/* Contact Info */}
-          <div className="p-4 rounded-xl bg-muted/50 border border-border space-y-3">
-            <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-muted-foreground" />
-              <span className="text-sm">{user?.email || "Non renseigné"}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Phone className="w-5 h-5 text-muted-foreground" />
-              <span className="text-sm">{phoneNumber || "Non renseigné"}</span>
-            </div>
-          </div>
-
-          {/* Addresses - Only show if logged in */}
-          {user && <AddressManager userId={user.id} />}
-
-          {!user && (
-            <div className="p-4 rounded-xl bg-muted/50 border border-border text-center">
-              <MapPin className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Mes Adresses</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Connectez-vous pour gérer vos adresses
-              </p>
+        {/* Menu Sections */}
+        <div className="px-4 space-y-6 pb-6">
+          {/* Addresses */}
+          {user ? (
+            <AddressManager userId={user.id} />
+          ) : (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted-foreground px-1">Mes Adresses</h3>
+              <div className="p-4 rounded-xl bg-muted/50 border border-border text-center">
+                <MapPin className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Connectez-vous pour gérer vos adresses</p>
+              </div>
             </div>
           )}
 
-          {/* Reservations */}
-          <Button
-            variant="outline"
-            className="w-full justify-between h-14 rounded-xl border-amber-500/30 bg-amber-500/5"
-            onClick={() => navigate("/reservations")}
-          >
-            <span className="flex items-center gap-3">
-              <Calendar className="w-5 h-5 text-amber-500" />
-              Mes Réservations Programmées
-            </span>
-            <ChevronRight className="w-5 h-5" />
-          </Button>
+          {/* Activity */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-muted-foreground px-1">Activité</h3>
+            <Button
+              variant="ghost"
+              className="w-full justify-between h-14 px-4 rounded-xl"
+              onClick={() => navigate("/reservations")}
+            >
+              <span className="flex items-center gap-3">
+                <Calendar className="w-5 h-5 text-amber-500" />
+                Réservations programmées
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-between h-14 px-4 rounded-xl"
+              onClick={() => navigate("/history")}
+            >
+              <span className="flex items-center gap-3">
+                <History className="w-5 h-5 text-muted-foreground" />
+                Historique des trajets
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Button>
+          </div>
 
-          {/* Driver Mode */}
-          <Button
-            variant="outline"
-            className="w-full justify-between h-14 rounded-xl border-lokebo-dark/30 bg-lokebo-dark/5"
-            onClick={() => navigate("/driver/planning")}
-          >
-            <span className="flex items-center gap-3">
-              <Car className="w-5 h-5 text-lokebo-dark" />
-              Mode Chauffeur
-            </span>
-            <ChevronRight className="w-5 h-5" />
-          </Button>
+          {/* Driver */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-muted-foreground px-1">Conducteur</h3>
+            <Button
+              variant="ghost"
+              className="w-full justify-between h-14 px-4 rounded-xl"
+              onClick={() => navigate("/become-driver")}
+            >
+              <span className="flex items-center gap-3">
+                <Car className="w-5 h-5 text-primary" />
+                Travailler comme chauffeur
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Button>
+          </div>
 
-          {/* History */}
-          <Button
-            variant="outline"
-            className="w-full justify-between h-14 rounded-xl"
-            onClick={() => navigate("/history")}
-          >
-            <span className="flex items-center gap-3">
-              <History className="w-5 h-5" />
-              Historique des trajets
-            </span>
-            <ChevronRight className="w-5 h-5" />
-          </Button>
+          {/* Support */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-muted-foreground px-1">Support</h3>
+            <Button
+              variant="ghost"
+              className="w-full justify-between h-14 px-4 rounded-xl"
+              onClick={() => navigate("/assistance")}
+            >
+              <span className="flex items-center gap-3">
+                <HelpCircle className="w-5 h-5 text-muted-foreground" />
+                Assistance
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full justify-between h-14 px-4 rounded-xl"
+              onClick={() => navigate("/about")}
+            >
+              <span className="flex items-center gap-3">
+                <Info className="w-5 h-5 text-muted-foreground" />
+                Informations
+              </span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Button>
+          </div>
 
-          {/* Security */}
-          <Button
-            variant="outline"
-            className="w-full justify-between h-14 rounded-xl"
-          >
-            <span className="flex items-center gap-3">
-              <Shield className="w-5 h-5" />
-              Sécurité & Confidentialité
-            </span>
-            <ChevronRight className="w-5 h-5" />
-          </Button>
+          {/* Auth Actions */}
+          <div className="pt-2">
+            {user ? (
+              <Button
+                variant="ghost"
+                className="w-full h-12 rounded-xl text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={handleSignOut}
+              >
+                <LogOut className="w-5 h-5 mr-2" />
+                Se déconnecter
+              </Button>
+            ) : (
+              <Button
+                className="w-full h-12 rounded-xl"
+                onClick={() => navigate("/auth")}
+              >
+                <User className="w-5 h-5 mr-2" />
+                Se connecter
+              </Button>
+            )}
+          </div>
         </div>
-
-        {/* Sign Out / Sign In */}
-        {user ? (
-          <Button
-            variant="destructive"
-            className="w-full h-14 rounded-xl mt-6"
-            onClick={handleSignOut}
-          >
-            <LogOut className="w-5 h-5 mr-2" />
-            Se déconnecter
-          </Button>
-        ) : (
-          <Button
-            className="w-full h-14 rounded-xl mt-6"
-            onClick={() => navigate("/auth")}
-          >
-            <User className="w-5 h-5 mr-2" />
-            Se connecter
-          </Button>
-        )}
       </div>
     </MobileLayout>
   );
