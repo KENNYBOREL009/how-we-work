@@ -8,6 +8,7 @@ export interface Vehicle {
   capacity: number;
   destination: string | null;
   status: 'available' | 'full' | 'private' | 'offline';
+  operator?: string;
   latitude?: number;
   longitude?: number;
   heading?: number;
@@ -62,6 +63,7 @@ export const useVehicles = () => {
           ...vehicle,
           vehicle_type: vehicle.vehicle_type as 'bus' | 'taxi',
           status: vehicle.status as 'available' | 'full' | 'private' | 'offline',
+          operator: vehicle.operator || 'SOCATUR',
           latitude: posData?.latitude,
           longitude: posData?.longitude,
           heading: posData?.heading,
