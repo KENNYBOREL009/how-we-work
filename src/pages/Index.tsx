@@ -1,7 +1,9 @@
+import { useState, useEffect } from "react";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/ui/Logo";
 import { HomeMap } from "@/components/map";
+import { JoinSharedRideDrawer } from "@/components/map/JoinSharedRideDrawer";
 import { MapPin, Navigation, Bus, Zap, Users, Crown } from "lucide-react";
 import { useBusMode } from "@/hooks/useBusMode";
 import { cn } from "@/lib/utils";
@@ -12,16 +14,65 @@ import { toast } from "sonner";
 const Index = () => {
   const { isBusModeEnabled, toggleBusMode } = useBusMode();
   const navigate = useNavigate();
+  
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedSharedVehicle, setSelectedSharedVehicle] = useState<Vehicle | null>(null);
+  const [showJoinDrawer, setShowJoinDrawer] = useState(false);
+
+  // Écouter les événements de sélection de taxi depuis la carte
+  useEffect(() => {
+    const handleSelectTaxi = (e: CustomEvent) => {
+      try {
+        const detail = JSON.parse(e.detail);
+        if (detail.canJoin) {
+          // C'est une course partagée - on gère différemment
+          // Le véhicule sera passé via onVehicleClick
+        }
+      } catch {
+        // Format ancien, ignorer
+      }
+    };
+
+    window.addEventListener('selectTaxi', handleSelectTaxi as EventListener);
+    return () => window.removeEventListener('selectTaxi', handleSelectTaxi as EventListener);
+  }, []);
 
   const handleVehicleClick = (vehicle: Vehicle) => {
-    toast.info(`🚕 ${vehicle.plate_number}`, {
-      description: vehicle.destination 
-        ? `Direction: ${vehicle.destination}` 
-        : 'Destination libre - Cliquez pour réserver',
-      action: {
-        label: 'Réserver',
-        onClick: () => navigate('/signal', { state: { selectedVehicle: vehicle } }),
-      },
+    // Vérifier si c'est une course partagée qu'on peut rejoindre
+    const isSharedRide = vehicle.ride_mode === 'confort-partage';
+    const availableSeats = (vehicle.capacity || 4) - (vehicle.current_passengers || 0);
+    const canJoin = isSharedRide && availableSeats > 0 && vehicle.destination;
+
+    if (canJoin) {
+      // Ouvrir le drawer pour rejoindre la course
+      setSelectedSharedVehicle(vehicle);
+      setShowJoinDrawer(true);
+    } else {
+      // Comportement normal
+      toast.info(`🚕 ${vehicle.plate_number}`, {
+        description: vehicle.destination 
+          ? `Direction: ${vehicle.destination}` 
+          : 'Destination libre - Cliquez pour réserver',
+        action: {
+          label: 'Réserver',
+          onClick: () => navigate('/signal', { state: { selectedVehicle: vehicle } }),
+        },
+      });
+    }
+  };
+
+  const handleJoinConfirm = (vehicle: Vehicle, fare: number) => {
+    setShowJoinDrawer(false);
+    toast.success(`🎉 Course rejointe!`, {
+      description: `Vous payerez ${fare.toLocaleString()} FCFA pour ${vehicle.destination}`,
+    });
+    // Ici on pourrait créer un trip dans la base de données
+    navigate('/signal', { 
+      state: { 
+        selectedVehicle: vehicle, 
+        joinedSharedRide: true,
+        calculatedFare: fare 
+      } 
     });
   };
 
@@ -61,6 +112,7 @@ const Index = () => {
         <HomeMap 
           className="w-full min-h-[340px] border border-border card-shadow" 
           onVehicleClick={handleVehicleClick}
+          onLocationFound={setUserLocation}
         />
 
         {/* Floating Legend */}
@@ -71,8 +123,8 @@ const Index = () => {
               <span className="text-foreground">Libre</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-lokebo-warning" />
-              <span className="text-foreground">Complet</span>
+              <span className="w-3 h-3 rounded-full bg-violet-500" />
+              <span className="text-foreground">Partagé</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-primary" />
@@ -81,6 +133,15 @@ const Index = () => {
           </div>
         </div>
       </div>
+
+      {/* Join Shared Ride Drawer */}
+      <JoinSharedRideDrawer
+        vehicle={selectedSharedVehicle}
+        userLocation={userLocation}
+        open={showJoinDrawer}
+        onClose={() => setShowJoinDrawer(false)}
+        onConfirm={handleJoinConfirm}
+      />
 
       {/* Quick Actions */}
       <div className="px-4 pb-4 space-y-3">
