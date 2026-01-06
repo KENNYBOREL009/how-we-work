@@ -11,10 +11,14 @@ import {
   Star,
   Shield,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Car,
+  CheckCircle2,
+  Flag
 } from "lucide-react";
 import { Vehicle } from "@/hooks/useVehicles";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface Passenger {
   id: string;
@@ -23,6 +27,8 @@ interface Passenger {
   pickup_location: string;
   dropoff_location: string;
 }
+
+export type TripStatus = 'driver_assigned' | 'driver_arriving' | 'driver_arrived' | 'picked_up' | 'in_progress' | 'arriving_destination' | 'arrived';
 
 interface ActiveTripViewProps {
   vehicle: Vehicle;
@@ -36,6 +42,7 @@ interface ActiveTripViewProps {
   passengers?: Passenger[];
   onCancel: () => void;
   onEmergency: () => void;
+  onTripComplete?: () => void;
 }
 
 export const ActiveTripView = ({
@@ -50,43 +57,102 @@ export const ActiveTripView = ({
   passengers = [],
   onCancel,
   onEmergency,
+  onTripComplete,
 }: ActiveTripViewProps) => {
-  const [tripStatus, setTripStatus] = useState<'searching' | 'driver_assigned' | 'arriving' | 'in_progress'>('driver_assigned');
-  const [eta, setEta] = useState(5);
+  const [tripStatus, setTripStatus] = useState<TripStatus>('driver_assigned');
+  const [eta, setEta] = useState(3);
+  const [tripEta, setTripEta] = useState(8);
   const [progress, setProgress] = useState(0);
 
-  // Simulation du trajet
+  // Simulation réaliste du trajet complet
   useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 2;
-      });
-      
-      setEta(prev => Math.max(0, prev - 0.1));
-    }, 1000);
+    const stages: { status: TripStatus; delay: number; message?: string }[] = [
+      { status: 'driver_assigned', delay: 0 },
+      { status: 'driver_arriving', delay: 2000, message: "🚗 Le chauffeur est en route" },
+      { status: 'driver_arrived', delay: 4000, message: "📍 Le chauffeur est arrivé !" },
+      { status: 'picked_up', delay: 6000, message: "✅ Vous êtes à bord" },
+      { status: 'in_progress', delay: 7000 },
+      { status: 'arriving_destination', delay: 11000, message: "🏁 Arrivée imminente" },
+      { status: 'arrived', delay: 13000, message: "🎉 Vous êtes arrivé !" },
+    ];
 
-    // Simulation des étapes
-    const statusTimeout = setTimeout(() => {
-      setTripStatus('arriving');
-      setTimeout(() => setTripStatus('in_progress'), 5000);
-    }, 3000);
+    const timeouts: NodeJS.Timeout[] = [];
+
+    stages.forEach(({ status, delay, message }) => {
+      const timeout = setTimeout(() => {
+        setTripStatus(status);
+        if (message) {
+          toast.info(message);
+        }
+        if (status === 'arrived' && onTripComplete) {
+          setTimeout(onTripComplete, 500);
+        }
+      }, delay);
+      timeouts.push(timeout);
+    });
+
+    // Progress bar animation
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) return 100;
+        return prev + 1.5;
+      });
+    }, 130);
+
+    // ETA countdown
+    const etaInterval = setInterval(() => {
+      setEta(prev => Math.max(0, prev - 0.05));
+      setTripEta(prev => Math.max(0, prev - 0.05));
+    }, 100);
 
     return () => {
-      clearInterval(interval);
-      clearTimeout(statusTimeout);
+      timeouts.forEach(clearTimeout);
+      clearInterval(progressInterval);
+      clearInterval(etaInterval);
     };
-  }, []);
+  }, [onTripComplete]);
 
-  const statusMessages = {
-    searching: "Recherche d'un chauffeur...",
-    driver_assigned: "Chauffeur en route vers vous",
-    arriving: "Le chauffeur arrive",
-    in_progress: "Course en cours",
+  const statusConfig: Record<TripStatus, { message: string; icon: React.ReactNode; color: string }> = {
+    driver_assigned: { 
+      message: "Chauffeur assigné", 
+      icon: <Car className="w-4 h-4" />,
+      color: "bg-blue-500"
+    },
+    driver_arriving: { 
+      message: "Chauffeur en route vers vous", 
+      icon: <Navigation className="w-4 h-4 animate-pulse" />,
+      color: "bg-blue-500"
+    },
+    driver_arrived: { 
+      message: "Le chauffeur est arrivé", 
+      icon: <MapPin className="w-4 h-4" />,
+      color: "bg-green-500"
+    },
+    picked_up: { 
+      message: "Vous êtes à bord", 
+      icon: <CheckCircle2 className="w-4 h-4" />,
+      color: "bg-green-500"
+    },
+    in_progress: { 
+      message: "Course en cours", 
+      icon: <Navigation className="w-4 h-4" />,
+      color: "bg-green-500"
+    },
+    arriving_destination: { 
+      message: "Arrivée imminente", 
+      icon: <Flag className="w-4 h-4 animate-bounce" />,
+      color: "bg-amber-500"
+    },
+    arrived: { 
+      message: "Vous êtes arrivé !", 
+      icon: <CheckCircle2 className="w-4 h-4" />,
+      color: "bg-green-500"
+    },
   };
+
+  const currentStatus = statusConfig[tripStatus];
+  const isBeforePickup = ['driver_assigned', 'driver_arriving', 'driver_arrived'].includes(tripStatus);
+  const displayEta = isBeforePickup ? eta : tripEta;
 
   return (
     <div className="flex flex-col h-full">
@@ -95,58 +161,121 @@ export const ActiveTripView = ({
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
             <div className={cn(
-              "w-3 h-3 rounded-full animate-pulse",
-              tripStatus === 'in_progress' ? "bg-green-400" : "bg-white"
+              "w-3 h-3 rounded-full",
+              currentStatus.color,
+              tripStatus !== 'arrived' && "animate-pulse"
             )} />
-            <span className="font-semibold">{statusMessages[tripStatus]}</span>
+            <span className="font-semibold flex items-center gap-2">
+              {currentStatus.icon}
+              {currentStatus.message}
+            </span>
             {isPrivate && <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">VIP</span>}
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="text-primary-foreground hover:bg-primary-foreground/20"
-            onClick={onCancel}
-          >
-            <X className="w-5 h-5" />
-          </Button>
+          {tripStatus !== 'arrived' && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-primary-foreground hover:bg-primary-foreground/20"
+              onClick={onCancel}
+            >
+              <X className="w-5 h-5" />
+            </Button>
+          )}
         </div>
         
         {/* Progress bar */}
         <div className="h-1.5 bg-primary-foreground/30 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-primary-foreground transition-all duration-300"
+            className={cn(
+              "h-full transition-all duration-300",
+              tripStatus === 'arrived' ? "bg-green-400" : "bg-primary-foreground"
+            )}
             style={{ width: `${progress}%` }}
           />
         </div>
+        
+        {/* Status steps indicator */}
+        <div className="flex justify-between mt-3 text-xs">
+          <div className={cn("flex flex-col items-center gap-1", isBeforePickup ? "text-primary-foreground" : "text-primary-foreground/50")}>
+            <Car className="w-4 h-4" />
+            <span>Pickup</span>
+          </div>
+          <div className={cn("flex flex-col items-center gap-1", ['picked_up', 'in_progress'].includes(tripStatus) ? "text-primary-foreground" : "text-primary-foreground/50")}>
+            <Navigation className="w-4 h-4" />
+            <span>En route</span>
+          </div>
+          <div className={cn("flex flex-col items-center gap-1", ['arriving_destination', 'arrived'].includes(tripStatus) ? "text-primary-foreground" : "text-primary-foreground/50")}>
+            <Flag className="w-4 h-4" />
+            <span>Arrivée</span>
+          </div>
+        </div>
       </div>
 
-      {/* Carte placeholder */}
-      <div className="flex-1 bg-muted relative min-h-[200px]">
-        <div className="absolute inset-0 flex items-center justify-center">
+      {/* Carte placeholder avec animation */}
+      <div className="flex-1 bg-muted relative min-h-[200px] overflow-hidden">
+        {/* Animated background for driving effect */}
+        <div className={cn(
+          "absolute inset-0 flex items-center justify-center",
+          tripStatus === 'in_progress' && "animate-pulse"
+        )}>
           <div className="text-center text-muted-foreground">
-            <Navigation className="w-12 h-12 mx-auto mb-2 animate-pulse" />
-            <p className="text-sm">Carte de suivi</p>
+            <Navigation className={cn(
+              "w-12 h-12 mx-auto mb-2 transition-transform duration-500",
+              tripStatus === 'in_progress' && "text-primary animate-bounce"
+            )} />
+            <p className="text-sm font-medium">
+              {isBeforePickup ? "Chauffeur en approche..." : "En direction de votre destination"}
+            </p>
           </div>
         </div>
         
         {/* ETA Badge */}
-        <div className="absolute top-4 left-4 bg-background rounded-xl px-4 py-2 shadow-lg">
+        <div className={cn(
+          "absolute top-4 left-4 rounded-xl px-4 py-2 shadow-lg transition-all",
+          tripStatus === 'arrived' 
+            ? "bg-green-500 text-white" 
+            : "bg-background"
+        )}>
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-primary" />
-            <span className="font-bold">{Math.ceil(eta)} min</span>
+            {tripStatus === 'arrived' ? (
+              <>
+                <CheckCircle2 className="w-4 h-4" />
+                <span className="font-bold">Arrivé !</span>
+              </>
+            ) : (
+              <>
+                <Clock className={cn("w-4 h-4", isPrivate ? "text-amber-500" : "text-primary")} />
+                <span className="font-bold">{Math.ceil(displayEta)} min</span>
+                <span className="text-xs text-muted-foreground">
+                  {isBeforePickup ? "avant pickup" : "restantes"}
+                </span>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Emergency Button */}
-        <Button
-          variant="destructive"
-          size="sm"
-          className="absolute top-4 right-4 rounded-xl"
-          onClick={onEmergency}
-        >
-          <AlertTriangle className="w-4 h-4 mr-1" />
-          Urgence
-        </Button>
+        {/* Emergency Button - hide when arrived */}
+        {tripStatus !== 'arrived' && (
+          <Button
+            variant="destructive"
+            size="sm"
+            className="absolute top-4 right-4 rounded-xl"
+            onClick={onEmergency}
+          >
+            <AlertTriangle className="w-4 h-4 mr-1" />
+            Urgence
+          </Button>
+        )}
+
+        {/* Driver arrived visual cue */}
+        {tripStatus === 'driver_arrived' && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg animate-bounce">
+            <span className="flex items-center gap-2 text-sm font-semibold">
+              <MapPin className="w-4 h-4" />
+              Le chauffeur vous attend !
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Détails du trajet */}
