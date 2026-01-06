@@ -137,12 +137,22 @@ const Signal = () => {
   };
 
   const handleDriverFound = async () => {
+    const tripStateData = {
+      origin,
+      destination: destination?.name,
+      fare: calculatePrice(),
+      tripType: selectedMode,
+      isPrivate: selectedMode === "privatisation",
+      vehicleClass: selectedMode === "privatisation" ? selectedVehicleClass : null,
+      selectedServices: selectedMode === "privatisation" ? selectedServices : [],
+    };
+
     if (!user) {
-      // Demo mode - just navigate
+      // Demo mode - navigate with state
       toast.success("Course confirmée!", {
         description: `Un chauffeur vers ${destination?.name} arrive bientôt.`,
       });
-      navigate("/trip");
+      navigate("/trip", { state: tripStateData });
       return;
     }
 
@@ -177,7 +187,7 @@ const Signal = () => {
       toast.success("Course confirmée!", {
         description: `Un chauffeur vers ${destination?.name} arrive bientôt.`,
       });
-      navigate("/trip");
+      navigate("/trip", { state: tripStateData });
     } catch (error) {
       console.error("Error creating trip:", error);
       toast.error("Erreur lors de la réservation");

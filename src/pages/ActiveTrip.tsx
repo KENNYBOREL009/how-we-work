@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { ActiveTripView } from "@/components/trip/ActiveTripView";
 import { RateDriverDialog } from "@/components/trip/RateDriverDialog";
@@ -10,19 +10,59 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Loader2, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { vehicleClasses, extraServices } from "@/components/signal/PrivateRideOptions";
+
+interface TripStateData {
+  origin?: string;
+  destination?: string;
+  fare?: number;
+  tripType?: string;
+  isPrivate?: boolean;
+  vehicleClass?: string | null;
+  selectedServices?: string[];
+}
 
 const ActiveTrip = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { activeTrip, coPassengers, loading, confirmPayment, rateDriver, cancelTrip } = useActiveTrip();
   const { wallet } = useWallet();
+  
+  // Get trip data from navigation state (for demo mode or fresh booking)
+  const tripState = location.state as TripStateData | null;
 
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [showRatingDialog, setShowRatingDialog] = useState(false);
   const [tripCompleted, setTripCompleted] = useState(false);
+  
+  // Derive trip info from either active trip or navigation state
+  const isPrivate = tripState?.isPrivate || activeTrip?.trip_type === 'privatisation';
+  const tripOrigin = activeTrip?.origin || tripState?.origin || 'Ma position';
+  const tripDestination = activeTrip?.destination || tripState?.destination || 'Destination';
+  const tripFare = activeTrip?.fare || tripState?.fare || 0;
+  const tripType = activeTrip?.trip_type || tripState?.tripType || 'taxi';
 
-  // Simuler la fin de course pour demo
+  // Get selected vehicle class info for private rides
+  const selectedVehicleClass = tripState?.vehicleClass 
+    ? vehicleClasses.find(v => v.id === tripState.vehicleClass) 
+    : null;
+  const selectedServicesList = tripState?.selectedServices?.map(
+    serviceId => extraServices.find(s => s.id === serviceId)
+  ).filter(Boolean) || [];
+
+  // Simuler la fin de course pour demo (faster for private rides demo)
   useEffect(() => {
+    // For demo mode (no activeTrip), auto-show payment after delay
+    if (!activeTrip && tripState) {
+      const timer = setTimeout(() => {
+        setTripCompleted(true);
+        setShowPaymentDialog(true);
+      }, 10000); // 10 secondes pour demo
+      
+      return () => clearTimeout(timer);
+    }
+    
     if (activeTrip?.current_status === 'in_progress') {
       const timer = setTimeout(() => {
         setTripCompleted(true);
@@ -31,9 +71,16 @@ const ActiveTrip = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [activeTrip?.current_status]);
+  }, [activeTrip?.current_status, tripState]);
 
   const handlePaymentConfirm = async () => {
+    // For demo mode without real trip
+    if (!activeTrip && tripState) {
+      setShowPaymentDialog(false);
+      setShowRatingDialog(true);
+      return true;
+    }
+    
     if (!activeTrip) return false;
     const success = await confirmPayment(activeTrip.id, activeTrip.fare || 0);
     if (success) {
@@ -81,7 +128,8 @@ const ActiveTrip = () => {
     );
   }
 
-  if (!activeTrip) {
+  // Show empty state only if no active trip AND no trip state from navigation
+  if (!activeTrip && !tripState) {
     return (
       <MobileLayout>
         <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 text-center">
@@ -101,14 +149,15 @@ const ActiveTrip = () => {
   }
 
   // Créer un véhicule mock pour l'affichage
+  const vehicleStatus: 'available' | 'full' | 'private' | 'offline' = isPrivate ? 'private' : 'available';
   const mockVehicle = {
-    id: activeTrip.vehicle_id || '',
+    id: activeTrip?.vehicle_id || '',
     vehicle_type: 'taxi' as const,
-    plate_number: 'CE 1234 LT',
+    plate_number: isPrivate ? 'VIP 888 CM' : 'CE 1234 LT',
     capacity: 4,
-    destination: activeTrip.destination || null,
-    status: 'available' as const,
-    operator: 'LOKEBO',
+    destination: tripDestination,
+    status: vehicleStatus,
+    operator: isPrivate ? (selectedVehicleClass?.name || 'Premium') : 'LOKEBO',
   };
 
   const passengers = coPassengers.map(p => ({
@@ -119,14 +168,19 @@ const ActiveTrip = () => {
     dropoff_location: p.dropoff_location || '',
   }));
 
+  const isSharedRide = activeTrip?.is_shared_ride || tripType === 'confort-partage';
+
   return (
     <MobileLayout showNav={false}>
       <ActiveTripView
         vehicle={mockVehicle}
-        destination={activeTrip.destination || 'Destination'}
-        origin={activeTrip.origin || 'Ma position'}
-        fare={activeTrip.fare || 0}
-        isSharedRide={activeTrip.is_shared_ride}
+        destination={tripDestination}
+        origin={tripOrigin}
+        fare={tripFare}
+        isSharedRide={isSharedRide}
+        isPrivate={isPrivate}
+        vehicleClassName={selectedVehicleClass?.name}
+        selectedServices={selectedServicesList.map(s => s?.name || '')}
         passengers={passengers}
         onCancel={handleCancel}
         onEmergency={handleEmergency}
@@ -137,10 +191,12 @@ const ActiveTrip = () => {
         open={showPaymentDialog}
         onClose={() => setShowPaymentDialog(false)}
         onConfirm={handlePaymentConfirm}
-        amount={activeTrip.fare || 0}
+        amount={tripFare}
         walletBalance={wallet?.balance || 0}
-        tripType={activeTrip.is_shared_ride ? 'confort-partage' : 'taxi'}
-        destination={activeTrip.destination || ''}
+        tripType={isPrivate ? 'privatisation' : (isSharedRide ? 'confort-partage' : 'taxi')}
+        destination={tripDestination}
+        isPrivate={isPrivate}
+        vehicleClassName={selectedVehicleClass?.name}
       />
 
       {/* Rating Dialog */}
@@ -151,7 +207,7 @@ const ActiveTrip = () => {
           navigate('/');
         }}
         onSubmit={handleRatingSubmit}
-        driverName=""
+        driverName={isPrivate ? "Chauffeur VIP" : ""}
         plateNumber={mockVehicle.plate_number}
       />
     </MobileLayout>
