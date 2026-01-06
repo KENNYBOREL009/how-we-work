@@ -22,6 +22,8 @@ import {
   Loader2,
   Save,
   History,
+  Calendar,
+  Car,
 } from "lucide-react";
 
 interface Profile {
@@ -245,6 +247,32 @@ const Profil = () => {
               <span className="text-sm">{phoneNumber || "Non renseigné"}</span>
             </div>
           </div>
+
+          {/* Reservations */}
+          <Button
+            variant="outline"
+            className="w-full justify-between h-14 rounded-xl border-amber-500/30 bg-amber-500/5"
+            onClick={() => navigate("/reservations")}
+          >
+            <span className="flex items-center gap-3">
+              <Calendar className="w-5 h-5 text-amber-500" />
+              Mes Réservations Programmées
+            </span>
+            <ChevronRight className="w-5 h-5" />
+          </Button>
+
+          {/* Driver Mode */}
+          <Button
+            variant="outline"
+            className="w-full justify-between h-14 rounded-xl border-lokebo-dark/30 bg-lokebo-dark/5"
+            onClick={() => navigate("/driver/planning")}
+          >
+            <span className="flex items-center gap-3">
+              <Car className="w-5 h-5 text-lokebo-dark" />
+              Mode Chauffeur
+            </span>
+            <ChevronRight className="w-5 h-5" />
+          </Button>
 
           {/* History */}
           <Button
