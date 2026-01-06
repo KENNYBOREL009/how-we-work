@@ -355,11 +355,10 @@ const HomeMap: React.FC<HomeMapProps> = ({
 
     const geolocateControl = new mapboxgl.GeolocateControl({
       positionOptions: { enableHighAccuracy: true },
-      trackUserLocation: true,
-      showUserHeading: true,
+      trackUserLocation: false,
+      showUserLocation: false,
+      showUserHeading: false,
     });
-
-    mapInstance.addControl(geolocateControl, 'top-right');
 
     const resizeObserver = new ResizeObserver(() => {
       mapInstance.resize();
