@@ -3,10 +3,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BusModeProvider } from "./hooks/useBusMode";
 import Index from "./pages/Index";
 import Signal from "./pages/Signal";
 import Wallet from "./pages/Wallet";
 import Profil from "./pages/Profil";
+import Bus from "./pages/Bus";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -14,17 +16,20 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/signal" element={<Signal />} />
-          <Route path="/wallet" element={<Wallet />} />
-          <Route path="/profil" element={<Profil />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <BusModeProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/signal" element={<Signal />} />
+            <Route path="/wallet" element={<Wallet />} />
+            <Route path="/profil" element={<Profil />} />
+            <Route path="/bus" element={<Bus />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </BusModeProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

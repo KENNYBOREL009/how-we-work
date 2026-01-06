@@ -1,8 +1,12 @@
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
-import { MapPin, Navigation, Car } from "lucide-react";
+import { MapPin, Navigation, Car, Bus } from "lucide-react";
+import { useBusMode } from "@/hooks/useBusMode";
+import { cn } from "@/lib/utils";
 
 const Index = () => {
+  const { isBusModeEnabled, toggleBusMode } = useBusMode();
+
   return (
     <MobileLayout>
       {/* Header */}
@@ -15,9 +19,24 @@ const Index = () => {
             </h1>
             <p className="text-sm text-muted-foreground">Douala, Cameroun</p>
           </div>
-          <Button size="icon" variant="outline" className="rounded-full">
-            <Navigation className="w-5 h-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* Bus Mode Toggle */}
+            <Button
+              size="icon"
+              variant="outline"
+              className={cn(
+                "rounded-full transition-colors",
+                isBusModeEnabled && "bg-lokebo-dark text-primary border-lokebo-dark"
+              )}
+              onClick={toggleBusMode}
+              title={isBusModeEnabled ? "Désactiver Mode Bus" : "Activer Mode Bus"}
+            >
+              <Bus className="w-5 h-5" />
+            </Button>
+            <Button size="icon" variant="outline" className="rounded-full">
+              <Navigation className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
