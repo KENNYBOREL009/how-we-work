@@ -1,0 +1,17 @@
+{
+  "name": "LOKEBO DRIVE",
+  "short_name": "LOKEBO",
+  "description": "Transport Urbain Intelligent au Cameroun",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFD42F",
+  "theme_color": "#FFD42F",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
