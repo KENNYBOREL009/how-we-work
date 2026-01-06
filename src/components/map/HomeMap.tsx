@@ -20,6 +20,12 @@ const statusColors: Record<string, string> = {
   offline: '#6b7280',
 };
 
+const rideModeColors: Record<string, string> = {
+  'standard': '#22c55e',
+  'confort-partage': '#8b5cf6', // Violet pour shared
+  'privatisation': '#FFD42F',
+};
+
 // Calcule la distance entre deux points en km (formule Haversine)
 const calculateDistance = (
   lat1: number,
@@ -169,7 +175,14 @@ const HomeMap: React.FC<HomeMapProps> = ({
     taxis.forEach((vehicle) => {
       if (!vehicle.latitude || !vehicle.longitude) return;
 
-      const color = statusColors[vehicle.status] || statusColors.offline;
+      const isSharedRide = vehicle.ride_mode === 'confort-partage';
+      const availableSeats = (vehicle.capacity || 4) - (vehicle.current_passengers || 0);
+      const canJoin = isSharedRide && availableSeats > 0 && vehicle.destination;
+      
+      // Couleur basée sur le mode de course
+      const color = isSharedRide 
+        ? rideModeColors['confort-partage']
+        : statusColors[vehicle.status] || statusColors.offline;
 
       const el = document.createElement('div');
       el.className = 'taxi-marker';
@@ -180,11 +193,32 @@ const HomeMap: React.FC<HomeMapProps> = ({
           flex-direction: column;
           align-items: center;
         ">
+          ${isSharedRide ? `
+            <div style="
+              position: absolute;
+              top: -8px;
+              right: -8px;
+              background: #22c55e;
+              color: white;
+              font-size: 10px;
+              font-weight: 700;
+              width: 18px;
+              height: 18px;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border: 2px solid white;
+              z-index: 10;
+            ">
+              ${availableSeats}
+            </div>
+          ` : ''}
           <div style="
             width: 32px;
             height: 32px;
             background: ${color};
-            border: 3px solid #fff;
+            border: 3px solid ${isSharedRide ? '#8b5cf6' : '#fff'};
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -194,26 +228,26 @@ const HomeMap: React.FC<HomeMapProps> = ({
             transform: rotate(${vehicle.heading || 0}deg);
             transition: transform 0.3s ease;
           ">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#414042" stroke-width="2.5">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${isSharedRide ? '#fff' : '#414042'}" stroke-width="2.5">
               <path d="M7 17m-2 0a2 2 0 1 0 4 0 2 2 0 1 0 -4 0M17 17m-2 0a2 2 0 1 0 4 0 2 2 0 1 0 -4 0M5 17h-3v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2"/>
             </svg>
           </div>
           ${vehicle.destination ? `
             <div style="
               margin-top: 4px;
-              background: #414042;
-              color: #FFD42F;
+              background: ${isSharedRide ? '#8b5cf6' : '#414042'};
+              color: ${isSharedRide ? '#fff' : '#FFD42F'};
               font-size: 10px;
               font-weight: 600;
               padding: 2px 6px;
               border-radius: 4px;
               white-space: nowrap;
-              max-width: 80px;
+              max-width: 100px;
               overflow: hidden;
               text-overflow: ellipsis;
               box-shadow: 0 2px 6px rgba(0,0,0,0.3);
             ">
-              → ${vehicle.destination}
+              ${isSharedRide ? '👥 ' : '→ '}${vehicle.destination}
             </div>
           ` : ''}
         </div>
@@ -221,8 +255,33 @@ const HomeMap: React.FC<HomeMapProps> = ({
 
       el.addEventListener('click', () => onVehicleClick?.(vehicle));
 
+      const sharedInfo = isSharedRide ? `
+        <div style="
+          background: #8b5cf620;
+          border: 1px solid #8b5cf6;
+          border-radius: 8px;
+          padding: 8px;
+          margin: 8px 0;
+        ">
+          <p style="margin: 0; font-size: 11px; color: #8b5cf6; font-weight: 600;">
+            🚗 Confort Partagé en cours
+          </p>
+          <p style="margin: 4px 0 0; font-size: 12px; color: #666;">
+            ${vehicle.current_passengers || 0}/${vehicle.capacity || 4} passagers • ${availableSeats} place${availableSeats > 1 ? 's' : ''} dispo
+          </p>
+          ${vehicle.shared_ride_origin ? `
+            <p style="margin: 4px 0 0; font-size: 11px; color: #888;">
+              De: ${vehicle.shared_ride_origin}
+            </p>
+          ` : ''}
+          <p style="margin: 4px 0 0; font-size: 11px; color: #888;">
+            Tarif: ${vehicle.shared_ride_fare_per_km || 200} FCFA/km
+          </p>
+        </div>
+      ` : '';
+
       const popupContent = `
-        <div style="padding: 10px; min-width: 160px;">
+        <div style="padding: 10px; min-width: 180px;">
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
             <span style="
               width: 12px;
@@ -240,26 +299,27 @@ const HomeMap: React.FC<HomeMapProps> = ({
               → <strong>${vehicle.destination}</strong>
             </p>
           ` : '<p style="margin: 6px 0 0; font-size: 12px; color: #888;">Destination libre</p>'}
+          ${sharedInfo}
           ${vehicle.speed ? `
             <p style="margin: 4px 0 0; font-size: 11px; color: #888;">
               ${Math.round(vehicle.speed)} km/h
             </p>
           ` : ''}
           <button 
-            onclick="window.dispatchEvent(new CustomEvent('selectTaxi', { detail: '${vehicle.id}' }))"
+            onclick="window.dispatchEvent(new CustomEvent('selectTaxi', { detail: JSON.stringify({ id: '${vehicle.id}', canJoin: ${canJoin} }) }))"
             style="
               margin-top: 8px;
               width: 100%;
               padding: 8px;
-              background: #FFD42F;
-              color: #414042;
+              background: ${isSharedRide ? '#8b5cf6' : '#FFD42F'};
+              color: ${isSharedRide ? '#fff' : '#414042'};
               border: none;
               border-radius: 8px;
               font-weight: 600;
               cursor: pointer;
             "
           >
-            Choisir ce taxi
+            ${canJoin ? 'Rejoindre la course' : 'Choisir ce taxi'}
           </button>
         </div>
       `;

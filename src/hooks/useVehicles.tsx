@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+export type RideModeType = 'standard' | 'confort-partage' | 'privatisation';
+
 export interface Vehicle {
   id: string;
   vehicle_type: 'bus' | 'taxi';
@@ -13,6 +15,11 @@ export interface Vehicle {
   longitude?: number;
   heading?: number;
   speed?: number;
+  // Champs pour courses partagées
+  ride_mode?: RideModeType;
+  current_passengers?: number;
+  shared_ride_origin?: string | null;
+  shared_ride_fare_per_km?: number;
 }
 
 export interface BusStop {
@@ -60,10 +67,17 @@ export const useVehicles = () => {
           .single();
 
         return {
-          ...vehicle,
+          id: vehicle.id,
           vehicle_type: vehicle.vehicle_type as 'bus' | 'taxi',
+          plate_number: vehicle.plate_number,
+          capacity: vehicle.capacity || 4,
+          destination: vehicle.destination,
           status: vehicle.status as 'available' | 'full' | 'private' | 'offline',
           operator: vehicle.operator || 'SOCATUR',
+          ride_mode: (vehicle.ride_mode || 'standard') as RideModeType,
+          current_passengers: vehicle.current_passengers || 0,
+          shared_ride_origin: vehicle.shared_ride_origin,
+          shared_ride_fare_per_km: vehicle.shared_ride_fare_per_km || 200,
           latitude: posData?.latitude,
           longitude: posData?.longitude,
           heading: posData?.heading,
