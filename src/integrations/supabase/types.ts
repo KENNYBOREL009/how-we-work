@@ -14,7 +14,167 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      nearby_contacts: {
+        Row: {
+          contact_phone: string | null
+          contact_user_id: string | null
+          created_at: string
+          id: string
+          is_favorite: boolean | null
+          nickname: string | null
+          user_id: string
+        }
+        Insert: {
+          contact_phone?: string | null
+          contact_user_id?: string | null
+          created_at?: string
+          id?: string
+          is_favorite?: boolean | null
+          nickname?: string | null
+          user_id: string
+        }
+        Update: {
+          contact_phone?: string | null
+          contact_user_id?: string | null
+          created_at?: string
+          id?: string
+          is_favorite?: boolean | null
+          nickname?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bus_mode_enabled: boolean | null
+          created_at: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bus_mode_enabled?: boolean | null
+          created_at?: string
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bus_mode_enabled?: boolean | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      trips: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          destination: string | null
+          fare: number | null
+          id: string
+          origin: string | null
+          started_at: string | null
+          status: string
+          trip_type: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          destination?: string | null
+          fare?: number | null
+          id?: string
+          origin?: string | null
+          started_at?: string | null
+          status?: string
+          trip_type: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          destination?: string | null
+          fare?: number | null
+          id?: string
+          origin?: string | null
+          started_at?: string | null
+          status?: string
+          trip_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          type: string
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          type: string
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          type?: string
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
