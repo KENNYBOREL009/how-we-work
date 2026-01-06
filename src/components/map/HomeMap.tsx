@@ -86,21 +86,26 @@ const HomeMap: React.FC<HomeMapProps> = ({
 
   // Dessine le cercle de visibilité sur la carte
   const drawRadiusCircle = useCallback(() => {
-    if (!map.current || !userLocation) return;
+    if (!map.current || !userLocation || !map.current.isStyleLoaded()) return;
 
     const sourceId = 'visibility-radius';
     const layerId = 'visibility-radius-layer';
     const borderLayerId = 'visibility-radius-border';
 
     // Supprime l'ancien cercle s'il existe
-    if (map.current.getLayer(borderLayerId)) {
-      map.current.removeLayer(borderLayerId);
-    }
-    if (map.current.getLayer(layerId)) {
-      map.current.removeLayer(layerId);
-    }
-    if (map.current.getSource(sourceId)) {
-      map.current.removeSource(sourceId);
+    try {
+      if (map.current.getLayer(borderLayerId)) {
+        map.current.removeLayer(borderLayerId);
+      }
+      if (map.current.getLayer(layerId)) {
+        map.current.removeLayer(layerId);
+      }
+      if (map.current.getSource(sourceId)) {
+        map.current.removeSource(sourceId);
+      }
+    } catch (e) {
+      // Style might not be loaded yet, ignore
+      return;
     }
 
     // Crée un cercle GeoJSON
