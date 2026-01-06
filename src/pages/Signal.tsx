@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dialog";
 
 type TaxiMode = "ligne-visuelle" | "reservation" | "confort-partage" | "privatisation";
-type Step = "mode" | "destination" | "confirm";
+type Step = "mode" | "destination" | "passengers" | "confirm";
 
 interface TaxiModeOption {
   id: TaxiMode;
@@ -44,6 +44,8 @@ interface TaxiModeOption {
   priceLabel: string;
   color: string;
   pricePerKm: number;
+  maxPassengers?: number;
+  isShared?: boolean;
 }
 
 const taxiModes: TaxiModeOption[] = [
@@ -70,12 +72,14 @@ const taxiModes: TaxiModeOption[] = [
   {
     id: "confort-partage",
     name: "Confort Partagé",
-    description: "VTC partagé, trajet premium",
+    description: "VTC Business partagé - Prix divisé entre passagers",
     icon: Users,
-    basePrice: 500,
-    priceLabel: "À partir de 500 FCFA",
+    basePrice: 1000,
+    priceLabel: "Divisé par 4 max",
     color: "bg-lokebo-warning",
-    pricePerKm: 150,
+    pricePerKm: 200,
+    maxPassengers: 4,
+    isShared: true,
   },
   {
     id: "privatisation",
@@ -115,6 +119,13 @@ const Signal = () => {
   const [isConfirming, setIsConfirming] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  
+  // Confort Partagé specific state
+  const [passengerCount, setPassengerCount] = useState<number>(1);
+  const [totalTripPrice, setTotalTripPrice] = useState<number | null>(null);
+  const [isSearchingPassengers, setIsSearchingPassengers] = useState(false);
+  const [foundPassengers, setFoundPassengers] = useState<number>(0);
+  const [selectedDistance, setSelectedDistance] = useState<number>(5);
 
   // Check for pre-selected vehicle from map
   useEffect(() => {
@@ -126,7 +137,15 @@ const Signal = () => {
     }
   }, [location.state]);
 
-  const calculatePrice = (mode: TaxiModeOption, distance: number) => {
+  const calculatePrice = (mode: TaxiModeOption, distance: number, passengers: number = 1) => {
+    const baseTotal = mode.basePrice + Math.round(distance * mode.pricePerKm);
+    if (mode.isShared && passengers > 1) {
+      return Math.round(baseTotal / passengers);
+    }
+    return baseTotal;
+  };
+
+  const calculateTotalPrice = (mode: TaxiModeOption, distance: number) => {
     return mode.basePrice + Math.round(distance * mode.pricePerKm);
   };
 
@@ -137,12 +156,20 @@ const Signal = () => {
 
   const handleDestinationSelect = (dest: { name: string; distance: number }) => {
     setDestination(dest.name);
+    setSelectedDistance(dest.distance);
     const mode = taxiModes.find(m => m.id === selectedMode);
     if (mode) {
-      setEstimatedPrice(calculatePrice(mode, dest.distance));
+      const total = calculateTotalPrice(mode, dest.distance);
+      setTotalTripPrice(total);
+      setEstimatedPrice(calculatePrice(mode, dest.distance, passengerCount));
       setEstimatedTime(Math.round(dest.distance * 3)); // ~3 min per km
     }
-    setStep("confirm");
+    // For Confort Partagé, go to passenger selection step
+    if (selectedMode === "confort-partage") {
+      setStep("passengers");
+    } else {
+      setStep("confirm");
+    }
   };
 
   const handleCustomDestination = () => {
@@ -151,9 +178,49 @@ const Signal = () => {
     const mode = taxiModes.find(m => m.id === selectedMode);
     if (mode) {
       // Estimate 5km for custom destinations
-      setEstimatedPrice(calculatePrice(mode, 5));
+      const total = calculateTotalPrice(mode, 5);
+      setTotalTripPrice(total);
+      setEstimatedPrice(calculatePrice(mode, 5, passengerCount));
       setEstimatedTime(15);
+      setSelectedDistance(5);
     }
+    if (selectedMode === "confort-partage") {
+      setStep("passengers");
+    } else {
+      setStep("confirm");
+    }
+  };
+
+  const handlePassengerSelection = (count: number) => {
+    setPassengerCount(count);
+    const mode = taxiModes.find(m => m.id === selectedMode);
+    if (mode && totalTripPrice) {
+      setEstimatedPrice(Math.round(totalTripPrice / count));
+    }
+  };
+
+  const handleSearchPassengers = () => {
+    setIsSearchingPassengers(true);
+    // Simulate finding passengers with similar routes
+    const searchInterval = setInterval(() => {
+      setFoundPassengers(prev => {
+        const newCount = Math.min(prev + 1, passengerCount - 1);
+        if (newCount >= passengerCount - 1) {
+          clearInterval(searchInterval);
+          setIsSearchingPassengers(false);
+        }
+        return newCount;
+      });
+    }, 1500);
+    
+    // Stop searching after 5 seconds max
+    setTimeout(() => {
+      clearInterval(searchInterval);
+      setIsSearchingPassengers(false);
+    }, 5000);
+  };
+
+  const handleConfirmPassengers = () => {
     setStep("confirm");
   };
 
@@ -232,6 +299,7 @@ const Signal = () => {
               <p className="text-sm text-muted-foreground">
                 {step === "mode" && "Choisissez votre mode"}
                 {step === "destination" && "Où allez-vous?"}
+                {step === "passengers" && "Partagez votre trajet"}
                 {step === "confirm" && "Confirmez votre trajet"}
               </p>
             </div>
@@ -240,7 +308,11 @@ const Signal = () => {
             <Button
               size="icon"
               variant="ghost"
-              onClick={() => setStep(step === "confirm" ? "destination" : "mode")}
+              onClick={() => {
+                if (step === "confirm") setStep(selectedMode === "confort-partage" ? "passengers" : "destination");
+                else if (step === "passengers") setStep("destination");
+                else setStep("mode");
+              }}
             >
               <X className="w-5 h-5" />
             </Button>
@@ -251,11 +323,14 @@ const Signal = () => {
       {/* Step Indicator */}
       <div className="px-4 mb-4">
         <div className="flex items-center gap-2">
-          {["mode", "destination", "confirm"].map((s, i) => (
+          {(selectedMode === "confort-partage" 
+            ? ["mode", "destination", "passengers", "confirm"] 
+            : ["mode", "destination", "confirm"]
+          ).map((s, i, arr) => (
             <div key={s} className="flex items-center flex-1">
               <div className={cn(
                 "h-1 flex-1 rounded-full transition-colors",
-                ["mode", "destination", "confirm"].indexOf(step) >= i 
+                arr.indexOf(step) >= i 
                   ? "bg-primary" 
                   : "bg-muted"
               )} />
@@ -411,6 +486,152 @@ const Signal = () => {
         </div>
       )}
 
+      {/* Step: Passengers (Confort Partagé) */}
+      {step === "passengers" && currentMode && (
+        <div className="px-4 flex-1 flex flex-col">
+          {/* Explanation Card */}
+          <div className="rounded-2xl border border-lokebo-warning/30 bg-lokebo-warning/10 p-4 mb-4">
+            <div className="flex items-start gap-3">
+              <Users className="w-6 h-6 text-lokebo-warning flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-bold text-foreground mb-1">Confort Partagé Business</h3>
+                <p className="text-sm text-muted-foreground">
+                  Divisez le coût du trajet jusqu'à 4 passagers. VTC climatisé, berline propre, confort premium.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Price Breakdown */}
+          <div className="rounded-2xl border border-border bg-card p-4 mb-4">
+            <div className="flex items-center justify-between mb-3 pb-3 border-b border-border">
+              <span className="text-sm text-muted-foreground">Prix total course</span>
+              <span className="font-bold text-foreground">{totalTripPrice?.toLocaleString()} FCFA</span>
+            </div>
+            
+            {/* Passenger Count Selector */}
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+              Nombre de passagers à partager
+            </p>
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              {[1, 2, 3, 4].map((count) => (
+                <button
+                  key={count}
+                  onClick={() => handlePassengerSelection(count)}
+                  className={cn(
+                    "p-3 rounded-xl border-2 transition-all flex flex-col items-center",
+                    passengerCount === count
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-card hover:border-primary/50"
+                  )}
+                >
+                  <span className="text-lg font-bold text-foreground">{count}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {count === 1 ? "Solo" : `/${count}`}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Price per person */}
+            <div className="p-4 rounded-xl bg-lokebo-success/10 border border-lokebo-success/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Votre part</p>
+                  <p className="text-2xl font-bold text-lokebo-success">
+                    {estimatedPrice?.toLocaleString()} <span className="text-sm font-normal">FCFA</span>
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground mb-1">Économie</p>
+                  <p className="text-lg font-bold text-lokebo-success">
+                    -{totalTripPrice && estimatedPrice ? Math.round((1 - estimatedPrice / totalTripPrice) * 100) : 0}%
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search for passengers */}
+          {passengerCount > 1 && (
+            <div className="rounded-2xl border border-border bg-card p-4 mb-4">
+              <p className="text-sm font-medium text-foreground mb-3">
+                Recherche de co-passagers ({foundPassengers}/{passengerCount - 1})
+              </p>
+              
+              {isSearchingPassengers ? (
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-muted">
+                  <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                  <div className="flex-1">
+                    <p className="text-sm text-foreground">Recherche en cours...</p>
+                    <p className="text-xs text-muted-foreground">
+                      Recherche d'utilisateurs sur l'axe {origin} → {destination}
+                    </p>
+                  </div>
+                </div>
+              ) : foundPassengers === 0 ? (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleSearchPassengers}
+                >
+                  <Search className="w-4 h-4 mr-2" />
+                  Rechercher des co-passagers
+                </Button>
+              ) : (
+                <div className="space-y-2">
+                  {Array.from({ length: foundPassengers }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-lokebo-success/10 border border-lokebo-success/30">
+                      <CheckCircle2 className="w-5 h-5 text-lokebo-success" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">Passager trouvé</p>
+                        <p className="text-xs text-muted-foreground">Même itinéraire</p>
+                      </div>
+                    </div>
+                  ))}
+                  {foundPassengers < passengerCount - 1 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={handleSearchPassengers}
+                      disabled={isSearchingPassengers}
+                    >
+                      <Search className="w-4 h-4 mr-2" />
+                      Continuer la recherche
+                    </Button>
+                  )}
+                </div>
+              )}
+              
+              <p className="text-xs text-muted-foreground mt-3 text-center">
+                Vous pouvez continuer même sans trouver tous les passagers
+              </p>
+            </div>
+          )}
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Continue Button */}
+          <div className="pb-4">
+            <Button
+              className="w-full h-14 text-lg font-bold rounded-xl elevated"
+              onClick={handleConfirmPassengers}
+            >
+              Continuer - {estimatedPrice?.toLocaleString()} FCFA / personne
+              <ChevronRight className="w-5 h-5 ml-2" />
+            </Button>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              {passengerCount > 1 
+                ? `${passengerCount} passagers × ${estimatedPrice?.toLocaleString()} = ${totalTripPrice?.toLocaleString()} FCFA`
+                : "Mode solo - tarif complet"
+              }
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Step: Confirm */}
       {step === "confirm" && currentMode && (
         <div className="px-4 flex-1 flex flex-col">
@@ -452,7 +673,9 @@ const Signal = () => {
             {/* Price & Time */}
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 rounded-xl bg-muted">
-                <p className="text-xs text-muted-foreground mb-1">Prix estimé</p>
+                <p className="text-xs text-muted-foreground mb-1">
+                  {selectedMode === "confort-partage" ? "Votre part" : "Prix estimé"}
+                </p>
                 <p className="text-xl font-bold text-foreground">
                   {estimatedPrice?.toLocaleString()} <span className="text-sm font-normal">FCFA</span>
                 </p>
@@ -467,6 +690,31 @@ const Signal = () => {
                 </p>
               </div>
             </div>
+
+            {/* Shared ride info */}
+            {selectedMode === "confort-partage" && passengerCount > 1 && (
+              <div className="mt-3 p-3 rounded-xl bg-lokebo-success/10 border border-lokebo-success/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-lokebo-success" />
+                    <span className="text-sm font-medium text-foreground">
+                      {passengerCount} passagers
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-muted-foreground">Total: </span>
+                    <span className="text-sm font-bold text-lokebo-success">
+                      {totalTripPrice?.toLocaleString()} FCFA
+                    </span>
+                  </div>
+                </div>
+                {foundPassengers > 0 && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {foundPassengers} co-passager(s) trouvé(s) sur votre itinéraire
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Selected Vehicle */}
