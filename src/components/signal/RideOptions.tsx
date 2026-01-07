@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Calendar, Users, Crown, Check } from "lucide-react";
+import { Car, Users, Crown, Check, Sparkles, TrendingDown } from "lucide-react";
 
 export type RideMode = "reservation" | "confort-partage" | "privatisation";
 
@@ -8,48 +8,58 @@ export interface RideModeOption {
   name: string;
   shortName: string;
   description: string;
-  icon: typeof Calendar;
+  icon: typeof Car;
   basePrice: number;
   pricePerKm: number;
   maxPassengers?: number;
   isShared?: boolean;
   isPremium?: boolean;
+  isDefault?: boolean;
+  badge?: string;
+  badgeColor?: string;
   eta: string;
 }
 
 export const rideModes: RideModeOption[] = [
   {
     id: "reservation",
-    name: "Réservation Place",
-    shortName: "Réserver",
-    description: "Réservez une place dans un taxi",
-    icon: Calendar,
+    name: "Course Standard",
+    shortName: "Standard",
+    description: "Taxi jaune • Rapide et fiable",
+    icon: Car,
     basePrice: 100,
     pricePerKm: 100,
     eta: "5-10 min",
+    isDefault: true,
+    badge: "Recommandé",
+    badgeColor: "bg-primary text-primary-foreground",
   },
   {
     id: "confort-partage",
     name: "Confort Partagé",
     shortName: "Partagé",
-    description: "Prix divisé jusqu'à 4",
+    description: "VTC partagé • Prix divisé jusqu'à 4",
     icon: Users,
     basePrice: 1000,
     pricePerKm: 200,
     maxPassengers: 4,
     isShared: true,
     eta: "5-8 min",
+    badge: "Économique",
+    badgeColor: "bg-violet-500 text-white",
   },
   {
     id: "privatisation",
-    name: "Privatisation",
-    shortName: "VTC Privé",
-    description: "Service exclusif • véhicule au choix",
+    name: "VTC Premium",
+    shortName: "Premium",
+    description: "Véhicule privé • Service exclusif",
     icon: Crown,
     basePrice: 2000,
     pricePerKm: 250,
     eta: "3-7 min",
     isPremium: true,
+    badge: "Luxe",
+    badgeColor: "bg-gradient-to-r from-amber-500 to-orange-500 text-white",
   },
 ];
 
@@ -70,7 +80,7 @@ export const RideOptions = ({ selectedMode, onSelect, distance, passengerCount =
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {rideModes.map((mode) => {
         const Icon = mode.icon;
         const isSelected = selectedMode === mode.id;
@@ -84,23 +94,31 @@ export const RideOptions = ({ selectedMode, onSelect, distance, passengerCount =
               "w-full p-4 rounded-2xl border-2 transition-all duration-200 text-left relative overflow-hidden",
               isSelected
                 ? mode.isPremium 
-                  ? "border-amber-500 bg-gradient-to-r from-amber-500/10 to-orange-500/10"
-                  : "border-primary bg-primary/5"
-                : "border-border bg-card hover:border-primary/50"
+                  ? "border-amber-500 bg-gradient-to-r from-amber-500/10 to-orange-500/10 shadow-lg"
+                  : mode.isShared
+                    ? "border-violet-500 bg-violet-500/10 shadow-lg"
+                    : "border-primary bg-primary/5 shadow-lg"
+                : "border-border bg-card hover:border-primary/50",
+              mode.isDefault && !selectedMode && "ring-2 ring-primary/20"
             )}
           >
-            {/* Premium badge */}
-            {mode.isPremium && (
-              <div className="absolute top-0 right-0 px-2 py-0.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-bold rounded-bl-lg">
-                PREMIUM
+            {/* Badge */}
+            {mode.badge && (
+              <div className={cn(
+                "absolute top-0 right-0 px-2.5 py-1 text-[10px] font-bold rounded-bl-xl flex items-center gap-1",
+                mode.badgeColor
+              )}>
+                {mode.isShared && <TrendingDown className="w-3 h-3" />}
+                {mode.isPremium && <Sparkles className="w-3 h-3" />}
+                {mode.badge}
               </div>
             )}
             
             {/* Selection indicator */}
             {isSelected && (
               <div className={cn(
-                "absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center",
-                mode.isPremium ? "bg-amber-500" : "bg-primary"
+                "absolute bottom-3 right-3 w-6 h-6 rounded-full flex items-center justify-center",
+                mode.isPremium ? "bg-amber-500" : mode.isShared ? "bg-violet-500" : "bg-primary"
               )}>
                 <Check className="w-4 h-4 text-white" />
               </div>
@@ -112,7 +130,9 @@ export const RideOptions = ({ selectedMode, onSelect, distance, passengerCount =
                 isSelected 
                   ? mode.isPremium 
                     ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white" 
-                    : "bg-primary text-primary-foreground" 
+                    : mode.isShared
+                      ? "bg-violet-500 text-white"
+                      : "bg-primary text-primary-foreground" 
                   : "bg-muted text-foreground"
               )}>
                 <Icon className="w-7 h-7" />
@@ -122,17 +142,19 @@ export const RideOptions = ({ selectedMode, onSelect, distance, passengerCount =
                 <div className="flex items-baseline gap-2 mb-0.5">
                   <h3 className={cn(
                     "font-bold",
-                    mode.isPremium && isSelected ? "text-amber-700 dark:text-amber-400" : "text-foreground"
+                    mode.isPremium && isSelected && "text-amber-700 dark:text-amber-400",
+                    mode.isShared && isSelected && "text-violet-700 dark:text-violet-400"
                   )}>{mode.name}</h3>
                   <span className="text-xs text-muted-foreground">{mode.eta}</span>
                 </div>
                 <p className="text-sm text-muted-foreground">{mode.description}</p>
               </div>
               
-              <div className="text-right shrink-0">
+              <div className="text-right shrink-0 pr-1">
                 <p className={cn(
-                  "text-lg font-bold",
-                  mode.isPremium && isSelected ? "text-amber-700 dark:text-amber-400" : "text-foreground"
+                  "text-xl font-bold",
+                  mode.isPremium && isSelected && "text-amber-700 dark:text-amber-400",
+                  mode.isShared && isSelected && "text-violet-700 dark:text-violet-400"
                 )}>
                   {price > 0 ? `${price.toLocaleString()}` : "Gratuit"}
                 </p>

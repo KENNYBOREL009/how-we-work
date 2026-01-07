@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import Logo from "@/components/ui/Logo";
 import { HomeMap } from "@/components/map";
 import { JoinSharedRideDrawer } from "@/components/map/JoinSharedRideDrawer";
-import { MapPin, Navigation, Bus, Users, Crown, Calendar, Search } from "lucide-react";
+import { MapPin, Navigation, Bus, Users, Calendar, Search } from "lucide-react";
 import { useBusMode } from "@/hooks/useBusMode";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -159,11 +159,14 @@ const Index = () => {
         <div className="grid grid-cols-2 gap-3">
           <Button 
             variant="outline" 
-            className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2"
+            className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2 border-violet-500/50 bg-violet-500/5 relative overflow-hidden"
             onClick={() => navigate("/book", { state: { preselectedMode: "confort-partage" } })}
           >
-            <Crown className="w-5 h-5 text-primary" />
-            <span className="text-xs font-semibold">Confort Partagé</span>
+            <span className="absolute top-0 right-0 px-1.5 py-0.5 bg-violet-500 text-white text-[8px] font-bold rounded-bl-lg">
+              ÉCONOMIQUE
+            </span>
+            <Users className="w-5 h-5 text-violet-500" />
+            <span className="text-xs font-semibold text-violet-600 dark:text-violet-400">Confort Partagé</span>
           </Button>
           <Button 
             variant="outline" 
@@ -171,7 +174,7 @@ const Index = () => {
             onClick={() => navigate("/schedule")}
           >
             <Calendar className="w-5 h-5 text-amber-500" />
-            <span className="text-xs font-semibold text-amber-600">Programmer</span>
+            <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">Programmer</span>
           </Button>
         </div>
       </div>
