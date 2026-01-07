@@ -1,31 +1,64 @@
 import { useState, useEffect } from 'react';
 import { Car, MapPin, Shield, Wifi } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ComfortZoneIndicatorProps {
   className?: string;
   onRefresh?: () => void;
+  initialCount?: number;
 }
 
-export const ComfortZoneIndicator = ({ className, onRefresh }: ComfortZoneIndicatorProps) => {
-  const [availableVehicles, setAvailableVehicles] = useState(3);
+export const ComfortZoneIndicator = ({ className, onRefresh, initialCount }: ComfortZoneIndicatorProps) => {
+  const [availableVehicles, setAvailableVehicles] = useState(initialCount ?? 0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Simulation de mise à jour des véhicules disponibles
+  // Fetch real vehicle count on mount
   useEffect(() => {
-    const interval = setInterval(() => {
-      setAvailableVehicles(prev => Math.max(1, Math.min(6, prev + Math.floor(Math.random() * 3) - 1)));
-    }, 10000);
+    const fetchCount = async () => {
+      const { count, error } = await supabase
+        .from('vehicles')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true)
+        .eq('ride_mode', 'shared')
+        .in('status', ['available', 'busy'])
+        .lt('current_passengers', 4);
+      
+      if (!error && count !== null) {
+        setAvailableVehicles(count);
+      } else if (initialCount === undefined) {
+        // Fallback to simulated count if no DB data
+        setAvailableVehicles(Math.floor(Math.random() * 4) + 1);
+      }
+    };
+    
+    fetchCount();
+    
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchCount, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [initialCount]);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
     onRefresh?.();
-    setTimeout(() => {
+    
+    const { count, error } = await supabase
+      .from('vehicles')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true)
+      .eq('ride_mode', 'shared')
+      .in('status', ['available', 'busy'])
+      .lt('current_passengers', 4);
+    
+    if (!error && count !== null) {
+      setAvailableVehicles(count);
+    } else {
+      // Fallback simulation
       setAvailableVehicles(Math.floor(Math.random() * 5) + 1);
-      setIsRefreshing(false);
-    }, 1500);
+    }
+    
+    setIsRefreshing(false);
   };
 
   return (

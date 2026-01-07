@@ -885,6 +885,77 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_comfort_requests: {
+        Row: {
+          created_at: string
+          current_passengers_count: number | null
+          destination_lat: number
+          destination_lng: number
+          destination_name: string | null
+          detour_minutes: number | null
+          estimated_distance_km: number | null
+          estimated_fare: number | null
+          id: string
+          matched_at: string | null
+          matched_vehicle_id: string | null
+          origin_lat: number
+          origin_lng: number
+          origin_name: string | null
+          seat_preference: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_passengers_count?: number | null
+          destination_lat: number
+          destination_lng: number
+          destination_name?: string | null
+          detour_minutes?: number | null
+          estimated_distance_km?: number | null
+          estimated_fare?: number | null
+          id?: string
+          matched_at?: string | null
+          matched_vehicle_id?: string | null
+          origin_lat: number
+          origin_lng: number
+          origin_name?: string | null
+          seat_preference?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_passengers_count?: number | null
+          destination_lat?: number
+          destination_lng?: number
+          destination_name?: string | null
+          detour_minutes?: number | null
+          estimated_distance_km?: number | null
+          estimated_fare?: number | null
+          id?: string
+          matched_at?: string | null
+          matched_vehicle_id?: string | null
+          origin_lat?: number
+          origin_lng?: number
+          origin_name?: string | null
+          seat_preference?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_comfort_requests_matched_vehicle_id_fkey"
+            columns: ["matched_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shared_ride_passengers: {
         Row: {
           avatar_url: string | null
@@ -1405,6 +1476,31 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      find_compatible_vehicles: {
+        Args: {
+          p_destination_lat: number
+          p_destination_lng: number
+          p_max_detour_minutes?: number
+          p_origin_lat: number
+          p_origin_lng: number
+          p_seat_preference?: string
+        }
+        Returns: {
+          available_seats: number
+          current_passengers: number
+          destination: string
+          direction_compatibility: number
+          distance_to_pickup_km: number
+          driver_id: string
+          estimated_detour_minutes: number
+          fare_per_km: number
+          heading: number
+          plate_number: string
+          vehicle_id: string
+          vehicle_lat: number
+          vehicle_lng: number
+        }[]
       }
       get_driver_avg_rating: { Args: { p_driver_id: string }; Returns: number }
       get_fleet_owner_id: { Args: { p_user_id: string }; Returns: string }

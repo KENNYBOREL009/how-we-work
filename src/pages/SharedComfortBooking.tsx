@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { DestinationSearch } from "@/components/signal/DestinationSearch";
 import {
   ComfortZoneIndicator,
@@ -13,8 +12,8 @@ import {
   type SeatPreference,
 } from "@/components/comfort";
 import { ChevronLeft, MapPin, Search, Users, Sparkles } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
+import { useSharedComfortMatching } from "@/hooks/useSharedComfortMatching";
 import { toast } from "sonner";
 
 type BookingStep = "zone" | "destination" | "preferences" | "searching" | "result";
@@ -22,29 +21,55 @@ type BookingStep = "zone" | "destination" | "preferences" | "searching" | "resul
 interface Destination {
   name: string;
   distance: number;
+  lat?: number;
+  lng?: number;
 }
 
 const PRICE_PER_KM = 200;
 const BASE_PRICE = 1000;
 
+// Default location (Douala center)
+const DEFAULT_LOCATION = { lat: 4.0511, lng: 9.7679 };
+
 const SharedComfortBooking = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
+  const {
+    isSearching,
+    matchResult,
+    availableVehiclesCount,
+    searchForMatch,
+    acceptMatch,
+    declineMatch,
+    cancelSearch,
+    refreshAvailability
+  } = useSharedComfortMatching();
+  
   const [step, setStep] = useState<BookingStep>("zone");
   const [destination, setDestination] = useState<Destination | null>(null);
+  const [userLocation, setUserLocation] = useState(DEFAULT_LOCATION);
+  
+  // Get user location and refresh availability on mount
+  useEffect(() => {
+    refreshAvailability();
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLocation({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+          });
+        },
+        () => {
+          // Keep default location
+        }
+      );
+    }
+  }, [refreshAvailability]);
   const [seatPreference, setSeatPreference] = useState<SeatPreference>("any");
   const [showDestinationSearch, setShowDestinationSearch] = useState(false);
-
-  // Simulation d'un chauffeur trouvé
-  const mockDriver = {
-    id: "drv-001",
-    name: "Paul Kamdem",
-    rating: 4.8,
-    vehicleModel: "Toyota Camry",
-    plateNumber: "LT 2847 C",
-    eta: 4,
-  };
 
   const calculatePrice = () => {
     if (!destination) return 0;
@@ -65,7 +90,7 @@ const SharedComfortBooking = () => {
     setStep("preferences");
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!user) {
       toast.error("Connexion requise", {
         description: "Veuillez vous connecter pour continuer",
@@ -84,30 +109,55 @@ const SharedComfortBooking = () => {
 
     setStep("searching");
 
-    // Simulation de recherche (3-6 secondes)
-    setTimeout(() => {
+    // Calculer des coordonnées de destination simulées (offset basé sur distance)
+    const destLat = destination.lat || userLocation.lat + (destination.distance * 0.009);
+    const destLng = destination.lng || userLocation.lng + (destination.distance * 0.009);
+
+    const result = await searchForMatch({
+      originLat: userLocation.lat,
+      originLng: userLocation.lng,
+      originName: "Ma position",
+      destinationLat: destLat,
+      destinationLng: destLng,
+      destinationName: destination.name,
+      seatPreference,
+      estimatedDistanceKm: destination.distance
+    });
+
+    if (result) {
       setStep("result");
-    }, 4000 + Math.random() * 2000);
+    } else {
+      toast.error("Aucun véhicule compatible trouvé");
+      setStep("preferences");
+    }
   };
 
-  const handleAcceptMatch = () => {
+  const handleAcceptMatch = async () => {
+    if (!matchResult) return;
+    
+    const success = await acceptMatch(matchResult.requestId);
+    if (!success) return;
+    
     toast.success("Trajet confirmé !", {
-      description: `${mockDriver.name} arrive dans ${mockDriver.eta} minutes`,
+      description: `${matchResult.driver.name} arrive dans ${matchResult.driver.eta} minutes`,
     });
     navigate("/trip", {
       state: {
         origin: "Ma position",
         destination: destination?.name,
-        fare: calculatePrice(),
+        fare: matchResult.sharedPrice,
         tripType: "confort-partage",
-        driver: mockDriver,
+        driver: matchResult.driver,
         isShared: true,
+        currentPassengers: matchResult.currentPassengers,
       },
     });
   };
 
-  const handleDeclineMatch = () => {
-    toast.info("Recherche annulée");
+  const handleDeclineMatch = async () => {
+    if (matchResult) {
+      await declineMatch(matchResult.requestId);
+    }
     setStep("preferences");
   };
 
@@ -122,6 +172,7 @@ const SharedComfortBooking = () => {
         setDestination(null);
         break;
       case "searching":
+        cancelSearch();
       case "result":
         setStep("preferences");
         break;
@@ -131,7 +182,7 @@ const SharedComfortBooking = () => {
   };
 
   // Écran de recherche
-  if (step === "searching") {
+  if (step === "searching" || isSearching) {
     return (
       <MobileLayout showNav={false} showThemeToggle={false}>
         <div className="flex flex-col h-full bg-gradient-to-b from-violet-500/5 to-background">
@@ -149,7 +200,10 @@ const SharedComfortBooking = () => {
           <div className="flex-1 flex items-center justify-center">
             <ComfortSearching
               destination={destination?.name || ""}
-              onCancel={handleBack}
+              onCancel={() => {
+                cancelSearch();
+                setStep("preferences");
+              }}
             />
           </div>
         </div>
@@ -158,7 +212,7 @@ const SharedComfortBooking = () => {
   }
 
   // Écran de résultat
-  if (step === "result") {
+  if (step === "result" && matchResult) {
     return (
       <MobileLayout showNav={false} showThemeToggle={false}>
         <div className="flex flex-col h-full bg-gradient-to-b from-violet-500/5 to-background">
@@ -175,13 +229,13 @@ const SharedComfortBooking = () => {
           
           <div className="flex-1 p-4">
             <ComfortMatchResult
-              driver={mockDriver}
-              currentPassengers={2}
+              driver={matchResult.driver}
+              currentPassengers={matchResult.currentPassengers}
               originalPrice={getOriginalPrice()}
-              sharedPrice={calculatePrice()}
+              sharedPrice={matchResult.sharedPrice}
               pickupLocation="Votre position actuelle"
               destination={destination?.name || ""}
-              detourMinutes={2}
+              detourMinutes={matchResult.detourMinutes}
               onAccept={handleAcceptMatch}
               onDecline={handleDeclineMatch}
             />
@@ -221,7 +275,7 @@ const SharedComfortBooking = () => {
 
         {/* Content */}
         <div className="flex-1 overflow-auto p-4 space-y-6">
-          {/* Zone de disponibilité (étape 1) */}
+          {/* Zone de disponibilité (étape 1) - avec count réel */}
           {(step === "zone" || step === "destination") && !showDestinationSearch && (
             <>
               <ComfortZoneIndicator />
