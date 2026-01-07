@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PickupNotificationCard from './PickupNotificationCard';
 import { toast } from 'sonner';
 
@@ -11,9 +12,18 @@ interface PickupRequest {
   detourTime: number;
   pickupLocation: string;
   isOnRoute: boolean;
+  pickupLat?: number;
+  pickupLng?: number;
 }
 
-const DriverPickupNotifications: React.FC = () => {
+interface DriverPickupNotificationsProps {
+  onNavigateToPickup?: (request: PickupRequest) => void;
+}
+
+const DriverPickupNotifications: React.FC<DriverPickupNotificationsProps> = ({ 
+  onNavigateToPickup 
+}) => {
+  const navigate = useNavigate();
   const [requests, setRequests] = useState<PickupRequest[]>([]);
 
   // Simuler des demandes entrantes (pour la démo)
@@ -28,6 +38,8 @@ const DriverPickupNotifications: React.FC = () => {
         detourTime: 2,
         pickupLocation: 'Carrefour Ange Raphael',
         isOnRoute: true,
+        pickupLat: 4.0511,
+        pickupLng: 9.7679,
       };
       setRequests([mockRequest]);
     }, 3000);
@@ -35,20 +47,26 @@ const DriverPickupNotifications: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleAccept = (requestId: string) => {
+  const handleAccept = useCallback((requestId: string) => {
     const request = requests.find(r => r.id === requestId);
     if (request) {
       toast.success(`Demande acceptée !`, {
-        description: `Ramassage de ${request.clientName} dans ${request.pickupDistance}m`,
+        description: `Navigation vers ${request.clientName} - ${request.pickupLocation}`,
       });
+      
+      // Déclencher la navigation GPS
+      if (onNavigateToPickup) {
+        onNavigateToPickup(request);
+      }
+      
       setRequests(prev => prev.filter(r => r.id !== requestId));
     }
-  };
+  }, [requests, onNavigateToPickup]);
 
-  const handleReject = (requestId: string) => {
+  const handleReject = useCallback((requestId: string) => {
     toast.info('Demande refusée');
     setRequests(prev => prev.filter(r => r.id !== requestId));
-  };
+  }, []);
 
   if (requests.length === 0) return null;
 
