@@ -23,6 +23,7 @@ import Reservations from "./pages/Reservations";
 import DriverPlanning from "./pages/DriverPlanning";
 import DriverDashboard from "./pages/DriverDashboard";
 import DriverDashboardV2 from "./pages/DriverDashboardV2";
+import DriverClassicDashboard from "./pages/DriverClassicDashboard";
 import DriverReports from "./pages/DriverReports";
 import DriverAnalytics from "./pages/DriverAnalytics";
 import Assistance from "./pages/Assistance";
@@ -63,6 +64,7 @@ const App = () => (
                   <Route path="/driver/reports" element={<DriverReports />} />
                   <Route path="/driver/analytics" element={<DriverAnalytics />} />
                   <Route path="/driver" element={<DriverDashboardV2 />} />
+                  <Route path="/driver/classic" element={<DriverClassicDashboard />} />
                   <Route path="/assistance" element={<Assistance />} />
                   <Route path="/become-driver" element={<BecomeDriver />} />
                   <Route path="/about" element={<About />} />
