@@ -27,7 +27,7 @@ const INTERFACE_OPTIONS: InterfaceOption[] = [
     id: 'standard',
     label: 'Standard',
     description: 'Confort partagé',
-    route: '/driver',
+    route: '/driver/dashboard',
     icon: <Users className="w-5 h-5" />,
     color: 'bg-blue-500',
   },
@@ -35,7 +35,7 @@ const INTERFACE_OPTIONS: InterfaceOption[] = [
     id: 'complete',
     label: 'Complet',
     description: 'VTC Premium + AI',
-    route: '/driver-v2',
+    route: '/driver',
     icon: <Sparkles className="w-5 h-5" />,
     color: 'bg-purple-500',
   },
@@ -75,8 +75,8 @@ export const InterfaceLevelSelector = ({
   // Determine current level from route
   const getCurrentLevel = (): InterfaceLevel => {
     if (location.pathname === '/driver/classic') return 'classic';
-    if (location.pathname === '/driver-v2') return 'complete';
-    return 'standard';
+    if (location.pathname === '/driver/dashboard') return 'standard';
+    return 'complete';
   };
 
   const currentLevel = getCurrentLevel();
