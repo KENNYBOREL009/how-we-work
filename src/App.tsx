@@ -8,6 +8,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import { ThemeProvider } from "./components/providers/ThemeProvider";
 import Index from "./pages/Index";
 import Signal from "./pages/Signal";
+import Book from "./pages/Book";
 import Wallet from "./pages/Wallet";
 import Profil from "./pages/Profil";
 import Bus from "./pages/Bus";
@@ -42,6 +43,7 @@ const App = () => (
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/signal" element={<Signal />} />
+                <Route path="/book" element={<Book />} />
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/profil" element={<Profil />} />
                 <Route path="/bus" element={<Bus />} />

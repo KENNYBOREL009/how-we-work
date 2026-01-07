@@ -55,7 +55,7 @@ const Index = () => {
           : 'Destination libre - Cliquez pour réserver',
         action: {
           label: 'Réserver',
-          onClick: () => navigate('/signal', { state: { selectedVehicle: vehicle } }),
+          onClick: () => navigate('/book', { state: { selectedVehicle: vehicle } }),
         },
       });
     }
@@ -67,7 +67,7 @@ const Index = () => {
       description: `Vous payerez ${fare.toLocaleString()} FCFA pour ${vehicle.destination}`,
     });
     // Ici on pourrait créer un trip dans la base de données
-    navigate('/signal', { 
+    navigate('/book', { 
       state: { 
         selectedVehicle: vehicle, 
         joinedSharedRide: true,
@@ -149,7 +149,7 @@ const Index = () => {
         <Button 
           className="w-full h-16 text-lg font-bold rounded-2xl elevated hover-scale"
           size="lg"
-          onClick={() => navigate("/signal")}
+          onClick={() => navigate("/book")}
         >
           <Search className="w-6 h-6 mr-3" />
           Où allons-nous ?
@@ -160,7 +160,7 @@ const Index = () => {
           <Button 
             variant="outline" 
             className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2"
-            onClick={() => navigate("/signal", { state: { preselectedMode: "reservation" } })}
+            onClick={() => navigate("/book", { state: { preselectedMode: "reservation" } })}
           >
             <Users className="w-5 h-5 text-primary" />
             <span className="text-xs font-semibold">Réserver</span>
@@ -168,7 +168,7 @@ const Index = () => {
           <Button 
             variant="outline" 
             className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2"
-            onClick={() => navigate("/signal", { state: { preselectedMode: "confort-partage" } })}
+            onClick={() => navigate("/book", { state: { preselectedMode: "confort-partage" } })}
           >
             <Crown className="w-5 h-5 text-primary" />
             <span className="text-xs font-semibold">Confort</span>
