@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_cache: {
+        Row: {
+          action: string
+          cache_key: string
+          created_at: string
+          data_hash: string
+          expires_at: string
+          id: string
+          result: Json
+        }
+        Insert: {
+          action: string
+          cache_key: string
+          created_at?: string
+          data_hash: string
+          expires_at?: string
+          id?: string
+          result: Json
+        }
+        Update: {
+          action?: string
+          cache_key?: string
+          created_at?: string
+          data_hash?: string
+          expires_at?: string
+          id?: string
+          result?: Json
+        }
+        Relationships: []
+      }
       ai_recommendations: {
         Row: {
           confidence_score: number | null

@@ -7,9 +7,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+// Environment variables
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+// AI Provider configuration - change AI_PROVIDER to switch
+// Options: "lovable" (default), "openai", "anthropic", "gemini"
+const AI_PROVIDER = Deno.env.get("AI_PROVIDER") || "lovable";
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+
+// Cache settings
+const CACHE_TTL_MINUTES = 15;
+const MIN_DATA_CHANGE_THRESHOLD = 0.2; // 20% change required to refresh
 
 interface TrafficData {
   signals: Array<{
@@ -40,13 +52,188 @@ interface TrafficData {
   }>;
 }
 
+// Simple hash function for cache comparison
+function hashData(data: any): string {
+  const str = JSON.stringify(data);
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return hash.toString(36);
+}
+
+// Calculate data similarity (returns 0-1, where 1 is identical)
+function calculateDataSimilarity(oldData: TrafficData, newData: TrafficData): number {
+  const oldSignalCount = oldData.signals?.length || 0;
+  const newSignalCount = newData.signals?.length || 0;
+  
+  if (oldSignalCount === 0 && newSignalCount === 0) return 1;
+  if (oldSignalCount === 0 || newSignalCount === 0) return 0;
+  
+  const signalDiff = Math.abs(oldSignalCount - newSignalCount) / Math.max(oldSignalCount, newSignalCount);
+  
+  const oldPeopleTotal = oldData.signals.reduce((sum, s) => sum + s.people_count, 0);
+  const newPeopleTotal = newData.signals.reduce((sum, s) => sum + s.people_count, 0);
+  const peopleDiff = oldPeopleTotal > 0 
+    ? Math.abs(oldPeopleTotal - newPeopleTotal) / Math.max(oldPeopleTotal, newPeopleTotal)
+    : 0;
+  
+  return 1 - ((signalDiff + peopleDiff) / 2);
+}
+
+// Multi-provider AI call
+async function callAI(systemPrompt: string, userPrompt: string, responseSchema: any): Promise<any> {
+  const provider = AI_PROVIDER.toLowerCase();
+  
+  console.log(`[AI] Using provider: ${provider}`);
+  
+  switch (provider) {
+    case "openai": {
+      if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
+      
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          tools: [{
+            type: "function",
+            function: {
+              name: "traffic_analysis",
+              description: "Analyse du trafic et recommandations",
+              parameters: responseSchema
+            }
+          }],
+          tool_choice: { type: "function", function: { name: "traffic_analysis" } }
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`OpenAI error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return JSON.parse(data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments || "{}");
+    }
+    
+    case "anthropic": {
+      if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
+      
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "x-api-key": ANTHROPIC_API_KEY,
+          "Content-Type": "application/json",
+          "anthropic-version": "2023-06-01"
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 4096,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userPrompt }],
+          tools: [{
+            name: "traffic_analysis",
+            description: "Analyse du trafic et recommandations",
+            input_schema: responseSchema
+          }],
+          tool_choice: { type: "tool", name: "traffic_analysis" }
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Anthropic error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const toolUse = data.content?.find((c: any) => c.type === "tool_use");
+      return toolUse?.input || {};
+    }
+    
+    case "gemini": {
+      if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
+      
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: `${systemPrompt}\n\n${userPrompt}\n\nRéponds UNIQUEMENT en JSON valide selon ce schéma: ${JSON.stringify(responseSchema)}` }]
+            }],
+            generationConfig: {
+              responseMimeType: "application/json"
+            }
+          }),
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Gemini error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+      return JSON.parse(text);
+    }
+    
+    case "lovable":
+    default: {
+      if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+      
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          tools: [{
+            type: "function",
+            function: {
+              name: "traffic_analysis",
+              description: "Analyse du trafic et recommandations",
+              parameters: responseSchema
+            }
+          }],
+          tool_choice: { type: "function", function: { name: "traffic_analysis" } }
+        }),
+      });
+      
+      if (!response.ok) {
+        const status = response.status;
+        if (status === 429) throw new Error("RATE_LIMIT");
+        if (status === 402) throw new Error("INSUFFICIENT_CREDITS");
+        throw new Error(`Lovable AI error: ${status}`);
+      }
+      
+      const data = await response.json();
+      return JSON.parse(data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments || "{}");
+    }
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { action, driverId, driverLocation } = await req.json();
+    const { action, driverId, driverLocation, forceRefresh } = await req.json();
     
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -54,6 +241,8 @@ serve(async (req) => {
     const now = new Date();
     const hourOfDay = now.getHours();
     const dayOfWeek = now.getDay();
+
+    console.log(`[Traffic] Action: ${action}, Hour: ${hourOfDay}, Day: ${dayOfWeek}`);
 
     // Get active signals
     const { data: signals } = await supabase
@@ -92,8 +281,39 @@ serve(async (req) => {
       learnedRoutes: learnedRoutes || [],
     };
 
+    // Cache key based on action and time window
+    const cacheKey = `${action}_${hourOfDay}_${dayOfWeek}`;
+    const currentDataHash = hashData(trafficData);
+
+    // Check cache (unless force refresh)
+    if (!forceRefresh) {
+      const { data: cachedResult } = await supabase
+        .from("ai_cache")
+        .select("*")
+        .eq("cache_key", cacheKey)
+        .gt("expires_at", now.toISOString())
+        .single();
+
+      if (cachedResult) {
+        // Check if data has changed significantly
+        const similarity = cachedResult.data_hash === currentDataHash ? 1 : 
+          calculateDataSimilarity(cachedResult.result.sourceData || {}, trafficData);
+        
+        if (similarity > (1 - MIN_DATA_CHANGE_THRESHOLD)) {
+          console.log(`[Cache] HIT for ${cacheKey}, similarity: ${(similarity * 100).toFixed(1)}%`);
+          return new Response(
+            JSON.stringify({ success: true, data: cachedResult.result, fromCache: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        console.log(`[Cache] Data changed significantly (${((1-similarity) * 100).toFixed(1)}%), refreshing...`);
+      }
+    }
+
+    console.log(`[Cache] MISS for ${cacheKey}, calling AI...`);
+
     // Build AI prompt based on action
-    let systemPrompt = `Tu es un expert en analyse de trafic urbain à Douala, Cameroun. 
+    const systemPrompt = `Tu es un expert en analyse de trafic urbain à Douala, Cameroun. 
 Tu analyses les données de transport pour aider les chauffeurs de taxi à optimiser leurs trajets.
 Réponds toujours en JSON valide selon le schéma demandé.
 Heure actuelle: ${hourOfDay}h, Jour: ${["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"][dayOfWeek]}`;
@@ -222,64 +442,40 @@ Génère des recommandations de positionnement personnalisées.`;
         );
     }
 
-    // Call Lovable AI Gateway
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "traffic_analysis",
-              description: "Analyse du trafic et recommandations",
-              parameters: responseSchema
-            }
-          }
-        ],
-        tool_choice: { type: "function", function: { name: "traffic_analysis" } }
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error("AI Gateway error:", aiResponse.status, errorText);
-      
-      if (aiResponse.status === 429) {
+    // Call AI (multi-provider)
+    let result: any;
+    try {
+      result = await callAI(systemPrompt, userPrompt, responseSchema);
+    } catch (aiError: any) {
+      if (aiError.message === "RATE_LIMIT") {
         return new Response(
           JSON.stringify({ error: "Limite de requêtes dépassée, réessayez plus tard" }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      if (aiResponse.status === 402) {
+      if (aiError.message === "INSUFFICIENT_CREDITS") {
         return new Response(
           JSON.stringify({ error: "Crédits IA insuffisants" }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      throw new Error(`AI error: ${aiResponse.status}`);
+      throw aiError;
     }
 
-    const aiData = await aiResponse.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    
-    if (!toolCall) {
-      throw new Error("No tool call in AI response");
-    }
+    // Cache the result
+    const cacheExpiry = new Date(now.getTime() + CACHE_TTL_MINUTES * 60 * 1000);
+    await supabase.from("ai_cache").upsert({
+      cache_key: cacheKey,
+      action,
+      data_hash: currentDataHash,
+      result: { ...result, sourceData: trafficData },
+      expires_at: cacheExpiry.toISOString()
+    }, { onConflict: "cache_key" });
 
-    const result = JSON.parse(toolCall.function.arguments);
+    console.log(`[Cache] Stored result for ${cacheKey}, expires: ${cacheExpiry.toISOString()}`);
 
     // Store results in database based on action
     if (action === "predict_traffic" && result.predictions) {
-      // Update traffic patterns
       for (const pred of result.predictions) {
         await supabase.from("traffic_patterns").upsert({
           zone_lat: pred.zone_lat,
@@ -296,16 +492,13 @@ Génère des recommandations de positionnement personnalisées.`;
     }
 
     if (action === "recommend_zones" && driverId && result.recommendations) {
-      // Store recommendations for driver
-      const validUntil = new Date(now.getTime() + 30 * 60 * 1000); // 30 min validity
+      const validUntil = new Date(now.getTime() + 30 * 60 * 1000);
       
-      // Deactivate old recommendations
       await supabase
         .from("ai_recommendations")
         .update({ is_active: false })
         .eq("driver_id", driverId);
 
-      // Insert new recommendations
       for (const rec of result.recommendations) {
         await supabase.from("ai_recommendations").insert({
           driver_id: driverId,
@@ -328,7 +521,7 @@ Génère des recommandations de positionnement personnalisées.`;
         await supabase.from("learned_routes").insert({
           origin_name: route.origin_name,
           destination_name: route.destination_name,
-          origin_lat: 4.05, // Default Douala center
+          origin_lat: 4.05,
           origin_lng: 9.70,
           destination_lat: 4.06,
           destination_lng: 9.71,
@@ -340,7 +533,7 @@ Génère des recommandations de positionnement personnalisées.`;
     }
 
     return new Response(
-      JSON.stringify({ success: true, data: result }),
+      JSON.stringify({ success: true, data: result, fromCache: false, provider: AI_PROVIDER }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
