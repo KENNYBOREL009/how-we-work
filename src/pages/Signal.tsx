@@ -92,12 +92,11 @@ const Signal = () => {
     setIsSignaling(true);
 
     try {
-      // Enregistrer le signal en base
-      const { error } = await supabase.from('client_signals').insert({
-        user_id: user?.id || null,
-        latitude: currentPosition.lat,
-        longitude: currentPosition.lng,
-        people_count: peopleCount,
+      // Enregistrer le signal via RPC (validation côté serveur)
+      const { error } = await supabase.rpc('create_client_signal', {
+        p_latitude: currentPosition.lat,
+        p_longitude: currentPosition.lng,
+        p_people_count: peopleCount,
       });
 
       if (error) throw error;

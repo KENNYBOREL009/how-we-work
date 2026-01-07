@@ -854,6 +854,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_client_signal: {
+        Args: {
+          p_latitude: number
+          p_longitude: number
+          p_people_count: number
+        }
+        Returns: string
+      }
       get_driver_avg_rating: { Args: { p_driver_id: string }; Returns: number }
     }
     Enums: {
