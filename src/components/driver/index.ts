@@ -3,6 +3,7 @@ export { RideRequestCardV2 } from './RideRequestCardV2';
 export { ActiveRideCard } from './ActiveRideCard';
 export { DriverStatsGrid } from './DriverStatsGrid';
 export { DriverHeader } from './DriverHeader';
+export { SharedSeatManager } from './SharedSeatManager';
 export { InterfaceLevelSelector, useInterfaceLevel } from './InterfaceLevelSelector';
 export { default as PickupNotificationCard } from './PickupNotificationCard';
 export { default as DriverPickupNotifications } from './DriverPickupNotifications';

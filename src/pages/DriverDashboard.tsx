@@ -10,6 +10,7 @@ import {
   ActiveRideCard,
   ReliabilityScoreCard,
   InterfaceLevelSelector,
+  SharedSeatManager,
 } from "@/components/driver";
 import { Car, Clock, Users, Settings2 } from "lucide-react";
 import { useState } from "react";
@@ -86,6 +87,15 @@ const DriverDashboard = () => {
           {/* Stats and actions when idle */}
           {!activeRide && !pendingRide && (
             <>
+              {/* Seat Manager for Shared Mode */}
+              <SharedSeatManager
+                maxSeats={4}
+                farePerKm={150}
+                onDestinationChange={() => {
+                  // TODO: Open destination selector
+                }}
+              />
+
               {/* Reliability Score */}
               {reliabilityScore && (
                 <ReliabilityScoreCard score={reliabilityScore} />
