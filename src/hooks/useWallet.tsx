@@ -5,6 +5,7 @@ import { useAuth } from "./useAuth";
 interface Wallet {
   id: string;
   balance: number;
+  locked_amount: number;
 }
 
 interface Transaction {
@@ -45,7 +46,10 @@ export const useWallet = () => {
     if (walletError) {
       console.error("Error fetching wallet:", walletError);
     } else if (walletData) {
-      setWallet(walletData);
+      setWallet({
+        ...walletData,
+        locked_amount: walletData.locked_amount || 0
+      });
       
       // Fetch transactions
       const { data: txData, error: txError } = await supabase
@@ -65,10 +69,13 @@ export const useWallet = () => {
     setLoading(false);
   };
 
+  const availableBalance = wallet ? wallet.balance - (wallet.locked_amount || 0) : 0;
+
   return {
     wallet,
     transactions,
     loading,
+    availableBalance,
     refetch: fetchWallet,
   };
 };

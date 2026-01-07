@@ -9,8 +9,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Vehicle } from '@/hooks/useVehicles';
-import { MapPin, Users, Clock, Car, Check, Star } from 'lucide-react';
+import { useWallet } from '@/hooks/useWallet';
+import { useWalletHold } from '@/hooks/useWalletHold';
+import { MapPin, Users, Clock, Car, Check, Star, Wallet, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface SeatReservationDrawerProps {
   open: boolean;
@@ -52,6 +55,9 @@ const SeatReservationDrawer: React.FC<SeatReservationDrawerProps> = ({
   onConfirm,
 }) => {
   const [selectedSeat, setSelectedSeat] = useState<SeatPosition | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { availableBalance, loading: walletLoading } = useWallet();
+  const { createHold, loading: holdLoading } = useWalletHold();
   
   if (!vehicle) return null;
 
@@ -77,15 +83,52 @@ const SeatReservationDrawer: React.FC<SeatReservationDrawerProps> = ({
   const estimatedFare = 500; // À calculer dynamiquement
   const totalPrice = estimatedFare + totalBookingFee;
 
-  const handleConfirm = () => {
+  // Vérifier si le solde est suffisant
+  const hasInsufficientBalance = availableBalance < totalBookingFee;
+
+  const handleConfirm = async () => {
     if (!selectedSeat) return;
-    onConfirm({
-      vehicleId: vehicle.id,
-      seatPreference: selectedSeat === 'front' ? 'front' : 
-                      selectedSeat === 'back-middle' ? 'back-middle' : 'back-window',
-      totalPrice,
-    });
-    onOpenChange(false);
+    
+    // Vérifier le solde disponible
+    if (hasInsufficientBalance) {
+      toast.error("Solde insuffisant", {
+        description: `Vous avez besoin de ${totalBookingFee} FCFA disponibles. Solde actuel : ${availableBalance} FCFA`,
+      });
+      return;
+    }
+    
+    setIsProcessing(true);
+    
+    try {
+      // Créer la caution (hold) sur le wallet
+      const holdId = await createHold(
+        totalBookingFee,
+        `Réservation siège - ${vehicle.plate_number}`,
+        undefined // tripId sera défini après création du trip
+      );
+      
+      if (!holdId) {
+        setIsProcessing(false);
+        return; // L'erreur est déjà gérée dans createHold
+      }
+      
+      toast.success("Caution prélevée", {
+        description: `${totalBookingFee} FCFA séquestrés. Libérés après la course.`,
+      });
+      
+      onConfirm({
+        vehicleId: vehicle.id,
+        seatPreference: selectedSeat === 'front' ? 'front' : 
+                        selectedSeat === 'back-middle' ? 'back-middle' : 'back-window',
+        totalPrice,
+      });
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Booking error:", error);
+      toast.error("Erreur de réservation");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // Déterminer le statut couleur du taxi
@@ -284,20 +327,54 @@ const SeatReservationDrawer: React.FC<SeatReservationDrawerProps> = ({
             </div>
           </div>
 
+          {/* Wallet balance info */}
+          <div className={cn(
+            "flex items-center gap-2 text-sm rounded-lg p-3 border",
+            hasInsufficientBalance 
+              ? "bg-destructive/10 border-destructive/30 text-destructive" 
+              : "bg-muted/30 border-transparent text-muted-foreground"
+          )}>
+            {hasInsufficientBalance ? (
+              <>
+                <AlertTriangle className="w-4 h-4" />
+                <span>
+                  Solde insuffisant : <strong>{availableBalance} FCFA</strong> disponibles
+                </span>
+              </>
+            ) : (
+              <>
+                <Wallet className="w-4 h-4" />
+                <span>
+                  Solde disponible : <strong className="text-foreground">{availableBalance} FCFA</strong>
+                </span>
+              </>
+            )}
+          </div>
+
           {/* Info temps */}
           <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/30 rounded-lg p-3">
             <Clock className="w-4 h-4" />
             <span>Arrivée estimée dans <strong className="text-foreground">3-5 min</strong></span>
           </div>
 
+          {/* Caution info */}
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-300">
+            <strong>💰 Caution :</strong> {totalBookingFee} FCFA seront séquestrés sur votre wallet. 
+            En cas d'annulation ou d'absence, une pénalité pourra être appliquée.
+          </div>
+
           {/* Bouton confirmer */}
           <Button
             onClick={handleConfirm}
-            disabled={!selectedSeat}
+            disabled={!selectedSeat || isProcessing || hasInsufficientBalance}
             className="w-full h-14 text-base font-bold"
             variant="premium"
           >
-            {selectedSeat ? (
+            {isProcessing ? (
+              <>Traitement en cours...</>
+            ) : hasInsufficientBalance ? (
+              <>Solde insuffisant</>
+            ) : selectedSeat ? (
               <>Réserver ma place • {totalPrice} FCFA</>
             ) : (
               <>Sélectionnez un siège</>
