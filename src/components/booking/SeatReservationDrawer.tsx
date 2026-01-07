@@ -319,17 +319,27 @@ const SeatReservationDrawer: React.FC<SeatReservationDrawerProps> = ({
             </div>
           </div>
           
-          {/* Info trajet payable en cash */}
+          {/* Info paiement trajet flexible */}
           <div className="bg-muted/50 rounded-xl p-4 border border-border">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-lg">💵</span>
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-lg">💳</span>
               </div>
-              <div>
-                <h4 className="text-sm font-semibold">Trajet payable en espèces</h4>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Le prix de la course est négociable directement avec le chauffeur. 
-                  Seuls les frais de réservation sont prélevés du wallet.
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">Paiement du trajet flexible</h4>
+                <p className="text-xs text-muted-foreground">
+                  Le prix de la course est négociable avec le chauffeur. À la fin du trajet, choisissez votre mode de paiement :
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <span className="text-xs bg-green-500/10 text-green-700 dark:text-green-400 px-2 py-1 rounded-full flex items-center gap-1">
+                    💵 Espèces
+                  </span>
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full flex items-center gap-1">
+                    📱 Wallet
+                  </span>
+                </div>
+                <p className="text-[10px] text-muted-foreground italic">
+                  💡 Payer via le Wallet évite les soucis de petite monnaie !
                 </p>
               </div>
             </div>
