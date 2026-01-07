@@ -1,4 +1,4 @@
-import { MapPin, Wallet, Phone, User, Bus } from "lucide-react";
+import { MapPin, Wallet, Megaphone, User, Bus } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useBusMode } from "@/hooks/useBusMode";
@@ -8,7 +8,7 @@ const BottomNav = () => {
 
   const navItems = [
     { icon: MapPin, label: "Carte", path: "/" },
-    { icon: Phone, label: "Appeler", path: "/signal" },
+    { icon: Megaphone, label: "Siffler", path: "/signal" },
     ...(isBusModeEnabled ? [{ icon: Bus, label: "Bus", path: "/bus" }] : []),
     { icon: Wallet, label: "Wallet", path: "/wallet" },
     { icon: User, label: "Profil", path: "/profil" },
