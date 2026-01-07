@@ -101,6 +101,59 @@ export type Database = {
         }
         Relationships: []
       }
+      driver_assignments: {
+        Row: {
+          assignment_type: string
+          commission_rate: number | null
+          created_at: string
+          daily_target: number | null
+          driver_id: string
+          end_date: string | null
+          fleet_vehicle_id: string
+          id: string
+          is_active: boolean | null
+          shift_type: string | null
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          assignment_type?: string
+          commission_rate?: number | null
+          created_at?: string
+          daily_target?: number | null
+          driver_id: string
+          end_date?: string | null
+          fleet_vehicle_id: string
+          id?: string
+          is_active?: boolean | null
+          shift_type?: string | null
+          start_date?: string
+          updated_at?: string
+        }
+        Update: {
+          assignment_type?: string
+          commission_rate?: number | null
+          created_at?: string
+          daily_target?: number | null
+          driver_id?: string
+          end_date?: string | null
+          fleet_vehicle_id?: string
+          id?: string
+          is_active?: boolean | null
+          shift_type?: string | null
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_assignments_fleet_vehicle_id_fkey"
+            columns: ["fleet_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "fleet_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_availability: {
         Row: {
           created_at: string
@@ -145,6 +198,124 @@ export type Database = {
           vehicle_type?: string | null
         }
         Relationships: []
+      }
+      driver_daily_reports: {
+        Row: {
+          commission_amount: number | null
+          created_at: string
+          driver_id: string
+          driver_share: number | null
+          fleet_vehicle_id: string | null
+          gross_earnings: number | null
+          id: string
+          is_validated: boolean | null
+          net_earnings: number | null
+          notes: string | null
+          owner_share: number | null
+          report_date: string
+          total_distance_km: number | null
+          total_expenses: number | null
+          total_trips: number | null
+          updated_at: string
+          validated_at: string | null
+        }
+        Insert: {
+          commission_amount?: number | null
+          created_at?: string
+          driver_id: string
+          driver_share?: number | null
+          fleet_vehicle_id?: string | null
+          gross_earnings?: number | null
+          id?: string
+          is_validated?: boolean | null
+          net_earnings?: number | null
+          notes?: string | null
+          owner_share?: number | null
+          report_date?: string
+          total_distance_km?: number | null
+          total_expenses?: number | null
+          total_trips?: number | null
+          updated_at?: string
+          validated_at?: string | null
+        }
+        Update: {
+          commission_amount?: number | null
+          created_at?: string
+          driver_id?: string
+          driver_share?: number | null
+          fleet_vehicle_id?: string | null
+          gross_earnings?: number | null
+          id?: string
+          is_validated?: boolean | null
+          net_earnings?: number | null
+          notes?: string | null
+          owner_share?: number | null
+          report_date?: string
+          total_distance_km?: number | null
+          total_expenses?: number | null
+          total_trips?: number | null
+          updated_at?: string
+          validated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_daily_reports_fleet_vehicle_id_fkey"
+            columns: ["fleet_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "fleet_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_expenses: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          driver_id: string
+          expense_date: string
+          expense_type: string
+          fleet_vehicle_id: string | null
+          id: string
+          is_reimbursed: boolean | null
+          receipt_url: string | null
+          reimbursed_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          driver_id: string
+          expense_date?: string
+          expense_type: string
+          fleet_vehicle_id?: string | null
+          id?: string
+          is_reimbursed?: boolean | null
+          receipt_url?: string | null
+          reimbursed_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          driver_id?: string
+          expense_date?: string
+          expense_type?: string
+          fleet_vehicle_id?: string | null
+          id?: string
+          is_reimbursed?: boolean | null
+          receipt_url?: string | null
+          reimbursed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_expenses_fleet_vehicle_id_fkey"
+            columns: ["fleet_vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "fleet_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       driver_ratings: {
         Row: {
@@ -275,6 +446,105 @@ export type Database = {
             columns: ["stop_id"]
             isOneToOne: false
             referencedRelation: "bus_stops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fleet_owners: {
+        Row: {
+          address: string | null
+          business_registration: string | null
+          company_name: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          business_registration?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          business_registration?: string | null
+          company_name?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fleet_vehicles: {
+        Row: {
+          created_at: string
+          fleet_owner_id: string
+          id: string
+          insurance_expiry: string | null
+          is_active: boolean | null
+          notes: string | null
+          purchase_date: string | null
+          purchase_price: number | null
+          technical_control_expiry: string | null
+          updated_at: string
+          vehicle_id: string
+        }
+        Insert: {
+          created_at?: string
+          fleet_owner_id: string
+          id?: string
+          insurance_expiry?: string | null
+          is_active?: boolean | null
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          technical_control_expiry?: string | null
+          updated_at?: string
+          vehicle_id: string
+        }
+        Update: {
+          created_at?: string
+          fleet_owner_id?: string
+          id?: string
+          insurance_expiry?: string | null
+          is_active?: boolean | null
+          notes?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          technical_control_expiry?: string | null
+          updated_at?: string
+          vehicle_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fleet_vehicles_fleet_owner_id_fkey"
+            columns: ["fleet_owner_id"]
+            isOneToOne: false
+            referencedRelation: "fleet_owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fleet_vehicles_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: true
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
         ]
@@ -963,6 +1233,7 @@ export type Database = {
         Returns: string
       }
       get_driver_avg_rating: { Args: { p_driver_id: string }; Returns: number }
+      get_fleet_owner_id: { Args: { p_user_id: string }; Returns: string }
       handle_driver_default: {
         Args: {
           p_default_type: string
@@ -972,7 +1243,16 @@ export type Database = {
         }
         Returns: Json
       }
+      is_driver_in_fleet: {
+        Args: { p_driver_id: string; p_fleet_owner_id: string }
+        Returns: boolean
+      }
       is_driver_suspended: { Args: { p_driver_id: string }; Returns: Json }
+      is_fleet_owner: { Args: { p_user_id: string }; Returns: boolean }
+      owns_fleet_vehicle: {
+        Args: { p_fleet_vehicle_id: string; p_user_id: string }
+        Returns: boolean
+      }
       release_wallet_hold: {
         Args: {
           p_apply_penalty?: boolean
