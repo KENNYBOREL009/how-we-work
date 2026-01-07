@@ -15,6 +15,7 @@ import {
   DriverStatsGrid,
   ActiveRideCard,
   ReliabilityScoreCard,
+  InterfaceLevelSelector,
 } from '@/components/driver';
 import { OperatingModeSelector } from '@/components/driver/OperatingModeSelector';
 import { DailyEarningsCard } from '@/components/driver/DailyEarningsCard';
@@ -116,6 +117,11 @@ const DriverDashboardV2 = () => {
   return (
     <MobileLayout showNav={false} showThemeToggle={false}>
       <div className="flex flex-col h-full bg-background">
+        {/* Interface Level Selector - Compact */}
+        <div className="px-4 py-2 border-b bg-muted/30">
+          <InterfaceLevelSelector compact />
+        </div>
+
         {/* Header avec toggle online et mode badge */}
         <div className="p-4 border-b bg-card">
           <div className="flex items-center justify-between mb-3">
