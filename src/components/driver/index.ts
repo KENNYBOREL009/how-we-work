@@ -1,4 +1,5 @@
 export { RideRequestCard } from './RideRequestCard';
+export { RideRequestCardV2 } from './RideRequestCardV2';
 export { ActiveRideCard } from './ActiveRideCard';
 export { DriverStatsGrid } from './DriverStatsGrid';
 export { DriverHeader } from './DriverHeader';
@@ -10,3 +11,4 @@ export { OperatingModeSelector } from './OperatingModeSelector';
 export { DailyEarningsCard } from './DailyEarningsCard';
 export { FleetAssignmentCard } from './FleetAssignmentCard';
 export { QuickExpenseButton } from './QuickExpenseButton';
+export { DriverHotspotMap } from './DriverHotspotMap';

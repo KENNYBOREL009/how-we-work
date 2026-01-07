@@ -8,11 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDriverMode } from '@/hooks/useDriverMode';
 import { useDriverOperatingMode } from '@/hooks/useDriverOperatingMode';
 import { useAuth } from '@/hooks/useAuth';
-import { useDriverAssignments } from '@/hooks/useDriverAssignments';
+import { useFleetAssignment } from '@/hooks/useFleetAssignment';
+import { useDriverRealStats } from '@/hooks/useDriverRealStats';
+import { useClientSignals } from '@/hooks/useClientSignals';
 import {
-  DriverHeader,
   DriverStatsGrid,
-  RideRequestCard,
   ActiveRideCard,
   ReliabilityScoreCard,
 } from '@/components/driver';
@@ -20,6 +20,8 @@ import { OperatingModeSelector } from '@/components/driver/OperatingModeSelector
 import { DailyEarningsCard } from '@/components/driver/DailyEarningsCard';
 import { FleetAssignmentCard } from '@/components/driver/FleetAssignmentCard';
 import { QuickExpenseButton } from '@/components/driver/QuickExpenseButton';
+import { DriverHotspotMap } from '@/components/driver/DriverHotspotMap';
+import { RideRequestCardV2 } from '@/components/driver/RideRequestCardV2';
 import {
   Car,
   Clock,
@@ -30,7 +32,9 @@ import {
   ChevronRight,
   Building2,
   Key,
+  MapPin,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const DriverDashboardV2 = () => {
   const navigate = useNavigate();
@@ -59,8 +63,12 @@ const DriverDashboardV2 = () => {
     isLoading: modeLoading,
   } = useDriverOperatingMode();
 
-  const { myAssignments } = useDriverAssignments();
-  const currentAssignment = myAssignments?.[0] || null;
+  const { assignment, hasFleetAssignment } = useFleetAssignment();
+  const { stats: realStats, rideRequests, nextPendingRide } = useDriverRealStats();
+  const { totalPeopleWaiting, hotspotCount } = useClientSignals();
+  
+  // Use real stats if available, otherwise fallback to demo stats
+  const displayStats = realStats.todayTrips > 0 ? realStats : stats;
 
   const userInitial = user?.email?.charAt(0).toUpperCase() || 'C';
 
@@ -140,34 +148,45 @@ const DriverDashboardV2 = () => {
           </div>
 
           {/* Stats rapides */}
-          <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="grid grid-cols-4 gap-2 text-center">
             <div className="p-2 rounded-lg bg-muted/50">
-              <p className="text-lg font-bold">{stats.todayTrips}</p>
+              <p className="text-lg font-bold">{displayStats.todayTrips}</p>
               <p className="text-xs text-muted-foreground">Courses</p>
             </div>
             <div className="p-2 rounded-lg bg-muted/50">
               <p className="text-lg font-bold">
-                {(stats.todayEarnings / 1000).toFixed(1)}k
+                {(displayStats.todayEarnings / 1000).toFixed(1)}k
               </p>
               <p className="text-xs text-muted-foreground">FCFA</p>
             </div>
             <div className="p-2 rounded-lg bg-muted/50">
-              <p className="text-lg font-bold">{stats.rating}</p>
+              <p className="text-lg font-bold">{displayStats.rating}</p>
               <p className="text-xs text-muted-foreground">Note</p>
+            </div>
+            <div className="p-2 rounded-lg bg-orange-500/10">
+              <p className="text-lg font-bold text-orange-500">{totalPeopleWaiting}</p>
+              <p className="text-xs text-muted-foreground">Signaux</p>
             </div>
           </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          {/* Course en attente */}
-          {pendingRide && (
+          {/* Demandes de courses réelles */}
+          {rideRequests.length > 0 && !activeRide && (
             <div className="p-4">
-              <RideRequestCard
-                ride={pendingRide}
-                countdown={acceptCountdown}
-                onAccept={acceptRide}
-                onDecline={declineRide}
+              <RideRequestCardV2
+                request={{
+                  ...rideRequests[0],
+                  expiresIn: rideRequests[0].expiresIn || 300,
+                }}
+                onAccept={(id) => {
+                  toast.success('Course acceptée !');
+                  // Here we would call acceptRide or similar
+                }}
+                onDecline={(id) => {
+                  toast.info('Course ignorée');
+                }}
               />
             </div>
           )}
@@ -207,12 +226,36 @@ const DriverDashboardV2 = () => {
               </TabsList>
 
               <TabsContent value="overview" className="p-4 space-y-4 mt-0">
+                {/* Carte hotspots temps réel */}
+                {isOnline && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-orange-500" />
+                      Hotspots en temps réel
+                    </h3>
+                    <DriverHotspotMap height="200px" />
+                  </div>
+                )}
+
                 {/* Carte affectation flotte */}
-                {operatingMode === 'fleet_assigned' && currentAssignment && (
+                {operatingMode === 'fleet_assigned' && hasFleetAssignment && assignment && (
                   <FleetAssignmentCard
-                    assignment={currentAssignment}
-                    vehiclePlate="CE-456-AB"
-                    ownerName="Transport Ndongo"
+                    assignment={{
+                      id: assignment.assignmentId,
+                      fleet_vehicle_id: assignment.vehicleId,
+                      driver_id: user?.id || '',
+                      assignment_type: 'permanent',
+                      shift_type: assignment.shiftType as any,
+                      start_date: assignment.startDate,
+                      daily_target: assignment.dailyTarget || undefined,
+                      commission_rate: assignment.commissionRate,
+                      is_active: assignment.isActive,
+                      created_at: assignment.startDate,
+                      updated_at: assignment.startDate,
+                    }}
+                    vehiclePlate={assignment.vehiclePlate}
+                    ownerName={assignment.ownerName}
+                    ownerPhone={assignment.ownerPhone || undefined}
                   />
                 )}
 
@@ -264,7 +307,7 @@ const DriverDashboardV2 = () => {
                 <DailyEarningsCard
                   summary={dailySummary}
                   operatingMode={operatingMode}
-                  commissionRate={currentAssignment?.commission_rate}
+                  commissionRate={assignment?.commissionRate}
                 />
 
                 {/* Lien vers rapports */}
