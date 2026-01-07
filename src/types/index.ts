@@ -285,3 +285,108 @@ export interface PickupRequest {
   location: string;
   isOnRoute: boolean;
 }
+
+// =============================================
+// FLEET MANAGEMENT TYPES
+// =============================================
+
+export interface FleetOwner {
+  id: string;
+  user_id: string;
+  company_name?: string;
+  business_registration?: string;
+  contact_phone?: string;
+  contact_email?: string;
+  address?: string;
+  is_verified: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FleetVehicle {
+  id: string;
+  fleet_owner_id: string;
+  vehicle_id: string;
+  purchase_date?: string;
+  purchase_price?: number;
+  insurance_expiry?: string;
+  technical_control_expiry?: string;
+  notes?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  // Joined vehicle data
+  vehicle?: Vehicle;
+}
+
+export type AssignmentType = 'permanent' | 'rotation' | 'temporary' | 'backup';
+export type ShiftType = 'day' | 'night' | 'full' | 'custom';
+
+export interface DriverAssignment {
+  id: string;
+  fleet_vehicle_id: string;
+  driver_id: string;
+  assignment_type: AssignmentType;
+  shift_type?: ShiftType;
+  start_date: string;
+  end_date?: string;
+  daily_target?: number;
+  commission_rate: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  // Joined data
+  fleet_vehicle?: FleetVehicle;
+  driver_profile?: UserProfile;
+}
+
+export type ExpenseType = 'fuel' | 'maintenance' | 'insurance' | 'fine' | 'wash' | 'toll' | 'parking' | 'other';
+
+export interface DriverExpense {
+  id: string;
+  driver_id: string;
+  fleet_vehicle_id?: string;
+  expense_type: ExpenseType;
+  amount: number;
+  description?: string;
+  receipt_url?: string;
+  expense_date: string;
+  is_reimbursed: boolean;
+  reimbursed_at?: string;
+  created_at: string;
+}
+
+export interface DriverDailyReport {
+  id: string;
+  driver_id: string;
+  fleet_vehicle_id?: string;
+  report_date: string;
+  total_trips: number;
+  total_distance_km: number;
+  gross_earnings: number;
+  total_expenses: number;
+  net_earnings: number;
+  commission_amount: number;
+  driver_share: number;
+  owner_share: number;
+  notes?: string;
+  is_validated: boolean;
+  validated_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Fleet analytics summary
+export interface FleetAnalytics {
+  totalVehicles: number;
+  activeVehicles: number;
+  totalDrivers: number;
+  activeDrivers: number;
+  totalRevenue: number;
+  totalExpenses: number;
+  netProfit: number;
+  avgRevenuePerVehicle: number;
+  topPerformingVehicle?: string;
+  period: 'daily' | 'weekly' | 'monthly';
+}
