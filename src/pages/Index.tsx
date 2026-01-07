@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import Logo from "@/components/ui/Logo";
 import { HomeMap } from "@/components/map";
 import { JoinSharedRideDrawer } from "@/components/map/JoinSharedRideDrawer";
-import { MapPin, Navigation, Bus, Users, Calendar, Search } from "lucide-react";
+import SeatReservationDrawer from "@/components/booking/SeatReservationDrawer";
+import { MapPin, Navigation, Bus, Users, Calendar, Search, Armchair } from "lucide-react";
 import { useBusMode } from "@/hooks/useBusMode";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +19,8 @@ const Index = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedSharedVehicle, setSelectedSharedVehicle] = useState<Vehicle | null>(null);
   const [showJoinDrawer, setShowJoinDrawer] = useState(false);
+  const [showSeatReservation, setShowSeatReservation] = useState(false);
+  const [selectedTaxiForSeat, setSelectedTaxiForSeat] = useState<Vehicle | null>(null);
 
   // Écouter les événements de sélection de taxi depuis la carte
   useEffect(() => {
@@ -44,11 +47,15 @@ const Index = () => {
     const canJoin = isSharedRide && availableSeats > 0 && vehicle.destination;
 
     if (canJoin) {
-      // Ouvrir le drawer pour rejoindre la course
+      // Ouvrir le drawer pour rejoindre la course partagée
       setSelectedSharedVehicle(vehicle);
       setShowJoinDrawer(true);
+    } else if (vehicle.vehicle_type === 'taxi' && availableSeats > 0) {
+      // Taxi collectif - ouvrir la réservation de siège
+      setSelectedTaxiForSeat(vehicle);
+      setShowSeatReservation(true);
     } else {
-      // Comportement normal
+      // Comportement normal pour autres cas
       toast.info(`🚕 ${vehicle.plate_number}`, {
         description: vehicle.destination 
           ? `Direction: ${vehicle.destination}` 
@@ -59,6 +66,23 @@ const Index = () => {
         },
       });
     }
+  };
+
+  const handleSeatReservation = (reservation: {
+    vehicleId: string;
+    seatPreference: 'front' | 'back-window' | 'back-middle' | null;
+    totalPrice: number;
+  }) => {
+    toast.success('🎉 Place réservée !', {
+      description: `Le chauffeur arrive dans 3-5 min. Total: ${reservation.totalPrice} FCFA`,
+    });
+    // Rediriger vers la page de suivi
+    navigate('/trip', { 
+      state: { 
+        seatReservation: reservation,
+        vehicle: selectedTaxiForSeat,
+      } 
+    });
   };
 
   const handleJoinConfirm = (vehicle: Vehicle, fare: number) => {
@@ -119,16 +143,20 @@ const Index = () => {
         <div className="absolute bottom-4 left-4 right-4 glass rounded-xl p-3 border border-border/50 z-10">
           <div className="flex items-center justify-around text-xs font-medium">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-lokebo-success animate-pulse" />
-              <span className="text-foreground">Libre</span>
+              <span className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-foreground">Vide</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-amber-500" />
+              <span className="text-foreground">Partiel</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-violet-500" />
               <span className="text-foreground">Partagé</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-primary" />
-              <span className="text-foreground">Privé</span>
+              <span className="w-3 h-3 rounded-full bg-destructive" />
+              <span className="text-foreground">Plein</span>
             </div>
           </div>
         </div>
@@ -141,6 +169,14 @@ const Index = () => {
         open={showJoinDrawer}
         onClose={() => setShowJoinDrawer(false)}
         onConfirm={handleJoinConfirm}
+      />
+
+      {/* Seat Reservation Drawer */}
+      <SeatReservationDrawer
+        open={showSeatReservation}
+        onOpenChange={setShowSeatReservation}
+        vehicle={selectedTaxiForSeat}
+        onConfirm={handleSeatReservation}
       />
 
       {/* Quick Actions */}
@@ -156,7 +192,34 @@ const Index = () => {
         </Button>
         
         {/* Secondary Actions Grid */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-2">
+          <Button 
+            variant="outline" 
+            className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2 border-green-500/50 bg-green-500/5 relative overflow-hidden"
+            onClick={() => {
+              // Ouvrir directement la réservation de siège avec un taxi mock
+              const mockTaxi: Vehicle = {
+                id: 'taxi-demo',
+                vehicle_type: 'taxi',
+                plate_number: 'LT 1234 A',
+                capacity: 4,
+                destination: 'Bonanjo',
+                status: 'available',
+                current_passengers: 1,
+                ride_mode: 'standard',
+                latitude: 4.0511,
+                longitude: 9.7043,
+              };
+              setSelectedTaxiForSeat(mockTaxi);
+              setShowSeatReservation(true);
+            }}
+          >
+            <span className="absolute top-0 right-0 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-bl-lg">
+              E-HAILING
+            </span>
+            <Armchair className="w-5 h-5 text-green-600" />
+            <span className="text-xs font-semibold text-green-600 dark:text-green-400">Réserver Siège</span>
+          </Button>
           <Button 
             variant="outline" 
             className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2 border-violet-500/50 bg-violet-500/5 relative overflow-hidden"
@@ -166,7 +229,7 @@ const Index = () => {
               ÉCONOMIQUE
             </span>
             <Users className="w-5 h-5 text-violet-500" />
-            <span className="text-xs font-semibold text-violet-600 dark:text-violet-400">Confort Partagé</span>
+            <span className="text-xs font-semibold text-violet-600 dark:text-violet-400">Partagé</span>
           </Button>
           <Button 
             variant="outline" 

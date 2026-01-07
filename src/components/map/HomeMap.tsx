@@ -190,15 +190,30 @@ const HomeMap: React.FC<HomeMapProps> = ({
       const isSharedRide = vehicle.ride_mode === 'confort-partage';
       const isPrivate = vehicle.ride_mode === 'privatisation';
       const availableSeats = (vehicle.capacity || 4) - (vehicle.current_passengers || 0);
+      const occupancy = (vehicle.current_passengers || 0) / (vehicle.capacity || 4);
       const canJoin = isSharedRide && availableSeats > 0 && vehicle.destination;
       const hasDestination = Boolean(vehicle.destination);
       
-      // Couleur basée sur le mode de course
+      // Couleur basée sur le remplissage pour les taxis collectifs
+      let fillStatusColor = '#22c55e'; // Vert - Vide
+      let fillStatusLabel = 'Vide';
+      if (availableSeats === 0) {
+        fillStatusColor = '#ef4444'; // Rouge - Plein
+        fillStatusLabel = 'Plein';
+      } else if (occupancy >= 0.5) {
+        fillStatusColor = '#f59e0b'; // Orange - Partiellement rempli
+        fillStatusLabel = `${availableSeats} place${availableSeats > 1 ? 's' : ''}`;
+      }
+      
+      // Couleur du marqueur principal
       const markerColor = isSharedRide 
         ? '#8b5cf6'
         : isPrivate 
         ? '#f59e0b'
         : '#FFD42F';
+
+      // Rotation pour la flèche de direction
+      const heading = vehicle.heading || 0;
 
       const el = document.createElement('div');
       el.className = 'taxi-marker-enhanced';
@@ -246,6 +261,23 @@ const HomeMap: React.FC<HomeMapProps> = ({
             "></div>
           ` : ''}
           
+          <!-- Flèche de direction -->
+          ${hasDestination ? `
+            <div style="
+              position: absolute;
+              top: -20px;
+              left: 50%;
+              transform: translateX(-50%) rotate(${heading}deg);
+              width: 0;
+              height: 0;
+              border-left: 8px solid transparent;
+              border-right: 8px solid transparent;
+              border-bottom: 14px solid ${fillStatusColor};
+              filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+              z-index: 5;
+            "></div>
+          ` : ''}
+          
           <div style="
             position: relative;
             width: 44px;
@@ -262,17 +294,31 @@ const HomeMap: React.FC<HomeMapProps> = ({
               inset 0 2px 4px rgba(255,255,255,0.3);
             transition: all 0.3s ease;
           ">
+            <!-- Indicateur de remplissage -->
+            <div style="
+              position: absolute;
+              top: -4px;
+              right: -4px;
+              background: ${fillStatusColor};
+              width: 16px;
+              height: 16px;
+              border-radius: 50%;
+              border: 2px solid white;
+              z-index: 10;
+              ${availableSeats === 0 ? '' : 'animation: pulse 2s infinite;'}
+            "></div>
+            
             ${isSharedRide ? `
               <div style="
                 position: absolute;
-                top: -6px;
-                right: -6px;
+                bottom: -4px;
+                right: -4px;
                 background: linear-gradient(135deg, #22c55e, #16a34a);
                 color: white;
-                font-size: 11px;
+                font-size: 10px;
                 font-weight: 800;
-                width: 22px;
-                height: 22px;
+                width: 20px;
+                height: 20px;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
@@ -293,7 +339,7 @@ const HomeMap: React.FC<HomeMapProps> = ({
           ${!hasDestination ? `
             <div style="
               margin-top: 4px;
-              background: rgba(34, 197, 94, 0.9);
+              background: ${fillStatusColor};
               color: white;
               font-size: 9px;
               font-weight: 700;
@@ -302,7 +348,7 @@ const HomeMap: React.FC<HomeMapProps> = ({
               text-transform: uppercase;
               letter-spacing: 0.5px;
             ">
-              Libre
+              ${fillStatusLabel}
             </div>
           ` : ''}
         </div>
@@ -310,6 +356,10 @@ const HomeMap: React.FC<HomeMapProps> = ({
           @keyframes float {
             0%, 100% { transform: translateX(-50%) translateY(0); }
             50% { transform: translateX(-50%) translateY(-3px); }
+          }
+          @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
           }
           .taxi-marker-enhanced:hover > div > div:last-of-type {
             transform: scale(1.1);
