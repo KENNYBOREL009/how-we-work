@@ -1,9 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, TrendingDown, Fuel, Percent, Wallet, Car } from 'lucide-react';
+import { TrendingUp, TrendingDown, Fuel, Percent, Wallet, Car, Smartphone, Banknote, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { DailyEarningsSummary } from '@/types/driver';
 import type { DriverOperatingMode } from '@/types/driver';
+
+interface EarningsBreakdown {
+  walletPayments: number;
+  cashPayments: number;
+  reservationFees: number;
+}
 
 interface DailyEarningsCardProps {
   summary: DailyEarningsSummary | null;
@@ -11,6 +17,10 @@ interface DailyEarningsCardProps {
   dailyTarget?: number;
   commissionRate?: number;
   rentAmount?: number;
+  /** Mode classique avec breakdown détaillé */
+  isClassicMode?: boolean;
+  /** Breakdown des paiements pour mode classique */
+  earningsBreakdown?: EarningsBreakdown;
 }
 
 export const DailyEarningsCard = ({
@@ -19,11 +29,20 @@ export const DailyEarningsCard = ({
   dailyTarget = 30000,
   commissionRate = 20,
   rentAmount = 15000,
+  isClassicMode = false,
+  earningsBreakdown,
 }: DailyEarningsCardProps) => {
   const grossEarnings = summary?.grossEarnings || 0;
   const expenses = summary?.totalExpenses || 0;
   const tripCount = summary?.tripCount || 0;
   const distanceKm = summary?.distanceKm || 0;
+
+  // Breakdown par défaut (simulation si non fourni)
+  const breakdown: EarningsBreakdown = earningsBreakdown || {
+    walletPayments: Math.round(grossEarnings * 0.35),
+    cashPayments: Math.round(grossEarnings * 0.55),
+    reservationFees: Math.round(grossEarnings * 0.10),
+  };
 
   // Calculs selon le mode
   let deductions = 0;
@@ -62,6 +81,44 @@ export const DailyEarningsCard = ({
           <p className="text-sm text-muted-foreground">Recettes brutes</p>
           <p className="text-3xl font-bold">{formatCurrency(grossEarnings)}</p>
         </div>
+
+        {/* Breakdown des sources de revenus (Mode Classique) */}
+        {isClassicMode && (
+          <div className="grid grid-cols-3 gap-2 p-3 bg-muted/30 rounded-lg">
+            {/* Réservations via app */}
+            <div className="text-center">
+              <div className="w-8 h-8 mx-auto rounded-full bg-amber-500/20 flex items-center justify-center mb-1">
+                <Smartphone className="w-4 h-4 text-amber-500" />
+              </div>
+              <p className="text-xs text-muted-foreground">Réservations</p>
+              <p className="text-sm font-semibold text-amber-600">
+                {formatCurrency(breakdown.reservationFees)}
+              </p>
+            </div>
+
+            {/* Paiements Wallet */}
+            <div className="text-center">
+              <div className="w-8 h-8 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-1">
+                <CreditCard className="w-4 h-4 text-primary" />
+              </div>
+              <p className="text-xs text-muted-foreground">Wallet</p>
+              <p className="text-sm font-semibold text-primary">
+                {formatCurrency(breakdown.walletPayments)}
+              </p>
+            </div>
+
+            {/* Paiements Cash */}
+            <div className="text-center">
+              <div className="w-8 h-8 mx-auto rounded-full bg-green-500/20 flex items-center justify-center mb-1">
+                <Banknote className="w-4 h-4 text-green-600" />
+              </div>
+              <p className="text-xs text-muted-foreground">Espèces</p>
+              <p className="text-sm font-semibold text-green-600">
+                {formatCurrency(breakdown.cashPayments)}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Barre de progression vers l'objectif */}
         <div className="space-y-1">
