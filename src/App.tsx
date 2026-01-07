@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { BusModeProvider } from "./hooks/useBusMode";
 import { AuthProvider } from "./hooks/useAuth";
+import { DriverModeProvider } from "./hooks/useDriverMode";
 import { ThemeProvider } from "./components/providers/ThemeProvider";
 import Index from "./pages/Index";
 import Signal from "./pages/Signal";
@@ -34,34 +35,36 @@ const App = () => (
     <ThemeProvider defaultTheme="light" storageKey="lokebo-theme">
       <TooltipProvider>
         <AuthProvider>
-          <BusModeProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/signal" element={<Signal />} />
-                <Route path="/book" element={<Book />} />
-                <Route path="/wallet" element={<Wallet />} />
-                <Route path="/profil" element={<Profil />} />
-                <Route path="/bus" element={<Bus />} />
-                <Route path="/history" element={<TripsHistory />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/notifications/settings" element={<NotificationSettings />} />
-                <Route path="/trip" element={<ActiveTrip />} />
-                <Route path="/schedule" element={<ScheduleTrip />} />
-                <Route path="/reservations" element={<Reservations />} />
-                <Route path="/driver/planning" element={<DriverPlanning />} />
-                <Route path="/driver/dashboard" element={<DriverDashboard />} />
-                <Route path="/assistance" element={<Assistance />} />
-                <Route path="/become-driver" element={<BecomeDriver />} />
-                <Route path="/about" element={<About />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
-          </BusModeProvider>
+          <DriverModeProvider>
+            <BusModeProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/signal" element={<Signal />} />
+                  <Route path="/book" element={<Book />} />
+                  <Route path="/wallet" element={<Wallet />} />
+                  <Route path="/profil" element={<Profil />} />
+                  <Route path="/bus" element={<Bus />} />
+                  <Route path="/history" element={<TripsHistory />} />
+                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/notifications/settings" element={<NotificationSettings />} />
+                  <Route path="/trip" element={<ActiveTrip />} />
+                  <Route path="/schedule" element={<ScheduleTrip />} />
+                  <Route path="/reservations" element={<Reservations />} />
+                  <Route path="/driver/planning" element={<DriverPlanning />} />
+                  <Route path="/driver/dashboard" element={<DriverDashboard />} />
+                  <Route path="/assistance" element={<Assistance />} />
+                  <Route path="/become-driver" element={<BecomeDriver />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </BusModeProvider>
+          </DriverModeProvider>
         </AuthProvider>
       </TooltipProvider>
     </ThemeProvider>
