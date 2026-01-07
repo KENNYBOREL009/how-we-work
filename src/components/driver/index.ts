@@ -6,3 +6,7 @@ export { ReliabilityScoreCard } from './ReliabilityScoreCard';
 export { DriverDefaultNotification } from './DriverDefaultNotification';
 export { default as DriverPickupNotifications } from './DriverPickupNotifications';
 export { default as PickupNotificationCard } from './PickupNotificationCard';
+export { OperatingModeSelector } from './OperatingModeSelector';
+export { DailyEarningsCard } from './DailyEarningsCard';
+export { FleetAssignmentCard } from './FleetAssignmentCard';
+export { QuickExpenseButton } from './QuickExpenseButton';

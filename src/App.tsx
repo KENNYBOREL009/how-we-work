@@ -22,6 +22,7 @@ import ScheduleTrip from "./pages/ScheduleTrip";
 import Reservations from "./pages/Reservations";
 import DriverPlanning from "./pages/DriverPlanning";
 import DriverDashboard from "./pages/DriverDashboard";
+import DriverDashboardV2 from "./pages/DriverDashboardV2";
 import Assistance from "./pages/Assistance";
 import BecomeDriver from "./pages/BecomeDriver";
 import About from "./pages/About";
@@ -57,6 +58,7 @@ const App = () => (
                   <Route path="/reservations" element={<Reservations />} />
                   <Route path="/driver/planning" element={<DriverPlanning />} />
                   <Route path="/driver/dashboard" element={<DriverDashboard />} />
+                  <Route path="/driver" element={<DriverDashboardV2 />} />
                   <Route path="/assistance" element={<Assistance />} />
                   <Route path="/become-driver" element={<BecomeDriver />} />
                   <Route path="/about" element={<About />} />
