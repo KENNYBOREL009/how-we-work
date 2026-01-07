@@ -20,7 +20,8 @@ import { OperatingModeSelector } from '@/components/driver/OperatingModeSelector
 import { DailyEarningsCard } from '@/components/driver/DailyEarningsCard';
 import { FleetAssignmentCard } from '@/components/driver/FleetAssignmentCard';
 import { QuickExpenseButton } from '@/components/driver/QuickExpenseButton';
-import { DriverHotspotMap } from '@/components/driver/DriverHotspotMap';
+import { SmartHotspotMap } from '@/components/driver/SmartHotspotMap';
+import { AITrafficPanel } from '@/components/driver/AITrafficPanel';
 import { RideRequestCardV2 } from '@/components/driver/RideRequestCardV2';
 import {
   Car,
@@ -32,6 +33,7 @@ import {
   ChevronRight,
   Building2,
   Key,
+  Brain,
   MapPin,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -212,6 +214,13 @@ const DriverDashboardV2 = () => {
                   Aperçu
                 </TabsTrigger>
                 <TabsTrigger
+                  value="ai"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
+                >
+                  <Brain className="w-4 h-4 mr-1" />
+                  IA
+                </TabsTrigger>
+                <TabsTrigger
                   value="earnings"
                   className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
                 >
@@ -226,14 +235,14 @@ const DriverDashboardV2 = () => {
               </TabsList>
 
               <TabsContent value="overview" className="p-4 space-y-4 mt-0">
-                {/* Carte hotspots temps réel */}
+                {/* Carte hotspots temps réel avec IA */}
                 {isOnline && (
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-orange-500" />
                       Hotspots en temps réel
                     </h3>
-                    <DriverHotspotMap height="200px" />
+                    <SmartHotspotMap height="200px" />
                   </div>
                 )}
 
@@ -293,6 +302,17 @@ const DriverDashboardV2 = () => {
                     </p>
                   </div>
                 )}
+              </TabsContent>
+
+              <TabsContent value="ai" className="p-4 space-y-4 mt-0">
+                {/* Panel IA complet */}
+                <AITrafficPanel 
+                  onZoneClick={(lat, lng) => {
+                    toast.info(`Zone sélectionnée`, {
+                      description: `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`,
+                    });
+                  }}
+                />
               </TabsContent>
 
               <TabsContent value="earnings" className="p-4 space-y-4 mt-0">
