@@ -9,12 +9,15 @@ import {
   RideRequestCard,
   ActiveRideCard,
   ReliabilityScoreCard,
+  InterfaceLevelSelector,
 } from "@/components/driver";
-import { Car, Clock, Users } from "lucide-react";
+import { Car, Clock, Users, Settings2 } from "lucide-react";
+import { useState } from "react";
 
 const DriverDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [showInterfaceSelector, setShowInterfaceSelector] = useState(false);
   const {
     isOnline,
     pendingRide,
@@ -41,6 +44,25 @@ const DriverDashboard = () => {
           isOnline={isOnline}
           onToggleOnline={toggleOnline}
         />
+
+        {/* Interface Level Selector - Compact */}
+        <div className="px-4 py-2 border-b flex items-center justify-between">
+          <InterfaceLevelSelector compact />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowInterfaceSelector(!showInterfaceSelector)}
+          >
+            <Settings2 className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Expanded Interface Selector */}
+        {showInterfaceSelector && (
+          <div className="px-4 py-3 border-b bg-muted/30">
+            <InterfaceLevelSelector onSelect={() => setShowInterfaceSelector(false)} />
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Pending ride request */}

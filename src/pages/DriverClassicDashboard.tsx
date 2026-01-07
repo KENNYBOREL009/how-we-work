@@ -9,6 +9,7 @@ import { useDriverMode } from '@/hooks/useDriverMode';
 import { useDriverServices } from '@/hooks/useDriverServices';
 import { ClassicDriverControls, SeatBookingAlert, SeatCapacityWidget } from '@/components/driver/classic';
 import { ServiceTypeSelector } from '@/components/driver/ServiceTypeSelector';
+import { InterfaceLevelSelector } from '@/components/driver/InterfaceLevelSelector';
 import { 
   ArrowLeft, 
   Bell, 
@@ -66,6 +67,11 @@ const DriverClassicDashboard = () => {
       )}
 
       <div className="flex flex-col h-full bg-background">
+        {/* Interface Level Selector - Compact */}
+        <div className="px-4 py-2 border-b bg-muted/30">
+          <InterfaceLevelSelector compact />
+        </div>
+
         {/* Header simplifié */}
         <div className={cn(
           'px-4 py-3 border-b transition-colors',
