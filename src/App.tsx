@@ -31,6 +31,7 @@ import BecomeDriver from "./pages/BecomeDriver";
 import About from "./pages/About";
 import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
+import SharedComfortBooking from "./pages/SharedComfortBooking";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,8 @@ const App = () => (
                   <Route path="/assistance" element={<Assistance />} />
                   <Route path="/become-driver" element={<BecomeDriver />} />
                   <Route path="/about" element={<About />} />
+                  <Route path="/shared-comfort" element={<SharedComfortBooking />} />
+                  <Route path="*" element={<NotFound />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
