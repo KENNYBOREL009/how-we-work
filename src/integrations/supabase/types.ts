@@ -565,15 +565,20 @@ export type Database = {
       }
       trips: {
         Row: {
+          cancellation_penalty: number | null
+          client_confirmed_at: string | null
           completed_at: string | null
           created_at: string
           current_status: string | null
           destination: string | null
+          driver_arrival_at: string | null
           driver_comment: string | null
+          driver_made_detour: boolean | null
           driver_rating: number | null
           fare: number | null
           id: string
           is_shared_ride: boolean | null
+          no_show_at: string | null
           origin: string | null
           payment_confirmed_at: string | null
           payment_status: string | null
@@ -587,15 +592,20 @@ export type Database = {
           vehicle_id: string | null
         }
         Insert: {
+          cancellation_penalty?: number | null
+          client_confirmed_at?: string | null
           completed_at?: string | null
           created_at?: string
           current_status?: string | null
           destination?: string | null
+          driver_arrival_at?: string | null
           driver_comment?: string | null
+          driver_made_detour?: boolean | null
           driver_rating?: number | null
           fare?: number | null
           id?: string
           is_shared_ride?: boolean | null
+          no_show_at?: string | null
           origin?: string | null
           payment_confirmed_at?: string | null
           payment_status?: string | null
@@ -609,15 +619,20 @@ export type Database = {
           vehicle_id?: string | null
         }
         Update: {
+          cancellation_penalty?: number | null
+          client_confirmed_at?: string | null
           completed_at?: string | null
           created_at?: string
           current_status?: string | null
           destination?: string | null
+          driver_arrival_at?: string | null
           driver_comment?: string | null
+          driver_made_detour?: boolean | null
           driver_rating?: number | null
           fare?: number | null
           id?: string
           is_shared_ride?: boolean | null
+          no_show_at?: string | null
           origin?: string | null
           payment_confirmed_at?: string | null
           payment_status?: string | null
@@ -790,6 +805,63 @@ export type Database = {
           },
         ]
       }
+      wallet_holds: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          penalty_amount: number | null
+          penalty_applied: boolean | null
+          penalty_reason: string | null
+          reason: string
+          released_at: string | null
+          status: string
+          trip_id: string | null
+          wallet_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          penalty_amount?: number | null
+          penalty_applied?: boolean | null
+          penalty_reason?: string | null
+          reason: string
+          released_at?: string | null
+          status?: string
+          trip_id?: string | null
+          wallet_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          penalty_amount?: number | null
+          penalty_applied?: boolean | null
+          penalty_reason?: string | null
+          reason?: string
+          released_at?: string | null
+          status?: string
+          trip_id?: string | null
+          wallet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wallet_holds_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wallet_holds_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wallet_transactions: {
         Row: {
           amount: number
@@ -830,6 +902,7 @@ export type Database = {
           balance: number
           created_at: string
           id: string
+          locked_amount: number | null
           updated_at: string
           user_id: string
         }
@@ -837,6 +910,7 @@ export type Database = {
           balance?: number
           created_at?: string
           id?: string
+          locked_amount?: number | null
           updated_at?: string
           user_id: string
         }
@@ -844,6 +918,7 @@ export type Database = {
           balance?: number
           created_at?: string
           id?: string
+          locked_amount?: number | null
           updated_at?: string
           user_id?: string
         }
@@ -862,7 +937,25 @@ export type Database = {
         }
         Returns: string
       }
+      create_wallet_hold: {
+        Args: {
+          p_amount: number
+          p_reason: string
+          p_trip_id?: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       get_driver_avg_rating: { Args: { p_driver_id: string }; Returns: number }
+      release_wallet_hold: {
+        Args: {
+          p_apply_penalty?: boolean
+          p_hold_id: string
+          p_penalty_percent?: number
+          p_penalty_reason?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
