@@ -188,45 +188,57 @@ export type Database = {
         Row: {
           acceptance_rate: number | null
           blocked_until: string | null
+          cancellation_count: number | null
           completed_trips: number | null
           created_at: string
           driver_id: string
+          ghosting_count: number | null
           id: string
           is_scheduling_blocked: boolean | null
+          last_penalty_at: string | null
           late_count: number | null
           no_show_count: number | null
           punctuality_score: number | null
           reliability_score: number | null
+          suspension_reason: string | null
           total_scheduled_trips: number | null
           updated_at: string
         }
         Insert: {
           acceptance_rate?: number | null
           blocked_until?: string | null
+          cancellation_count?: number | null
           completed_trips?: number | null
           created_at?: string
           driver_id: string
+          ghosting_count?: number | null
           id?: string
           is_scheduling_blocked?: boolean | null
+          last_penalty_at?: string | null
           late_count?: number | null
           no_show_count?: number | null
           punctuality_score?: number | null
           reliability_score?: number | null
+          suspension_reason?: string | null
           total_scheduled_trips?: number | null
           updated_at?: string
         }
         Update: {
           acceptance_rate?: number | null
           blocked_until?: string | null
+          cancellation_count?: number | null
           completed_trips?: number | null
           created_at?: string
           driver_id?: string
+          ghosting_count?: number | null
           id?: string
           is_scheduling_blocked?: boolean | null
+          last_penalty_at?: string | null
           late_count?: number | null
           no_show_count?: number | null
           punctuality_score?: number | null
           reliability_score?: number | null
+          suspension_reason?: string | null
           total_scheduled_trips?: number | null
           updated_at?: string
         }
@@ -929,6 +941,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_driver_see_reservations: {
+        Args: { p_driver_id: string }
+        Returns: boolean
+      }
       create_client_signal: {
         Args: {
           p_latitude: number
@@ -947,6 +963,16 @@ export type Database = {
         Returns: string
       }
       get_driver_avg_rating: { Args: { p_driver_id: string }; Returns: number }
+      handle_driver_default: {
+        Args: {
+          p_default_type: string
+          p_driver_id: string
+          p_hold_id?: string
+          p_trip_id?: string
+        }
+        Returns: Json
+      }
+      is_driver_suspended: { Args: { p_driver_id: string }; Returns: Json }
       release_wallet_hold: {
         Args: {
           p_apply_penalty?: boolean
