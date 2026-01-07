@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_recommendations: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          description: string | null
+          driver_id: string | null
+          id: string
+          is_active: boolean | null
+          predicted_demand: number | null
+          priority: string | null
+          recommendation_type: string
+          title: string
+          valid_until: string | null
+          zone_lat: number | null
+          zone_lng: number | null
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          description?: string | null
+          driver_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          predicted_demand?: number | null
+          priority?: string | null
+          recommendation_type: string
+          title: string
+          valid_until?: string | null
+          zone_lat?: number | null
+          zone_lng?: number | null
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          description?: string | null
+          driver_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          predicted_demand?: number | null
+          priority?: string | null
+          recommendation_type?: string
+          title?: string
+          valid_until?: string | null
+          zone_lat?: number | null
+          zone_lng?: number | null
+        }
+        Relationships: []
+      }
       bus_routes: {
         Row: {
           color: string | null
@@ -549,6 +597,60 @@ export type Database = {
           },
         ]
       }
+      learned_routes: {
+        Row: {
+          avg_duration_minutes: number | null
+          avg_fare: number | null
+          created_at: string
+          destination_lat: number
+          destination_lng: number
+          destination_name: string | null
+          id: string
+          is_trending: boolean | null
+          last_used_at: string | null
+          origin_lat: number
+          origin_lng: number
+          origin_name: string | null
+          popularity_score: number | null
+          trip_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          avg_duration_minutes?: number | null
+          avg_fare?: number | null
+          created_at?: string
+          destination_lat: number
+          destination_lng: number
+          destination_name?: string | null
+          id?: string
+          is_trending?: boolean | null
+          last_used_at?: string | null
+          origin_lat: number
+          origin_lng: number
+          origin_name?: string | null
+          popularity_score?: number | null
+          trip_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          avg_duration_minutes?: number | null
+          avg_fare?: number | null
+          created_at?: string
+          destination_lat?: number
+          destination_lng?: number
+          destination_name?: string | null
+          id?: string
+          is_trending?: boolean | null
+          last_used_at?: string | null
+          origin_lat?: number
+          origin_lng?: number
+          origin_name?: string | null
+          popularity_score?: number | null
+          trip_count?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       nearby_contacts: {
         Row: {
           contact_phone: string | null
@@ -799,6 +901,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      traffic_patterns: {
+        Row: {
+          avg_demand: number | null
+          created_at: string
+          day_of_week: number
+          hour_of_day: number
+          id: string
+          peak_demand: number | null
+          sample_count: number | null
+          updated_at: string
+          zone_lat: number
+          zone_lng: number
+          zone_name: string | null
+        }
+        Insert: {
+          avg_demand?: number | null
+          created_at?: string
+          day_of_week: number
+          hour_of_day: number
+          id?: string
+          peak_demand?: number | null
+          sample_count?: number | null
+          updated_at?: string
+          zone_lat: number
+          zone_lng: number
+          zone_name?: string | null
+        }
+        Update: {
+          avg_demand?: number | null
+          created_at?: string
+          day_of_week?: number
+          hour_of_day?: number
+          id?: string
+          peak_demand?: number | null
+          sample_count?: number | null
+          updated_at?: string
+          zone_lat?: number
+          zone_lng?: number
+          zone_name?: string | null
+        }
+        Relationships: []
       }
       transport_budgets: {
         Row: {
