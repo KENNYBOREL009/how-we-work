@@ -149,6 +149,36 @@ export type Database = {
         }
         Relationships: []
       }
+      city_zones: {
+        Row: {
+          center_lat: number
+          center_lng: number
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          radius_km: number | null
+        }
+        Insert: {
+          center_lat: number
+          center_lng: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          radius_km?: number | null
+        }
+        Update: {
+          center_lat?: number
+          center_lng?: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          radius_km?: number | null
+        }
+        Relationships: []
+      }
       client_signals: {
         Row: {
           created_at: string
@@ -178,6 +208,97 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      contribution_votes: {
+        Row: {
+          contribution_id: string
+          created_at: string | null
+          id: string
+          points_earned: number | null
+          user_id: string
+          vote: string
+        }
+        Insert: {
+          contribution_id: string
+          created_at?: string | null
+          id?: string
+          points_earned?: number | null
+          user_id: string
+          vote: string
+        }
+        Update: {
+          contribution_id?: string
+          created_at?: string | null
+          id?: string
+          points_earned?: number | null
+          user_id?: string
+          vote?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contribution_votes_contribution_id_fkey"
+            columns: ["contribution_id"]
+            isOneToOne: false
+            referencedRelation: "map_contributions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demand_signals: {
+        Row: {
+          created_at: string | null
+          destination_lat: number | null
+          destination_lng: number | null
+          id: string
+          is_from_routine: boolean | null
+          origin_lat: number | null
+          origin_lng: number | null
+          passenger_count: number | null
+          signal_date: string
+          signal_time: string
+          user_id: string | null
+          zone_id: string | null
+          zone_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          destination_lat?: number | null
+          destination_lng?: number | null
+          id?: string
+          is_from_routine?: boolean | null
+          origin_lat?: number | null
+          origin_lng?: number | null
+          passenger_count?: number | null
+          signal_date: string
+          signal_time: string
+          user_id?: string | null
+          zone_id?: string | null
+          zone_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          destination_lat?: number | null
+          destination_lng?: number | null
+          id?: string
+          is_from_routine?: boolean | null
+          origin_lat?: number | null
+          origin_lng?: number | null
+          passenger_count?: number | null
+          signal_date?: string
+          signal_time?: string
+          user_id?: string | null
+          zone_id?: string | null
+          zone_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_signals_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "city_zones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       driver_assignments: {
         Row: {
@@ -391,6 +512,50 @@ export type Database = {
             columns: ["fleet_vehicle_id"]
             isOneToOne: false
             referencedRelation: "fleet_vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      driver_intentions: {
+        Row: {
+          created_at: string | null
+          driver_id: string
+          end_time: string | null
+          id: string
+          intended_date: string
+          is_high_demand_zone: boolean | null
+          start_time: string
+          target_zone_id: string | null
+          target_zone_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          driver_id: string
+          end_time?: string | null
+          id?: string
+          intended_date: string
+          is_high_demand_zone?: boolean | null
+          start_time: string
+          target_zone_id?: string | null
+          target_zone_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          driver_id?: string
+          end_time?: string | null
+          id?: string
+          intended_date?: string
+          is_high_demand_zone?: boolean | null
+          start_time?: string
+          target_zone_id?: string | null
+          target_zone_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_intentions_target_zone_id_fkey"
+            columns: ["target_zone_id"]
+            isOneToOne: false
+            referencedRelation: "city_zones"
             referencedColumns: ["id"]
           },
         ]
@@ -681,6 +846,81 @@ export type Database = {
         }
         Relationships: []
       }
+      map_contributions: {
+        Row: {
+          contribution_type: Database["public"]["Enums"]["contribution_type"]
+          created_at: string | null
+          error_description: string | null
+          error_type: Database["public"]["Enums"]["error_type"] | null
+          id: string
+          is_new_road: boolean | null
+          latitude: number
+          local_name: string | null
+          longitude: number
+          mapbox_poi_id: string | null
+          official_name: string | null
+          photo_url: string | null
+          points_awarded: number | null
+          route_length_km: number | null
+          route_trace: Json | null
+          status: Database["public"]["Enums"]["contribution_status"] | null
+          updated_at: string | null
+          user_id: string
+          validated_at: string | null
+          votes_negative: number | null
+          votes_positive: number | null
+          votes_unknown: number | null
+        }
+        Insert: {
+          contribution_type: Database["public"]["Enums"]["contribution_type"]
+          created_at?: string | null
+          error_description?: string | null
+          error_type?: Database["public"]["Enums"]["error_type"] | null
+          id?: string
+          is_new_road?: boolean | null
+          latitude: number
+          local_name?: string | null
+          longitude: number
+          mapbox_poi_id?: string | null
+          official_name?: string | null
+          photo_url?: string | null
+          points_awarded?: number | null
+          route_length_km?: number | null
+          route_trace?: Json | null
+          status?: Database["public"]["Enums"]["contribution_status"] | null
+          updated_at?: string | null
+          user_id: string
+          validated_at?: string | null
+          votes_negative?: number | null
+          votes_positive?: number | null
+          votes_unknown?: number | null
+        }
+        Update: {
+          contribution_type?: Database["public"]["Enums"]["contribution_type"]
+          created_at?: string | null
+          error_description?: string | null
+          error_type?: Database["public"]["Enums"]["error_type"] | null
+          id?: string
+          is_new_road?: boolean | null
+          latitude?: number
+          local_name?: string | null
+          longitude?: number
+          mapbox_poi_id?: string | null
+          official_name?: string | null
+          photo_url?: string | null
+          points_awarded?: number | null
+          route_length_km?: number | null
+          route_trace?: Json | null
+          status?: Database["public"]["Enums"]["contribution_status"] | null
+          updated_at?: string | null
+          user_id?: string
+          validated_at?: string | null
+          votes_negative?: number | null
+          votes_positive?: number | null
+          votes_unknown?: number | null
+        }
+        Relationships: []
+      }
       nearby_contacts: {
         Row: {
           contact_phone: string | null
@@ -744,6 +984,81 @@ export type Database = {
         }
         Relationships: []
       }
+      passenger_routines: {
+        Row: {
+          created_at: string | null
+          days_of_week: number[] | null
+          destination_lat: number
+          destination_lng: number
+          destination_name: string
+          destination_zone_id: string | null
+          id: string
+          is_active: boolean | null
+          origin_lat: number
+          origin_lng: number
+          origin_name: string
+          origin_zone_id: string | null
+          routine_name: string | null
+          trip_count: number | null
+          typical_departure_time: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          days_of_week?: number[] | null
+          destination_lat: number
+          destination_lng: number
+          destination_name: string
+          destination_zone_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          origin_lat: number
+          origin_lng: number
+          origin_name: string
+          origin_zone_id?: string | null
+          routine_name?: string | null
+          trip_count?: number | null
+          typical_departure_time?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          days_of_week?: number[] | null
+          destination_lat?: number
+          destination_lng?: number
+          destination_name?: string
+          destination_zone_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          origin_lat?: number
+          origin_lng?: number
+          origin_name?: string
+          origin_zone_id?: string | null
+          routine_name?: string | null
+          trip_count?: number | null
+          typical_departure_time?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passenger_routines_destination_zone_id_fkey"
+            columns: ["destination_zone_id"]
+            isOneToOne: false
+            referencedRelation: "city_zones"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passenger_routines_origin_zone_id_fkey"
+            columns: ["origin_zone_id"]
+            isOneToOne: false
+            referencedRelation: "city_zones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -774,6 +1089,80 @@ export type Database = {
           last_name?: string | null
           phone_number?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      reward_redemptions: {
+        Row: {
+          created_at: string | null
+          id: string
+          points_spent: number
+          reward_id: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          points_spent: number
+          reward_id: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          points_spent?: number
+          reward_id?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reward_redemptions_reward_id_fkey"
+            columns: ["reward_id"]
+            isOneToOne: false
+            referencedRelation: "rewards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rewards: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          points_cost: number
+          stock: number | null
+          value_fcfa: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          points_cost: number
+          stock?: number | null
+          value_fcfa?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          points_cost?: number
+          stock?: number | null
+          value_fcfa?: number | null
         }
         Relationships: []
       }
@@ -1229,6 +1618,48 @@ export type Database = {
           },
         ]
       }
+      user_points: {
+        Row: {
+          contributions_count: number | null
+          created_at: string | null
+          current_points: number | null
+          id: string
+          level_name: string | null
+          level_threshold: number | null
+          next_level_threshold: number | null
+          total_points: number | null
+          updated_at: string | null
+          user_id: string
+          validations_count: number | null
+        }
+        Insert: {
+          contributions_count?: number | null
+          created_at?: string | null
+          current_points?: number | null
+          id?: string
+          level_name?: string | null
+          level_threshold?: number | null
+          next_level_threshold?: number | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id: string
+          validations_count?: number | null
+        }
+        Update: {
+          contributions_count?: number | null
+          created_at?: string | null
+          current_points?: number | null
+          id?: string
+          level_name?: string | null
+          level_threshold?: number | null
+          next_level_threshold?: number | null
+          total_points?: number | null
+          updated_at?: string | null
+          user_id?: string
+          validations_count?: number | null
+        }
+        Relationships: []
+      }
       vehicle_positions: {
         Row: {
           heading: number | null
@@ -1456,6 +1887,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_user_points: {
+        Args: { p_action: string; p_points: number; p_user_id: string }
+        Returns: undefined
+      }
       can_driver_see_reservations: {
         Args: { p_driver_id: string }
         Returns: boolean
@@ -1504,6 +1939,18 @@ export type Database = {
       }
       get_driver_avg_rating: { Args: { p_driver_id: string }; Returns: number }
       get_fleet_owner_id: { Args: { p_user_id: string }; Returns: string }
+      get_predicted_demand: {
+        Args: { p_date: string; p_hour: number }
+        Returns: {
+          center_lat: number
+          center_lng: number
+          demand_level: string
+          driver_supply: number
+          predicted_demand: number
+          zone_id: string
+          zone_name: string
+        }[]
+      }
       handle_driver_default: {
         Args: {
           p_default_type: string
@@ -1534,7 +1981,9 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      contribution_status: "pending" | "validated" | "rejected"
+      contribution_type: "local_name" | "road_trace" | "error_report"
+      error_type: "road_blocked" | "one_way" | "non_existent" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1661,6 +2110,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      contribution_status: ["pending", "validated", "rejected"],
+      contribution_type: ["local_name", "road_trace", "error_report"],
+      error_type: ["road_blocked", "one_way", "non_existent", "other"],
+    },
   },
 } as const
