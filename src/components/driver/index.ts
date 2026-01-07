@@ -12,3 +12,5 @@ export { DailyEarningsCard } from './DailyEarningsCard';
 export { FleetAssignmentCard } from './FleetAssignmentCard';
 export { QuickExpenseButton } from './QuickExpenseButton';
 export { DriverHotspotMap } from './DriverHotspotMap';
+export { SmartHotspotMap } from './SmartHotspotMap';
+export { AITrafficPanel } from './AITrafficPanel';
