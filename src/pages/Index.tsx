@@ -156,22 +156,14 @@ const Index = () => {
         </Button>
         
         {/* Secondary Actions Grid */}
-        <div className="grid grid-cols-3 gap-2">
-          <Button 
-            variant="outline" 
-            className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2"
-            onClick={() => navigate("/book", { state: { preselectedMode: "reservation" } })}
-          >
-            <Users className="w-5 h-5 text-primary" />
-            <span className="text-xs font-semibold">Réserver</span>
-          </Button>
+        <div className="grid grid-cols-2 gap-3">
           <Button 
             variant="outline" 
             className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2"
             onClick={() => navigate("/book", { state: { preselectedMode: "confort-partage" } })}
           >
             <Crown className="w-5 h-5 text-primary" />
-            <span className="text-xs font-semibold">Confort</span>
+            <span className="text-xs font-semibold">Confort Partagé</span>
           </Button>
           <Button 
             variant="outline" 
