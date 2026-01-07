@@ -78,12 +78,8 @@ const SeatReservationDrawer: React.FC<SeatReservationDrawerProps> = ({
   const selectedSeatData = seats.find(s => s.id === selectedSeat);
   const seatPremium = selectedSeatData?.premium ? SEAT_PREMIUM : 0;
   const totalBookingFee = BOOKING_FEE + seatPremium;
-  
-  // Prix estimé de la course normale (simulation)
-  const estimatedFare = 500; // À calculer dynamiquement
-  const totalPrice = estimatedFare + totalBookingFee;
 
-  // Vérifier si le solde est suffisant
+  // Vérifier si le solde est suffisant (uniquement pour les frais de réservation)
   const hasInsufficientBalance = availableBalance < totalBookingFee;
 
   const handleConfirm = async () => {
@@ -120,7 +116,7 @@ const SeatReservationDrawer: React.FC<SeatReservationDrawerProps> = ({
         vehicleId: vehicle.id,
         seatPreference: selectedSeat === 'front' ? 'front' : 
                         selectedSeat === 'back-middle' ? 'back-middle' : 'back-window',
-        totalPrice,
+        totalPrice: totalBookingFee, // Uniquement les frais de réservation
       });
       onOpenChange(false);
     } catch (error) {
@@ -301,18 +297,14 @@ const SeatReservationDrawer: React.FC<SeatReservationDrawerProps> = ({
             </div>
           </div>
 
-          {/* Récapitulatif prix */}
+          {/* Récapitulatif prix - Frais de réservation uniquement */}
           <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-4 space-y-3">
-            <h3 className="text-sm font-semibold">Récapitulatif</h3>
+            <h3 className="text-sm font-semibold">Frais de réservation (Wallet)</h3>
             
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Course estimée</span>
-                <span className="font-medium">{estimatedFare} FCFA</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Frais de réservation</span>
-                <span className="font-medium">+{BOOKING_FEE} FCFA</span>
+                <span className="text-muted-foreground">Réservation de base</span>
+                <span className="font-medium">{BOOKING_FEE} FCFA</span>
               </div>
               {seatPremium > 0 && (
                 <div className="flex justify-between text-amber-600">
@@ -321,8 +313,24 @@ const SeatReservationDrawer: React.FC<SeatReservationDrawerProps> = ({
                 </div>
               )}
               <div className="border-t pt-2 flex justify-between text-base font-bold">
-                <span>Total</span>
-                <span className="text-primary">{totalPrice} FCFA</span>
+                <span>Total à séquestrer</span>
+                <span className="text-primary">{totalBookingFee} FCFA</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Info trajet payable en cash */}
+          <div className="bg-muted/50 rounded-xl p-4 border border-border">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-lg">💵</span>
+              </div>
+              <div>
+                <h4 className="text-sm font-semibold">Trajet payable en espèces</h4>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Le prix de la course est négociable directement avec le chauffeur. 
+                  Seuls les frais de réservation sont prélevés du wallet.
+                </p>
               </div>
             </div>
           </div>
@@ -375,7 +383,7 @@ const SeatReservationDrawer: React.FC<SeatReservationDrawerProps> = ({
             ) : hasInsufficientBalance ? (
               <>Solde insuffisant</>
             ) : selectedSeat ? (
-              <>Réserver ma place • {totalPrice} FCFA</>
+              <>Réserver ma place • {totalBookingFee} FCFA</>
             ) : (
               <>Sélectionnez un siège</>
             )}
