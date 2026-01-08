@@ -72,7 +72,8 @@ const DriverDashboardV2 = () => {
   const { assignment, hasFleetAssignment } = useFleetAssignment();
   const { stats: realStats, rideRequests, nextPendingRide } = useDriverRealStats();
   const { totalPeopleWaiting, hotspotCount } = useClientSignals();
-  const { zones, predictions, fetchPredictions } = useSmartRoutine();
+const { zones, predictions, driverIntention, setDriverWorkZone, fetchPredictions } = useSmartRoutine();
+  const [selectedHour, setSelectedHour] = useState(7);
   
   // Use real stats if available, otherwise fallback to demo stats
   const displayStats = realStats.todayTrips > 0 ? realStats : stats;
@@ -323,7 +324,25 @@ const DriverDashboardV2 = () => {
                     });
                   }}
                 />
-                
+
+                {/* Zone de travail demain */}
+                <DriverWorkZoneSelector
+                  zones={zones}
+                  currentIntention={driverIntention}
+                  predictions={predictions}
+                  onSave={setDriverWorkZone}
+                />
+
+                {/* Météo des courses */}
+                <DemandHeatmap
+                  zones={zones}
+                  predictions={predictions}
+                  selectedHour={selectedHour}
+                  onHourChange={(hour) => {
+                    setSelectedHour(hour);
+                    fetchPredictions(undefined, hour);
+                  }}
+                />
               </TabsContent>
 
               <TabsContent value="earnings" className="p-4 space-y-4 mt-0">
