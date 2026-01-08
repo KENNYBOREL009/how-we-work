@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { useVehicles, Vehicle } from '@/hooks/useVehicles';
+import { MapContributorFAB } from '@/components/map-contributor';
 
 interface HomeMapProps {
   onLocationFound?: (coords: { lat: number; lng: number }) => void;
@@ -589,6 +590,9 @@ const HomeMap: React.FC<HomeMapProps> = ({
           🎯 Zone: {visibilityRadius} km
         </div>
       )}
+
+      {/* Map Contributor FAB */}
+      {userLocation && <MapContributorFAB />}
     </div>
   );
 };

@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import AddressManager from "@/components/profile/AddressManager";
+import UserPointsCard from "@/components/map-contributor/UserPointsCard";
+import { useMapContributions } from "@/hooks/useMapContributions";
 import {
   User,
   LogOut,
@@ -22,6 +24,7 @@ import {
   HelpCircle,
   Info,
   X,
+  Gift,
 } from "lucide-react";
 
 interface Profile {
@@ -35,6 +38,7 @@ interface Profile {
 const Profil = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { userPoints } = useMapContributions();
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
@@ -232,6 +236,17 @@ const Profil = () => {
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </Button>
           </div>
+
+          {/* Gamification Points */}
+          {user && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-muted-foreground px-1">Contributions</h3>
+              <UserPointsCard 
+                points={userPoints} 
+                onViewRewards={() => navigate("/rewards")}
+              />
+            </div>
+          )}
 
           {/* Driver */}
           <div className="space-y-2">

@@ -24,6 +24,8 @@ import { QuickExpenseButton } from '@/components/driver/QuickExpenseButton';
 import { SmartHotspotMap } from '@/components/driver/SmartHotspotMap';
 import { AITrafficPanel } from '@/components/driver/AITrafficPanel';
 import { RideRequestCardV2 } from '@/components/driver/RideRequestCardV2';
+import { DriverWorkZoneSelector, DemandHeatmap } from '@/components/smart-routine';
+import { useSmartRoutine } from '@/hooks/useSmartRoutine';
 import {
   Car,
   Clock,
@@ -36,6 +38,7 @@ import {
   Key,
   Brain,
   MapPin,
+  Compass,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -69,6 +72,7 @@ const DriverDashboardV2 = () => {
   const { assignment, hasFleetAssignment } = useFleetAssignment();
   const { stats: realStats, rideRequests, nextPendingRide } = useDriverRealStats();
   const { totalPeopleWaiting, hotspotCount } = useClientSignals();
+  const { zones, predictions, fetchPredictions } = useSmartRoutine();
   
   // Use real stats if available, otherwise fallback to demo stats
   const displayStats = realStats.todayTrips > 0 ? realStats : stats;
@@ -319,6 +323,7 @@ const DriverDashboardV2 = () => {
                     });
                   }}
                 />
+                
               </TabsContent>
 
               <TabsContent value="earnings" className="p-4 space-y-4 mt-0">
