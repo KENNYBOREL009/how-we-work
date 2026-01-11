@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { 
   MapPin, 
   Navigation, 
@@ -21,6 +22,8 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import LiveTripMap, { TripMapStatus } from "./LiveTripMap";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { RideChatDrawer } from "./RideChatDrawer";
+import { useRideMessages } from "@/hooks/useRideMessages";
 
 interface Passenger {
   id: string;
@@ -42,6 +45,8 @@ interface ActiveTripViewProps {
   vehicleClassName?: string;
   selectedServices?: string[];
   passengers?: Passenger[];
+  rideId?: string;
+  driverPhone?: string;
   onCancel: () => void;
   onEmergency: () => void;
   onTripComplete?: () => void;
@@ -57,6 +62,8 @@ export const ActiveTripView = ({
   vehicleClassName,
   selectedServices = [],
   passengers = [],
+  rideId,
+  driverPhone,
   onCancel,
   onEmergency,
   onTripComplete,
@@ -65,6 +72,10 @@ export const ActiveTripView = ({
   const [eta, setEta] = useState(3);
   const [tripEta, setTripEta] = useState(8);
   const [progress, setProgress] = useState(0);
+  const [showChat, setShowChat] = useState(false);
+  
+  // Messages hook for unread count badge
+  const { unreadCount } = useRideMessages(rideId || null);
 
   const { 
     notifyDriverArriving, 
@@ -385,14 +396,41 @@ export const ActiveTripView = ({
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="icon" className="rounded-full">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="rounded-full"
+              onClick={() => driverPhone && (window.location.href = `tel:${driverPhone}`)}
+            >
               <Phone className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="icon" className="rounded-full">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="rounded-full relative"
+              onClick={() => setShowChat(true)}
+            >
               <MessageCircle className="w-4 h-4" />
+              {unreadCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center">
+                  {unreadCount}
+                </Badge>
+              )}
             </Button>
           </div>
         </div>
+
+        {/* Chat Drawer */}
+        {rideId && (
+          <RideChatDrawer
+            open={showChat}
+            onOpenChange={setShowChat}
+            rideId={rideId}
+            otherPartyName={vehicle.operator || "Chauffeur"}
+            otherPartyPhone={driverPhone}
+            isDriver={false}
+          />
+        )}
 
         {/* Co-passagers (si course partagée) */}
         {isSharedRide && passengers.length > 0 && (
