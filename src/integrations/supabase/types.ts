@@ -1166,6 +1166,94 @@ export type Database = {
         }
         Relationships: []
       }
+      ride_audit_logs: {
+        Row: {
+          action_type: string
+          client_lat: number | null
+          client_lng: number | null
+          created_at: string
+          distance_meters: number | null
+          driver_id: string
+          driver_lat: number | null
+          driver_lng: number | null
+          id: string
+          metadata: Json | null
+          ride_id: string
+        }
+        Insert: {
+          action_type: string
+          client_lat?: number | null
+          client_lng?: number | null
+          created_at?: string
+          distance_meters?: number | null
+          driver_id: string
+          driver_lat?: number | null
+          driver_lng?: number | null
+          id?: string
+          metadata?: Json | null
+          ride_id: string
+        }
+        Update: {
+          action_type?: string
+          client_lat?: number | null
+          client_lng?: number | null
+          created_at?: string
+          distance_meters?: number | null
+          driver_id?: string
+          driver_lat?: number | null
+          driver_lng?: number | null
+          id?: string
+          metadata?: Json | null
+          ride_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_audit_logs_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ride_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          ride_id: string
+          sender_id: string
+          sender_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          ride_id: string
+          sender_id: string
+          sender_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          ride_id?: string
+          sender_id?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_messages_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       route_stops: {
         Row: {
           arrival_time: string | null
