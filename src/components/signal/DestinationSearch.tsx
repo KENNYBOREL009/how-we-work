@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { MapPin, Search, Navigation, Clock, Home, Briefcase, Star } from "lucide-react";
+import { MapPin, Search, Navigation, Clock, Home, Briefcase, Star, Mic, MicOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useVoiceInput } from "@/hooks/useVoiceInput";
+import { toast } from "sonner";
 
 interface Destination {
   name: string;
@@ -45,6 +47,21 @@ export const DestinationSearch = ({ onSelect, className }: DestinationSearchProp
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const { user } = useAuth();
 
+  // Voice input hook
+  const { isListening, transcript, startListening, stopListening, isSupported } = useVoiceInput({
+    onResult: (result) => {
+      setSearchQuery(result);
+      toast.success('Destination reconnue', { description: result });
+      // Auto-select if it matches a known destination
+      const match = popularDestinations.find(d => 
+        d.name.toLowerCase().includes(result.toLowerCase())
+      );
+      if (match) {
+        onSelect(match);
+      }
+    },
+  });
+
   useEffect(() => {
     if (user) {
       fetchSavedAddresses();
@@ -74,20 +91,54 @@ export const DestinationSearch = ({ onSelect, className }: DestinationSearchProp
     onSelect({ name: searchQuery, distance: 5 });
   };
 
+  const handleVoiceClick = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
   return (
     <div className={cn("flex flex-col h-full", className)}>
-      {/* Search Input */}
+      {/* Search Input with Voice */}
       <div className="sticky top-0 bg-background z-10 pb-4">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
-            placeholder="Rechercher une destination..."
-            value={searchQuery}
+            placeholder={isListening ? "Parlez maintenant..." : "Rechercher une destination..."}
+            value={isListening ? transcript || searchQuery : searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-12 h-14 text-base"
+            className={cn(
+              "pl-12 pr-14 h-14 text-base transition-all",
+              isListening && "ring-2 ring-primary animate-pulse"
+            )}
             autoFocus
           />
+          {isSupported && (
+            <Button
+              type="button"
+              variant={isListening ? "destructive" : "ghost"}
+              size="icon"
+              onClick={handleVoiceClick}
+              className={cn(
+                "absolute right-2 top-1/2 -translate-y-1/2 transition-all",
+                isListening && "animate-pulse"
+              )}
+            >
+              {isListening ? (
+                <MicOff className="w-5 h-5" />
+              ) : (
+                <Mic className="w-5 h-5" />
+              )}
+            </Button>
+          )}
         </div>
+        {isListening && (
+          <p className="text-xs text-center text-primary mt-2 animate-pulse">
+            🎤 Dites votre destination...
+          </p>
+        )}
       </div>
 
       {/* Current Location */}

@@ -12,8 +12,11 @@ import {
   InterfaceLevelSelector,
   SharedSeatManager,
 } from "@/components/driver";
+import { DriverVoiceControl } from "@/components/voice";
+import { NewUserDetector } from "@/components/onboarding";
 import { Car, Clock, Users, Settings2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const DriverDashboard = () => {
   const navigate = useNavigate();
@@ -36,6 +39,9 @@ const DriverDashboard = () => {
 
   return (
     <MobileLayout showNav={false} showThemeToggle={false}>
+      {/* New User Guide Detector for Drivers */}
+      <NewUserDetector userType="driver" />
+      
       <div className="flex flex-col h-full bg-background">
         {/* Header with online toggle */}
         <DriverHeader
@@ -87,6 +93,19 @@ const DriverDashboard = () => {
           {/* Stats and actions when idle */}
           {!activeRide && !pendingRide && (
             <>
+              {/* Voice Control for Hands-Free Operation */}
+              <DriverVoiceControl
+                onAcceptRide={pendingRide ? acceptRide : undefined}
+                onRejectRide={pendingRide ? declineRide : undefined}
+                onArrived={activeRide ? updateRideStatus : undefined}
+                onStartTrip={activeRide ? updateRideStatus : undefined}
+                onEndTrip={activeRide ? updateRideStatus : undefined}
+                onCallClient={() => toast.info('Appel du client...')}
+                onSetDestination={(dest) => toast.success(`Direction: ${dest}`)}
+                hasActiveRide={!!activeRide}
+                hasPendingRequest={!!pendingRide}
+              />
+
               {/* Seat Manager for Shared Mode */}
               <SharedSeatManager
                 maxSeats={4}
