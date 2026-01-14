@@ -4,4 +4,4 @@ export { default as ReportErrorDialog } from './ReportErrorDialog';
 export { default as ValidationPrompt } from './ValidationPrompt';
 export { default as UserPointsCard } from './UserPointsCard';
 export { default as RewardsMarketplace } from './RewardsMarketplace';
-export { ContributionPrompt, ContributionReminder } from './ContributionPrompt';
+export { ContributionPrompt, ContributionPromptDialog, ContributionReminder } from './ContributionPrompt';

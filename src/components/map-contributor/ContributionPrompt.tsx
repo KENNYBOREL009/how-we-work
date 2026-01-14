@@ -1,10 +1,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { MapPin, Gift, X, ChevronRight } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { MapPin, Gift, X, ChevronRight, Sparkles, Map } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 
 interface ContributionPromptProps {
-  onOpenContributor: () => void;
+  onOpenContributor?: () => void;
   className?: string;
 }
 
@@ -64,6 +71,92 @@ export const ContributionPrompt = ({ onOpenContributor, className }: Contributio
         </div>
       </div>
     </div>
+  );
+};
+
+/**
+ * Dialog version of the contribution prompt - shown after trips
+ */
+interface ContributionPromptDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  destinationName?: string;
+}
+
+export const ContributionPromptDialog = ({ 
+  isOpen, 
+  onClose,
+  destinationName 
+}: ContributionPromptDialogProps) => {
+  const navigate = useNavigate();
+
+  const handleContribute = () => {
+    onClose();
+    navigate('/rewards', { state: { openContributor: true } });
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-sm mx-4">
+        <DialogHeader>
+          <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mb-2">
+            <Map className="w-8 h-8 text-white" />
+          </div>
+          <DialogTitle className="text-center text-xl">
+            Merci pour votre trajet !
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="text-center space-y-4 py-2">
+          <p className="text-muted-foreground">
+            {destinationName 
+              ? `Connaissez-vous un nom local pour "${destinationName}" ou les lieux autour ?`
+              : "Connaissez-vous des noms locaux des lieux visités ?"
+            }
+          </p>
+
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                <Gift className="w-6 h-6 text-emerald-500" />
+              </div>
+              <div className="text-left">
+                <p className="font-semibold text-emerald-700 dark:text-emerald-300">
+                  Gagnez 50 points Lokebo
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Pour chaque contribution validée
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+              <Sparkles className="w-3 h-3" />
+              Aidez-nous à mieux vous servir
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 pt-2">
+          <Button 
+            className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600"
+            onClick={handleContribute}
+          >
+            <MapPin className="w-5 h-5 mr-2" />
+            Contribuer maintenant
+          </Button>
+          <Button 
+            variant="ghost" 
+            className="w-full"
+            onClick={onClose}
+          >
+            Peut-être plus tard
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

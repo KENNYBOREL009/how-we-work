@@ -9,6 +9,7 @@ import {
   ComfortMatchResult,
   ComfortSearching,
   getSeatExtraPrice,
+  VTCFallbackDialog,
   type SeatPreference,
 } from "@/components/comfort";
 import { ChevronLeft, MapPin, Search, Users, Sparkles } from "lucide-react";
@@ -70,6 +71,8 @@ const SharedComfortBooking = () => {
   }, [refreshAvailability]);
   const [seatPreference, setSeatPreference] = useState<SeatPreference>("any");
   const [showDestinationSearch, setShowDestinationSearch] = useState(false);
+  const [showVTCFallback, setShowVTCFallback] = useState(false);
+  const [searchFailReason, setSearchFailReason] = useState<'no_match' | 'timeout' | 'no_passengers'>('no_match');
 
   const calculatePrice = () => {
     if (!destination) return 0;
@@ -127,9 +130,30 @@ const SharedComfortBooking = () => {
     if (result) {
       setStep("result");
     } else {
-      toast.error("Aucun véhicule compatible trouvé");
+      // No match found - show VTC fallback dialog
+      setSearchFailReason('no_passengers');
+      setShowVTCFallback(true);
       setStep("preferences");
     }
+  };
+
+  const handleAcceptVTC = async () => {
+    // Navigate to private VTC booking with pre-filled destination
+    navigate('/signal', {
+      state: {
+        destination: destination?.name,
+        destinationLat: destination?.lat,
+        destinationLng: destination?.lng,
+        mode: 'privatisation',
+        fromSharedFallback: true
+      }
+    });
+    setShowVTCFallback(false);
+  };
+
+  const handleRetryShared = () => {
+    setShowVTCFallback(false);
+    handleSearch();
   };
 
   const handleAcceptMatch = async () => {
@@ -413,13 +437,26 @@ const SharedComfortBooking = () => {
               onClick={handleSearch}
             >
               <Search className="w-5 h-5 mr-2" />
-              Trouver mon trajet partagé
-            </Button>
-          </div>
-        )}
-      </div>
-    </MobileLayout>
-  );
+            Trouver mon trajet partagé
+          </Button>
+        </div>
+      )}
+
+      {/* VTC Fallback Dialog */}
+      <VTCFallbackDialog
+        open={showVTCFallback}
+        onOpenChange={setShowVTCFallback}
+        sharedPrice={calculatePrice()}
+        vtcPrice={getOriginalPrice()}
+        destination={destination?.name || ''}
+        reason={searchFailReason}
+        onAcceptVTC={handleAcceptVTC}
+        onRetryShared={handleRetryShared}
+        onCancel={() => setShowVTCFallback(false)}
+      />
+    </div>
+  </MobileLayout>
+);
 };
 
 export default SharedComfortBooking;
