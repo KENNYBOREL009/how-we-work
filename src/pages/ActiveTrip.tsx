@@ -4,6 +4,7 @@ import MobileLayout from "@/components/layout/MobileLayout";
 import { ActiveTripView } from "@/components/trip/ActiveTripView";
 import { RateDriverDialog } from "@/components/trip/RateDriverDialog";
 import { PaymentConfirmDialog } from "@/components/trip/PaymentConfirmDialog";
+import { ContributionPromptDialog } from "@/components/map-contributor/ContributionPrompt";
 import { useActiveTrip } from "@/hooks/useActiveTrip";
 import { useWallet } from "@/hooks/useWallet";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,6 +35,7 @@ const ActiveTrip = () => {
 
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [showRatingDialog, setShowRatingDialog] = useState(false);
+  const [showContributionPrompt, setShowContributionPrompt] = useState(false);
   const [tripCompleted, setTripCompleted] = useState(false);
   
   // Derive trip info from either active trip or navigation state
@@ -86,13 +88,23 @@ const ActiveTrip = () => {
   };
 
   const handleRatingSubmit = async (rating: number, comment: string) => {
-    if (!activeTrip?.vehicle_id) return;
+    if (!activeTrip?.vehicle_id) {
+      // Demo mode - just show contribution prompt
+      setShowContributionPrompt(true);
+      return;
+    }
     await rateDriver(
       activeTrip.id,
       activeTrip.vehicle_id,
       rating,
       comment
     );
+    // Show contribution prompt after rating
+    setShowContributionPrompt(true);
+  };
+
+  const handleContributionClose = () => {
+    setShowContributionPrompt(false);
     navigate('/');
   };
 
@@ -200,11 +212,18 @@ const ActiveTrip = () => {
         open={showRatingDialog}
         onClose={() => {
           setShowRatingDialog(false);
-          navigate('/');
+          setShowContributionPrompt(true);
         }}
         onSubmit={handleRatingSubmit}
         driverName={isPrivate ? "Chauffeur VIP" : ""}
         plateNumber={mockVehicle.plate_number}
+      />
+
+      {/* Contribution Prompt - shown after rating */}
+      <ContributionPromptDialog
+        isOpen={showContributionPrompt}
+        onClose={handleContributionClose}
+        destinationName={tripDestination}
       />
     </MobileLayout>
   );
