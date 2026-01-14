@@ -5,6 +5,7 @@ import Logo from "@/components/ui/Logo";
 import { HomeMap } from "@/components/map";
 import { JoinSharedRideDrawer } from "@/components/map/JoinSharedRideDrawer";
 import SeatReservationDrawer from "@/components/booking/SeatReservationDrawer";
+import { NewUserDetector } from "@/components/onboarding";
 import { MapPin, Navigation, Bus, Users, Calendar, Search, Armchair } from "lucide-react";
 import { useBusMode } from "@/hooks/useBusMode";
 import { cn } from "@/lib/utils";
@@ -102,6 +103,9 @@ const Index = () => {
 
   return (
     <MobileLayout>
+      {/* New User Guide Detector */}
+      <NewUserDetector userType="client" />
+      
       {/* Header */}
       <header className="safe-top px-4 pt-4 pb-3">
         <div className="flex items-center justify-between">

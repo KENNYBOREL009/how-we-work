@@ -7,6 +7,7 @@ import { BusModeProvider } from "./hooks/useBusMode";
 import { AuthProvider } from "./hooks/useAuth";
 import { DriverModeProvider } from "./hooks/useDriverMode";
 import { ThemeProvider } from "./components/providers/ThemeProvider";
+import { OnboardingGuideProvider } from "./components/onboarding";
 import Index from "./pages/Index";
 import Signal from "./pages/Signal";
 import Book from "./pages/Book";
@@ -43,10 +44,11 @@ const App = () => (
         <AuthProvider>
           <DriverModeProvider>
             <BusModeProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
+              <OnboardingGuideProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/auth" element={<Auth />} />
@@ -71,10 +73,11 @@ const App = () => (
                   <Route path="/become-driver" element={<BecomeDriver />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/shared-comfort" element={<SharedComfortBooking />} />
-                  <Route path="/rewards" element={<Rewards />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
+                    <Route path="/rewards" element={<Rewards />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </OnboardingGuideProvider>
             </BusModeProvider>
           </DriverModeProvider>
         </AuthProvider>
