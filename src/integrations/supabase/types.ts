@@ -560,6 +560,62 @@ export type Database = {
           },
         ]
       }
+      driver_match_scores: {
+        Row: {
+          acceptance_score: number | null
+          created_at: string | null
+          distance_score: number | null
+          driver_id: string
+          history_score: number | null
+          id: string
+          notified_at: string | null
+          rank: number | null
+          rating_score: number | null
+          responded_at: string | null
+          response: string | null
+          ride_request_id: string | null
+          total_score: number | null
+        }
+        Insert: {
+          acceptance_score?: number | null
+          created_at?: string | null
+          distance_score?: number | null
+          driver_id: string
+          history_score?: number | null
+          id?: string
+          notified_at?: string | null
+          rank?: number | null
+          rating_score?: number | null
+          responded_at?: string | null
+          response?: string | null
+          ride_request_id?: string | null
+          total_score?: number | null
+        }
+        Update: {
+          acceptance_score?: number | null
+          created_at?: string | null
+          distance_score?: number | null
+          driver_id?: string
+          history_score?: number | null
+          id?: string
+          notified_at?: string | null
+          rank?: number | null
+          rating_score?: number | null
+          responded_at?: string | null
+          response?: string | null
+          ride_request_id?: string | null
+          total_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_match_scores_ride_request_id_fkey"
+            columns: ["ride_request_id"]
+            isOneToOne: false
+            referencedRelation: "ride_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_ratings: {
         Row: {
           comment: string | null
@@ -921,6 +977,68 @@ export type Database = {
         }
         Relationships: []
       }
+      momo_transactions: {
+        Row: {
+          amount: number
+          callback_received_at: string | null
+          created_at: string | null
+          currency: string | null
+          error_message: string | null
+          external_reference: string | null
+          id: string
+          phone_number: string
+          provider: string | null
+          reference_id: string | null
+          status: string | null
+          transaction_type: string | null
+          updated_at: string | null
+          user_id: string
+          wallet_id: string | null
+        }
+        Insert: {
+          amount: number
+          callback_received_at?: string | null
+          created_at?: string | null
+          currency?: string | null
+          error_message?: string | null
+          external_reference?: string | null
+          id?: string
+          phone_number: string
+          provider?: string | null
+          reference_id?: string | null
+          status?: string | null
+          transaction_type?: string | null
+          updated_at?: string | null
+          user_id: string
+          wallet_id?: string | null
+        }
+        Update: {
+          amount?: number
+          callback_received_at?: string | null
+          created_at?: string | null
+          currency?: string | null
+          error_message?: string | null
+          external_reference?: string | null
+          id?: string
+          phone_number?: string
+          provider?: string | null
+          reference_id?: string | null
+          status?: string | null
+          transaction_type?: string | null
+          updated_at?: string | null
+          user_id?: string
+          wallet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "momo_transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nearby_contacts: {
         Row: {
           contact_phone: string | null
@@ -1254,6 +1372,92 @@ export type Database = {
           },
         ]
       }
+      ride_requests: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          current_driver_id: string | null
+          destination: string
+          destination_lat: number | null
+          destination_lng: number | null
+          driver_notification_count: number | null
+          driver_notified_at: string | null
+          estimated_fare: number | null
+          expired_drivers: string[] | null
+          final_fare: number | null
+          id: string
+          matched_at: string | null
+          matched_driver_id: string | null
+          origin: string
+          origin_lat: number | null
+          origin_lng: number | null
+          passenger_count: number | null
+          status: string | null
+          surge_multiplier: number | null
+          trip_id: string | null
+          updated_at: string | null
+          vehicle_type: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          current_driver_id?: string | null
+          destination: string
+          destination_lat?: number | null
+          destination_lng?: number | null
+          driver_notification_count?: number | null
+          driver_notified_at?: string | null
+          estimated_fare?: number | null
+          expired_drivers?: string[] | null
+          final_fare?: number | null
+          id?: string
+          matched_at?: string | null
+          matched_driver_id?: string | null
+          origin: string
+          origin_lat?: number | null
+          origin_lng?: number | null
+          passenger_count?: number | null
+          status?: string | null
+          surge_multiplier?: number | null
+          trip_id?: string | null
+          updated_at?: string | null
+          vehicle_type?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          current_driver_id?: string | null
+          destination?: string
+          destination_lat?: number | null
+          destination_lng?: number | null
+          driver_notification_count?: number | null
+          driver_notified_at?: string | null
+          estimated_fare?: number | null
+          expired_drivers?: string[] | null
+          final_fare?: number | null
+          id?: string
+          matched_at?: string | null
+          matched_driver_id?: string | null
+          origin?: string
+          origin_lat?: number | null
+          origin_lng?: number | null
+          passenger_count?: number | null
+          status?: string | null
+          surge_multiplier?: number | null
+          trip_id?: string | null
+          updated_at?: string | null
+          vehicle_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_requests_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       route_stops: {
         Row: {
           arrival_time: string | null
@@ -1476,6 +1680,59 @@ export type Database = {
             columns: ["trip_id"]
             isOneToOne: false
             referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surge_pricing_zones: {
+        Row: {
+          calculated_at: string | null
+          center_lat: number
+          center_lng: number
+          created_at: string | null
+          demand_count: number | null
+          driver_count: number | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          surge_multiplier: number | null
+          zone_id: string | null
+          zone_name: string
+        }
+        Insert: {
+          calculated_at?: string | null
+          center_lat: number
+          center_lng: number
+          created_at?: string | null
+          demand_count?: number | null
+          driver_count?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          surge_multiplier?: number | null
+          zone_id?: string | null
+          zone_name: string
+        }
+        Update: {
+          calculated_at?: string | null
+          center_lat?: number
+          center_lng?: number
+          created_at?: string | null
+          demand_count?: number | null
+          driver_count?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          surge_multiplier?: number | null
+          zone_id?: string | null
+          zone_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "surge_pricing_zones_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "city_zones"
             referencedColumns: ["id"]
           },
         ]
@@ -1979,6 +2236,10 @@ export type Database = {
         Args: { p_action: string; p_points: number; p_user_id: string }
         Returns: undefined
       }
+      calculate_surge_multiplier: {
+        Args: { p_demand_count: number; p_driver_count: number }
+        Returns: number
+      }
       can_driver_see_reservations: {
         Args: { p_driver_id: string }
         Returns: boolean
@@ -1999,6 +2260,28 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      driver_respond_to_request: {
+        Args: { p_driver_id: string; p_request_id: string; p_response: string }
+        Returns: Json
+      }
+      find_best_drivers: {
+        Args: {
+          p_client_id: string
+          p_max_distance_km?: number
+          p_origin_lat: number
+          p_origin_lng: number
+          p_request_id: string
+        }
+        Returns: {
+          acceptance_rate: number
+          distance_km: number
+          driver_id: string
+          has_history: boolean
+          rank: number
+          rating: number
+          total_score: number
+        }[]
       }
       find_compatible_vehicles: {
         Args: {
@@ -2054,6 +2337,7 @@ export type Database = {
       }
       is_driver_suspended: { Args: { p_driver_id: string }; Returns: Json }
       is_fleet_owner: { Args: { p_user_id: string }; Returns: boolean }
+      notify_next_driver: { Args: { p_request_id: string }; Returns: Json }
       owns_fleet_vehicle: {
         Args: { p_fleet_vehicle_id: string; p_user_id: string }
         Returns: boolean
