@@ -1,10 +1,12 @@
+import { useState } from "react";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useWallet } from "@/hooks/useWallet";
 import { useTransportBudget } from "@/hooks/useTransportBudget";
 import { TransportBudgetCard } from "@/components/wallet/TransportBudgetCard";
+import { MomoDepositDialog } from "@/components/wallet/MomoDepositDialog";
 import { Button } from "@/components/ui/button";
-import { Wallet as WalletIcon, Plus, ArrowUpRight, ArrowDownLeft, History, Loader2, CreditCard } from "lucide-react";
+import { Wallet as WalletIcon, Plus, ArrowUpRight, ArrowDownLeft, History, Loader2, CreditCard, Smartphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -12,8 +14,9 @@ import { fr } from "date-fns/locale";
 const Wallet = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { wallet, transactions, loading: walletLoading } = useWallet();
+  const { wallet, transactions, loading: walletLoading, refetch: refetchWallet } = useWallet();
   const { activeBudget, createBudget, loading: budgetLoading } = useTransportBudget();
+  const [showMomoDialog, setShowMomoDialog] = useState(false);
 
   // Demo mode for non-authenticated users
   const isDemo = !user;
@@ -79,8 +82,12 @@ const Wallet = () => {
         {/* Quick Actions */}
         <div className="px-4 mb-6">
           <div className="grid grid-cols-2 gap-3">
-            <Button size="lg" className="h-14 gap-3">
-              <Plus className="w-5 h-5" />
+            <Button 
+              size="lg" 
+              className="h-14 gap-3"
+              onClick={() => setShowMomoDialog(true)}
+            >
+              <Smartphone className="w-5 h-5" />
               Recharger
             </Button>
             <Button variant="outline" size="lg" className="h-14 gap-3">
@@ -170,6 +177,13 @@ const Wallet = () => {
             </Button>
           </div>
         )}
+
+        {/* MoMo Deposit Dialog */}
+        <MomoDepositDialog
+          open={showMomoDialog}
+          onClose={() => setShowMomoDialog(false)}
+          onSuccess={refetchWallet}
+        />
       </div>
     </MobileLayout>
   );

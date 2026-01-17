@@ -17,3 +17,4 @@ export { QuickExpenseButton } from './QuickExpenseButton';
 export { DriverHotspotMap } from './DriverHotspotMap';
 export { SmartHotspotMap } from './SmartHotspotMap';
 export { AITrafficPanel } from './AITrafficPanel';
+export { DriverMatchingNotification } from './DriverMatchingNotification';
