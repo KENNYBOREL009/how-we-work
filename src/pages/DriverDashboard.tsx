@@ -11,6 +11,7 @@ import {
   InterfaceLevelSelector,
   SharedSeatManager,
   RideRequestFullScreen,
+  DriverQuickAccessSheet,
 } from "@/components/driver";
 import { DriverVoiceControl } from "@/components/voice";
 import { NewUserDetector } from "@/components/onboarding";
@@ -164,6 +165,28 @@ const DriverDashboard = () => {
             </>
           )}
         </div>
+
+        {/* Quick Access Bottom Sheet */}
+        <DriverQuickAccessSheet
+          stats={{
+            todayEarnings: stats.todayEarnings,
+            todayTrips: stats.todayTrips,
+            weeklyEarnings: stats.weekEarnings,
+            weeklyTrips: stats.todayTrips * 5,
+            avgPerTrip: stats.todayTrips > 0 ? Math.round(stats.todayEarnings / stats.todayTrips) : 0,
+            acceptanceRate: stats.acceptanceRate,
+            rating: stats.rating,
+            hoursOnline: 6,
+          }}
+          isEmployee={false}
+          onToggleBreak={() => toast.info('Mode pause activé')}
+          onSetDestination={() => toast.info('Sélection de destination...')}
+          onSelectWorkZone={() => toast.info('Zone de travail...')}
+          onEndDay={() => {
+            toggleOnline();
+            toast.success('Journée terminée !');
+          }}
+        />
 
         {/* Bottom nav for driver */}
         <div className="p-4 border-t bg-background">
