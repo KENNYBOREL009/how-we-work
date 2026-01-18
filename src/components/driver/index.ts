@@ -20,3 +20,4 @@ export { SmartHotspotMap } from './SmartHotspotMap';
 export { AITrafficPanel } from './AITrafficPanel';
 export { DriverMatchingNotification } from './DriverMatchingNotification';
 export { DriverQuickAccessSheet } from './DriverQuickAccessSheet';
+export { DriverCockpit } from './DriverCockpit';

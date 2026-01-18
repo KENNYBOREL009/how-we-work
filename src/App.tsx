@@ -34,7 +34,7 @@ import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 import SharedComfortBooking from "./pages/SharedComfortBooking";
 import Rewards from "./pages/Rewards";
-
+import DriverCockpitPage from "./pages/DriverCockpit";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -68,6 +68,7 @@ const App = () => (
                   <Route path="/driver/reports" element={<DriverReports />} />
                   <Route path="/driver/analytics" element={<DriverAnalytics />} />
                   <Route path="/driver" element={<DriverDashboardV2 />} />
+                  <Route path="/driver/cockpit" element={<DriverCockpitPage />} />
                   <Route path="/driver/classic" element={<DriverClassicDashboard />} />
                   <Route path="/assistance" element={<Assistance />} />
                   <Route path="/become-driver" element={<BecomeDriver />} />
