@@ -6,11 +6,11 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   DriverHeader,
   DriverStatsGrid,
-  RideRequestCard,
   ActiveRideCard,
   ReliabilityScoreCard,
   InterfaceLevelSelector,
   SharedSeatManager,
+  RideRequestFullScreen,
 } from "@/components/driver";
 import { DriverVoiceControl } from "@/components/voice";
 import { NewUserDetector } from "@/components/onboarding";
@@ -72,11 +72,22 @@ const DriverDashboard = () => {
         )}
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* Pending ride request */}
+          {/* Full-screen ride request overlay */}
           {pendingRide && (
-            <RideRequestCard
-              ride={pendingRide}
-              countdown={acceptCountdown}
+            <RideRequestFullScreen
+              request={{
+                id: pendingRide.id,
+                clientName: pendingRide.clientName,
+                clientRating: 4.8,
+                origin: pendingRide.origin,
+                destination: pendingRide.destination,
+                distance: pendingRide.distance,
+                duration: '6 min',
+                fare: pendingRide.fare,
+                isShared: pendingRide.isShared,
+                passengerCount: pendingRide.passengerCount,
+              }}
+              timeoutSeconds={acceptCountdown}
               onAccept={acceptRide}
               onDecline={declineRide}
             />
