@@ -1,5 +1,6 @@
 export { RideRequestCard } from './RideRequestCard';
 export { RideRequestCardV2 } from './RideRequestCardV2';
+export { RideRequestFullScreen } from './RideRequestFullScreen';
 export { ActiveRideCard } from './ActiveRideCard';
 export { DriverStatsGrid } from './DriverStatsGrid';
 export { DriverHeader } from './DriverHeader';
