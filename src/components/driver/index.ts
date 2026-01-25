@@ -21,3 +21,5 @@ export { AITrafficPanel } from './AITrafficPanel';
 export { DriverMatchingNotification } from './DriverMatchingNotification';
 export { DriverQuickAccessSheet } from './DriverQuickAccessSheet';
 export { DriverCockpit } from './DriverCockpit';
+export { DriverProfileSetup } from './DriverProfileSetup';
+export { DailyRentalEarnings, CommissionEarnings, OwnerEarnings } from './earnings';
