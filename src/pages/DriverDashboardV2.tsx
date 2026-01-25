@@ -6,46 +6,45 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDriverMode } from '@/hooks/useDriverMode';
-import { useDriverOperatingMode } from '@/hooks/useDriverOperatingMode';
+import { useDriverProfile } from '@/hooks/useDriverProfile';
 import { useAuth } from '@/hooks/useAuth';
-import { useFleetAssignment } from '@/hooks/useFleetAssignment';
 import { useDriverRealStats } from '@/hooks/useDriverRealStats';
 import { useClientSignals } from '@/hooks/useClientSignals';
+import { useDriverExpenses } from '@/hooks/useDriverExpenses';
 import {
   DriverStatsGrid,
   ActiveRideCard,
   ReliabilityScoreCard,
-  InterfaceLevelSelector,
 } from '@/components/driver';
-import { OperatingModeSelector } from '@/components/driver/OperatingModeSelector';
-import { DailyEarningsCard } from '@/components/driver/DailyEarningsCard';
-import { FleetAssignmentCard } from '@/components/driver/FleetAssignmentCard';
-import { QuickExpenseButton } from '@/components/driver/QuickExpenseButton';
 import { SmartHotspotMap } from '@/components/driver/SmartHotspotMap';
 import { AITrafficPanel } from '@/components/driver/AITrafficPanel';
 import { RideRequestCardV2 } from '@/components/driver/RideRequestCardV2';
-import { DriverWorkZoneSelector, DemandHeatmap } from '@/components/smart-routine';
+import { DriverProfileSetup } from '@/components/driver/DriverProfileSetup';
+import { DailyRentalEarnings, CommissionEarnings, OwnerEarnings } from '@/components/driver/earnings';
+import { DriverWorkZoneSelector } from '@/components/smart-routine';
 import { useSmartRoutine } from '@/hooks/useSmartRoutine';
 import {
   Car,
-  Clock,
-  Users,
-  Settings,
-  TrendingUp,
-  FileText,
-  ChevronRight,
-  Building2,
-  Key,
+  Home,
+  Wallet,
   Brain,
-  MapPin,
-  Compass,
+  Calendar,
+  Settings,
+  ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const DriverDashboardV2 = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [showModeSelector, setShowModeSelector] = useState(false);
+  
+  const {
+    profile,
+    updateProfile,
+    saveProfile,
+    isLoading: profileLoading,
+    isConfigured,
+  } = useDriverProfile();
 
   const {
     isOnline,
@@ -60,74 +59,43 @@ const DriverDashboardV2 = () => {
     updateRideStatus,
   } = useDriverMode();
 
-  const {
-    operatingMode,
-    driverProfile,
-    dailySummary,
-    modeConfig,
-    setMode,
-    isLoading: modeLoading,
-  } = useDriverOperatingMode();
-
-  const { assignment, hasFleetAssignment } = useFleetAssignment();
-  const { stats: realStats, rideRequests, nextPendingRide } = useDriverRealStats();
-  const { totalPeopleWaiting, hotspotCount } = useClientSignals();
-const { zones, predictions, driverIntention, setDriverWorkZone, fetchPredictions } = useSmartRoutine();
-  const [selectedHour, setSelectedHour] = useState(7);
+  const { stats: realStats, rideRequests } = useDriverRealStats();
+  const { totalPeopleWaiting } = useClientSignals();
+  const { totalExpenses } = useDriverExpenses();
+  const { zones, predictions, driverIntention, setDriverWorkZone } = useSmartRoutine();
   
   // Use real stats if available, otherwise fallback to demo stats
   const displayStats = realStats.todayTrips > 0 ? realStats : stats;
 
   const userInitial = user?.email?.charAt(0).toUpperCase() || 'C';
 
-  // Montre le sélecteur de mode si aucun mode n'est défini
-  useEffect(() => {
-    if (!modeLoading && !operatingMode) {
-      setShowModeSelector(true);
-    }
-  }, [modeLoading, operatingMode]);
+  // Show setup screen if not configured
+  if (!profileLoading && !isConfigured) {
+    return (
+      <DriverProfileSetup 
+        onComplete={(newProfile) => {
+          updateProfile({ ...newProfile, isConfigured: true });
+          saveProfile();
+        }}
+      />
+    );
+  }
 
-  // Mode selector modal
-  if (showModeSelector) {
+  // Loading state
+  if (profileLoading) {
     return (
       <MobileLayout showNav={false} showThemeToggle={false}>
-        <div className="flex flex-col h-full bg-background p-4">
-          <OperatingModeSelector
-            currentMode={operatingMode}
-            onSelectMode={(mode) => {
-              setMode(mode);
-              setShowModeSelector(false);
-            }}
-          />
-          {operatingMode && (
-            <Button
-              className="mt-4"
-              onClick={() => setShowModeSelector(false)}
-            >
-              Continuer
-            </Button>
-          )}
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         </div>
       </MobileLayout>
     );
   }
 
-  const ModeIcon =
-    operatingMode === 'fleet_assigned'
-      ? Building2
-      : operatingMode === 'independent_owner'
-      ? Car
-      : Key;
-
   return (
     <MobileLayout showNav={false} showThemeToggle={false}>
       <div className="flex flex-col h-full bg-background">
-        {/* Interface Level Selector - Compact */}
-        <div className="px-4 py-2 border-b bg-muted/30">
-          <InterfaceLevelSelector compact />
-        </div>
-
-        {/* Header avec toggle online et mode badge */}
+        {/* Header avec toggle online */}
         <div className="p-4 border-b bg-card">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
@@ -136,13 +104,17 @@ const { zones, predictions, driverIntention, setDriverWorkZone, fetchPredictions
               </div>
               <div>
                 <p className="font-medium">Mode Chauffeur</p>
-                <Badge
-                  variant="outline"
-                  className="text-xs cursor-pointer"
-                  onClick={() => setShowModeSelector(true)}
-                >
-                  <ModeIcon className="w-3 h-3 mr-1" />
-                  {modeConfig?.label || 'Configurer'}
+                <Badge variant="outline" className="text-xs">
+                  {profile.employmentType === 'owner' ? (
+                    <>
+                      <Car className="w-3 h-3 mr-1" />
+                      Propriétaire
+                    </>
+                  ) : (
+                    <>
+                      {profile.paymentModel === 'daily_rental' ? '📅 Location' : '📊 Commission'}
+                    </>
+                  )}
                 </Badge>
               </div>
             </div>
@@ -183,128 +155,65 @@ const { zones, predictions, driverIntention, setDriverWorkZone, fetchPredictions
           </div>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          {/* Demandes de courses réelles */}
-          {rideRequests.length > 0 && !activeRide && (
-            <div className="p-4">
-              <RideRequestCardV2
-                request={{
-                  ...rideRequests[0],
-                  expiresIn: rideRequests[0].expiresIn || 300,
-                }}
-                onAccept={(id) => {
-                  toast.success('Course acceptée !');
-                  // Here we would call acceptRide or similar
-                }}
-                onDecline={(id) => {
-                  toast.info('Course ignorée');
-                }}
-              />
-            </div>
-          )}
+        {/* Demandes de courses */}
+        {rideRequests.length > 0 && !activeRide && (
+          <div className="p-4 border-b bg-primary/5">
+            <RideRequestCardV2
+              request={{
+                ...rideRequests[0],
+                expiresIn: rideRequests[0].expiresIn || 300,
+              }}
+              onAccept={() => toast.success('Course acceptée !')}
+              onDecline={() => toast.info('Course ignorée')}
+            />
+          </div>
+        )}
 
-          {/* Course active */}
-          {activeRide && (
-            <div className="p-4">
-              <ActiveRideCard
-                ride={activeRide}
-                onUpdateStatus={updateRideStatus}
-              />
-            </div>
-          )}
+        {/* Course active */}
+        {activeRide && (
+          <div className="p-4 border-b">
+            <ActiveRideCard ride={activeRide} onUpdateStatus={updateRideStatus} />
+          </div>
+        )}
 
-          {/* Dashboard normal */}
-          {!activeRide && !pendingRide && (
-            <Tabs defaultValue="overview" className="flex-1">
-              <TabsList className="w-full justify-start rounded-none border-b bg-transparent p-0">
-                <TabsTrigger
-                  value="overview"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-                >
-                  Aperçu
-                </TabsTrigger>
-                <TabsTrigger
-                  value="ai"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-                >
-                  <Brain className="w-4 h-4 mr-1" />
-                  IA
-                </TabsTrigger>
-                <TabsTrigger
-                  value="earnings"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-                >
-                  Gains
-                </TabsTrigger>
-                <TabsTrigger
-                  value="stats"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
-                >
-                  Stats
-                </TabsTrigger>
-              </TabsList>
+        {/* Onglets principaux */}
+        {!activeRide && !pendingRide && (
+          <Tabs defaultValue="home" className="flex-1 flex flex-col">
+            <TabsList className="grid grid-cols-4 mx-4 mt-2">
+              <TabsTrigger value="home" className="flex flex-col gap-1 py-2">
+                <Home className="w-4 h-4" />
+                <span className="text-xs">Accueil</span>
+              </TabsTrigger>
+              <TabsTrigger value="earnings" className="flex flex-col gap-1 py-2">
+                <Wallet className="w-4 h-4" />
+                <span className="text-xs">Gains</span>
+              </TabsTrigger>
+              <TabsTrigger value="ai" className="flex flex-col gap-1 py-2">
+                <Brain className="w-4 h-4" />
+                <span className="text-xs">IA</span>
+              </TabsTrigger>
+              <TabsTrigger value="planning" className="flex flex-col gap-1 py-2">
+                <Calendar className="w-4 h-4" />
+                <span className="text-xs">Planning</span>
+              </TabsTrigger>
+            </TabsList>
 
-              <TabsContent value="overview" className="p-4 space-y-4 mt-0">
-                {/* Carte hotspots temps réel avec IA */}
+            <div className="flex-1 overflow-y-auto">
+              {/* TAB ACCUEIL */}
+              <TabsContent value="home" className="p-4 space-y-4 mt-0">
                 {isOnline && (
                   <div className="space-y-2">
-                    <h3 className="text-sm font-medium flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-orange-500" />
-                      Hotspots en temps réel
-                    </h3>
+                    <h3 className="text-sm font-medium">📍 Hotspots en temps réel</h3>
                     <SmartHotspotMap height="200px" />
                   </div>
                 )}
 
-                {/* Carte affectation flotte */}
-                {operatingMode === 'fleet_assigned' && hasFleetAssignment && assignment && (
-                  <FleetAssignmentCard
-                    assignment={{
-                      id: assignment.assignmentId,
-                      fleet_vehicle_id: assignment.vehicleId,
-                      driver_id: user?.id || '',
-                      assignment_type: 'permanent',
-                      shift_type: assignment.shiftType as any,
-                      start_date: assignment.startDate,
-                      daily_target: assignment.dailyTarget || undefined,
-                      commission_rate: assignment.commissionRate,
-                      is_active: assignment.isActive,
-                      created_at: assignment.startDate,
-                      updated_at: assignment.startDate,
-                    }}
-                    vehiclePlate={assignment.vehiclePlate}
-                    ownerName={assignment.ownerName}
-                    ownerPhone={assignment.ownerPhone || undefined}
-                  />
-                )}
-
-                {/* Score de fiabilité */}
                 {reliabilityScore && (
                   <ReliabilityScoreCard score={reliabilityScore} />
                 )}
 
-                {/* Actions rapides */}
-                <div className="grid grid-cols-2 gap-3">
-                  <Button
-                    variant="outline"
-                    className="h-auto py-4 flex-col"
-                    onClick={() => navigate('/driver/planning')}
-                  >
-                    <Clock className="w-6 h-6 mb-2 text-primary" />
-                    <span>Mes horaires</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="h-auto py-4 flex-col"
-                    onClick={() => navigate('/history')}
-                  >
-                    <Users className="w-6 h-6 mb-2 text-primary" />
-                    <span>Historique</span>
-                  </Button>
-                </div>
+                <DriverStatsGrid stats={stats} />
 
-                {/* Message hors ligne */}
                 {!isOnline && (
                   <div className="text-center py-8">
                     <Car className="w-16 h-16 mx-auto mb-4 text-muted-foreground/30" />
@@ -315,8 +224,45 @@ const { zones, predictions, driverIntention, setDriverWorkZone, fetchPredictions
                 )}
               </TabsContent>
 
+              {/* TAB GAINS - Adaptatif selon le profil */}
+              <TabsContent value="earnings" className="p-4 mt-0">
+                {profile.employmentType === 'employee' ? (
+                  profile.paymentModel === 'daily_rental' ? (
+                    <DailyRentalEarnings
+                      dailyRentalAmount={profile.dailyRentalAmount}
+                      todayEarnings={displayStats.todayEarnings}
+                      todayTrips={displayStats.todayTrips}
+                      ownerName={profile.fleetOwnerName}
+                    />
+                  ) : (
+                    <CommissionEarnings
+                      commissionRate={profile.commissionRate}
+                      todayEarnings={displayStats.todayEarnings}
+                      todayTrips={displayStats.todayTrips}
+                      ownerName={profile.fleetOwnerName}
+                    />
+                  )
+                ) : (
+                  <OwnerEarnings
+                    todayEarnings={displayStats.todayEarnings}
+                    todayTrips={displayStats.todayTrips}
+                    todayExpenses={totalExpenses}
+                    fleetVehicleId={profile.fleetVehicleId}
+                    weeklyData={[
+                      { day: 'Lun', earnings: 25000, expenses: 5000 },
+                      { day: 'Mar', earnings: 32000, expenses: 3000 },
+                      { day: 'Mer', earnings: 28000, expenses: 8000 },
+                      { day: 'Jeu', earnings: 35000, expenses: 2000 },
+                      { day: 'Ven', earnings: 42000, expenses: 6000 },
+                      { day: 'Sam', earnings: 38000, expenses: 4000 },
+                      { day: 'Dim', earnings: displayStats.todayEarnings, expenses: totalExpenses },
+                    ]}
+                  />
+                )}
+              </TabsContent>
+
+              {/* TAB IA */}
               <TabsContent value="ai" className="p-4 space-y-4 mt-0">
-                {/* Panel IA complet */}
                 <AITrafficPanel 
                   onZoneClick={(lat, lng) => {
                     toast.info(`Zone sélectionnée`, {
@@ -325,74 +271,46 @@ const { zones, predictions, driverIntention, setDriverWorkZone, fetchPredictions
                   }}
                 />
 
-                {/* Zone de travail demain */}
                 <DriverWorkZoneSelector
                   zones={zones}
                   currentIntention={driverIntention}
                   predictions={predictions}
                   onSave={setDriverWorkZone}
                 />
-
-                {/* Météo des courses */}
-                <DemandHeatmap
-                  zones={zones}
-                  predictions={predictions}
-                  selectedHour={selectedHour}
-                  onHourChange={(hour) => {
-                    setSelectedHour(hour);
-                    fetchPredictions(undefined, hour);
-                  }}
-                />
               </TabsContent>
 
-              <TabsContent value="earnings" className="p-4 space-y-4 mt-0">
-                {/* Bouton ajout dépense */}
-                <div className="flex justify-end">
-                  <QuickExpenseButton
-                    fleetVehicleId={driverProfile?.fleetVehicleId}
-                  />
-                </div>
-
-                {/* Carte des gains */}
-                <DailyEarningsCard
-                  summary={dailySummary}
-                  operatingMode={operatingMode}
-                  commissionRate={assignment?.commissionRate}
-                />
-
-                {/* Lien vers rapports */}
+              {/* TAB PLANNING */}
+              <TabsContent value="planning" className="p-4 space-y-4 mt-0">
                 <Button
-                  variant="ghost"
-                  className="w-full justify-between"
+                  variant="outline"
+                  className="w-full justify-between h-14"
+                  onClick={() => navigate('/driver/planning')}
+                >
+                  <span>📅 Gérer mes disponibilités</span>
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-between h-14"
                   onClick={() => navigate('/driver/reports')}
                 >
-                  <span className="flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    Voir tous les rapports
-                  </span>
-                  <ChevronRight className="w-4 h-4" />
+                  <span>📊 Rapports quotidiens</span>
+                  <ChevronRight className="w-5 h-5" />
                 </Button>
-              </TabsContent>
 
-              <TabsContent value="stats" className="p-4 space-y-4 mt-0">
-                <DriverStatsGrid stats={stats} />
-
-                {/* Graphique tendance */}
                 <Button
-                  variant="ghost"
-                  className="w-full justify-between"
+                  variant="outline"
+                  className="w-full justify-between h-14"
                   onClick={() => navigate('/driver/analytics')}
                 >
-                  <span className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" />
-                    Voir les statistiques détaillées
-                  </span>
-                  <ChevronRight className="w-4 h-4" />
+                  <span>📈 Statistiques détaillées</span>
+                  <ChevronRight className="w-5 h-5" />
                 </Button>
               </TabsContent>
-            </Tabs>
-          )}
-        </div>
+            </div>
+          </Tabs>
+        )}
 
         {/* Bottom nav */}
         <div className="p-4 border-t bg-background flex gap-2">
@@ -406,7 +324,7 @@ const { zones, predictions, driverIntention, setDriverWorkZone, fetchPredictions
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setShowModeSelector(true)}
+            onClick={() => navigate('/driver/cockpit')}
           >
             <Settings className="w-5 h-5" />
           </Button>
