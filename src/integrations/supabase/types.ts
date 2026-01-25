@@ -97,27 +97,84 @@ export type Database = {
           color: string | null
           created_at: string
           description: string | null
+          end_point: string | null
           id: string
           is_active: boolean | null
           name: string
+          route_number: string | null
+          start_point: string | null
         }
         Insert: {
           color?: string | null
           created_at?: string
           description?: string | null
+          end_point?: string | null
           id?: string
           is_active?: boolean | null
           name: string
+          route_number?: string | null
+          start_point?: string | null
         }
         Update: {
           color?: string | null
           created_at?: string
           description?: string | null
+          end_point?: string | null
           id?: string
           is_active?: boolean | null
           name?: string
+          route_number?: string | null
+          start_point?: string | null
         }
         Relationships: []
+      }
+      bus_schedules: {
+        Row: {
+          arrival_time: string | null
+          created_at: string
+          days_of_week: number[] | null
+          departure_time: string
+          id: string
+          is_active: boolean | null
+          route_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          arrival_time?: string | null
+          created_at?: string
+          days_of_week?: number[] | null
+          departure_time: string
+          id?: string
+          is_active?: boolean | null
+          route_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          arrival_time?: string | null
+          created_at?: string
+          days_of_week?: number[] | null
+          departure_time?: string
+          id?: string
+          is_active?: boolean | null
+          route_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bus_schedules_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "bus_routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bus_schedules_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bus_stops: {
         Row: {
@@ -128,6 +185,7 @@ export type Database = {
           latitude: number
           longitude: number
           name: string
+          routes: string[] | null
         }
         Insert: {
           address?: string | null
@@ -137,6 +195,7 @@ export type Database = {
           latitude: number
           longitude: number
           name: string
+          routes?: string[] | null
         }
         Update: {
           address?: string | null
@@ -146,34 +205,44 @@ export type Database = {
           latitude?: number
           longitude?: number
           name?: string
+          routes?: string[] | null
         }
         Relationships: []
       }
       city_zones: {
         Row: {
+          active_signals_count: number | null
           center_lat: number
           center_lng: number
           created_at: string | null
+          demand_score: number | null
           id: string
           is_active: boolean | null
+          last_updated: string | null
           name: string
           radius_km: number | null
         }
         Insert: {
+          active_signals_count?: number | null
           center_lat: number
           center_lng: number
           created_at?: string | null
+          demand_score?: number | null
           id?: string
           is_active?: boolean | null
+          last_updated?: string | null
           name: string
           radius_km?: number | null
         }
         Update: {
+          active_signals_count?: number | null
           center_lat?: number
           center_lng?: number
           created_at?: string | null
+          demand_score?: number | null
           id?: string
           is_active?: boolean | null
+          last_updated?: string | null
           name?: string
           radius_km?: number | null
         }
@@ -182,29 +251,38 @@ export type Database = {
       client_signals: {
         Row: {
           created_at: string
+          destination: string | null
           expires_at: string
           id: string
+          is_active: boolean | null
           latitude: number
           longitude: number
           people_count: number
+          trip_type: string | null
           user_id: string | null
         }
         Insert: {
           created_at?: string
+          destination?: string | null
           expires_at?: string
           id?: string
+          is_active?: boolean | null
           latitude: number
           longitude: number
           people_count?: number
+          trip_type?: string | null
           user_id?: string | null
         }
         Update: {
           created_at?: string
+          destination?: string | null
           expires_at?: string
           id?: string
+          is_active?: boolean | null
           latitude?: number
           longitude?: number
           people_count?: number
+          trip_type?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -240,6 +318,44 @@ export type Database = {
             columns: ["contribution_id"]
             isOneToOne: false
             referencedRelation: "map_contributions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demand_predictions: {
+        Row: {
+          confidence_level: number | null
+          created_at: string | null
+          day_of_week: number
+          id: string
+          predicted_demand_score: number | null
+          prediction_hour: number
+          zone_id: string | null
+        }
+        Insert: {
+          confidence_level?: number | null
+          created_at?: string | null
+          day_of_week: number
+          id?: string
+          predicted_demand_score?: number | null
+          prediction_hour: number
+          zone_id?: string | null
+        }
+        Update: {
+          confidence_level?: number | null
+          created_at?: string | null
+          day_of_week?: number
+          id?: string
+          predicted_demand_score?: number | null
+          prediction_hour?: number
+          zone_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_predictions_zone_id_fkey"
+            columns: ["zone_id"]
+            isOneToOne: false
+            referencedRelation: "city_zones"
             referencedColumns: ["id"]
           },
         ]
@@ -406,6 +522,7 @@ export type Database = {
           driver_share: number | null
           fleet_vehicle_id: string | null
           gross_earnings: number | null
+          hours_worked: number | null
           id: string
           is_validated: boolean | null
           net_earnings: number | null
@@ -425,6 +542,7 @@ export type Database = {
           driver_share?: number | null
           fleet_vehicle_id?: string | null
           gross_earnings?: number | null
+          hours_worked?: number | null
           id?: string
           is_validated?: boolean | null
           net_earnings?: number | null
@@ -444,6 +562,7 @@ export type Database = {
           driver_share?: number | null
           fleet_vehicle_id?: string | null
           gross_earnings?: number | null
+          hours_worked?: number | null
           id?: string
           is_validated?: boolean | null
           net_earnings?: number | null
@@ -713,6 +832,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      driver_work_preferences: {
+        Row: {
+          created_at: string
+          driver_id: string
+          end_hour: number | null
+          id: string
+          preference_date: string
+          preferred_zone_id: string | null
+          start_hour: number | null
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          end_hour?: number | null
+          id?: string
+          preference_date: string
+          preferred_zone_id?: string | null
+          start_hour?: number | null
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          end_hour?: number | null
+          id?: string
+          preference_date?: string
+          preferred_zone_id?: string | null
+          start_hour?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_work_preferences_preferred_zone_id_fkey"
+            columns: ["preferred_zone_id"]
+            isOneToOne: false
+            referencedRelation: "city_zones"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       favorite_stops: {
         Row: {
