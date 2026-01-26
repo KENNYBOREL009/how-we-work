@@ -1989,15 +1989,21 @@ export type Database = {
           created_at: string
           current_status: string | null
           destination: string | null
+          destination_lat: number | null
+          destination_lng: number | null
           driver_arrival_at: string | null
           driver_comment: string | null
           driver_made_detour: boolean | null
           driver_rating: number | null
+          estimated_fare: number | null
           fare: number | null
+          final_fare: number | null
           id: string
           is_shared_ride: boolean | null
           no_show_at: string | null
           origin: string | null
+          origin_lat: number | null
+          origin_lng: number | null
           payment_confirmed_at: string | null
           payment_status: string | null
           pickup_lat: number | null
@@ -2016,15 +2022,21 @@ export type Database = {
           created_at?: string
           current_status?: string | null
           destination?: string | null
+          destination_lat?: number | null
+          destination_lng?: number | null
           driver_arrival_at?: string | null
           driver_comment?: string | null
           driver_made_detour?: boolean | null
           driver_rating?: number | null
+          estimated_fare?: number | null
           fare?: number | null
+          final_fare?: number | null
           id?: string
           is_shared_ride?: boolean | null
           no_show_at?: string | null
           origin?: string | null
+          origin_lat?: number | null
+          origin_lng?: number | null
           payment_confirmed_at?: string | null
           payment_status?: string | null
           pickup_lat?: number | null
@@ -2043,15 +2055,21 @@ export type Database = {
           created_at?: string
           current_status?: string | null
           destination?: string | null
+          destination_lat?: number | null
+          destination_lng?: number | null
           driver_arrival_at?: string | null
           driver_comment?: string | null
           driver_made_detour?: boolean | null
           driver_rating?: number | null
+          estimated_fare?: number | null
           fare?: number | null
+          final_fare?: number | null
           id?: string
           is_shared_ride?: boolean | null
           no_show_at?: string | null
           origin?: string | null
+          origin_lat?: number | null
+          origin_lng?: number | null
           payment_confirmed_at?: string | null
           payment_status?: string | null
           pickup_lat?: number | null
