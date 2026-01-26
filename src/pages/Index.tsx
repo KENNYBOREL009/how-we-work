@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
 import Logo from "@/components/ui/Logo";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import { HomeMap } from "@/components/map";
 import { JoinSharedRideDrawer } from "@/components/map/JoinSharedRideDrawer";
 import SeatReservationDrawer from "@/components/booking/SeatReservationDrawer";
 import { NewUserDetector } from "@/components/onboarding";
-import { MapPin, Navigation, Bus, Users, Calendar, Search, Armchair } from "lucide-react";
+import { MapPin, Bus, Users, Calendar, Search, Armchair } from "lucide-react";
 import { useBusMode } from "@/hooks/useBusMode";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -102,7 +103,7 @@ const Index = () => {
   };
 
   return (
-    <MobileLayout>
+    <MobileLayout showThemeToggle={false}>
       {/* New User Guide Detector */}
       <NewUserDetector userType="client" />
       
@@ -111,21 +112,20 @@ const Index = () => {
         <div className="flex items-center justify-between">
           <Logo variant="full" size="md" />
           <div className="flex items-center gap-2">
+            {/* Theme Toggle */}
+            <ThemeToggle className="w-9 h-9" />
             {/* Bus Mode Toggle */}
             <Button
               size="icon"
               variant="outline"
               className={cn(
-                "rounded-full w-10 h-10 transition-all duration-300",
+                "rounded-full w-9 h-9 transition-all duration-300",
                 isBusModeEnabled && "bg-lokebo-dark text-primary border-lokebo-dark shadow-lg"
               )}
               onClick={toggleBusMode}
               title={isBusModeEnabled ? "Désactiver Mode Bus" : "Activer Mode Bus"}
             >
-              <Bus className="w-5 h-5" />
-            </Button>
-            <Button size="icon" variant="ghost" className="rounded-full w-10 h-10">
-              <Navigation className="w-5 h-5" />
+              <Bus className="w-4 h-4" />
             </Button>
           </div>
         </div>
@@ -144,22 +144,22 @@ const Index = () => {
         />
 
         {/* Floating Legend */}
-        <div className="absolute bottom-4 left-4 right-4 glass rounded-xl p-3 border border-border/50 z-10">
-          <div className="flex items-center justify-around text-xs font-medium">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+        <div className="absolute bottom-4 left-4 right-4 glass rounded-xl p-2.5 border border-border/50 z-10">
+          <div className="flex items-center justify-around text-[10px] font-medium">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
+              <span className="text-foreground">Taxi</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[hsl(var(--lokebo-success))]" />
               <span className="text-foreground">Vide</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-amber-500" />
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[hsl(var(--lokebo-warning))]" />
               <span className="text-foreground">Partiel</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-violet-500" />
-              <span className="text-foreground">Partagé</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-destructive" />
+            <div className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-destructive" />
               <span className="text-foreground">Plein</span>
             </div>
           </div>
@@ -185,23 +185,24 @@ const Index = () => {
 
       {/* Quick Actions */}
       <div className="px-4 pb-4 space-y-3">
-        {/* Main CTA */}
+        {/* Main CTA - Redesigned */}
         <Button 
-          className="w-full h-16 text-lg font-bold rounded-2xl elevated hover-scale"
+          className="w-full h-14 text-base font-semibold rounded-xl elevated hover-scale gap-3"
           size="lg"
           onClick={() => navigate("/book")}
         >
-          <Search className="w-6 h-6 mr-3" />
-          Où allons-nous ?
+          <div className="w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center">
+            <Search className="w-4 h-4" />
+          </div>
+          <span>Où allons-nous ?</span>
         </Button>
         
         {/* Secondary Actions Grid */}
         <div className="grid grid-cols-3 gap-2">
           <Button 
             variant="outline" 
-            className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2 border-green-500/50 bg-green-500/5 relative overflow-hidden"
+            className="h-14 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border border-border bg-card relative overflow-hidden group"
             onClick={() => {
-              // Ouvrir directement la réservation de siège avec un taxi mock
               const mockTaxi: Vehicle = {
                 id: 'taxi-demo',
                 vehicle_type: 'taxi',
@@ -218,30 +219,30 @@ const Index = () => {
               setShowSeatReservation(true);
             }}
           >
-            <span className="absolute top-0 right-0 px-1.5 py-0.5 bg-green-500 text-white text-[8px] font-bold rounded-bl-lg">
+            <span className="absolute top-0 right-0 px-1.5 py-0.5 bg-primary text-primary-foreground text-[8px] font-bold rounded-bl-lg">
               E-HAILING
             </span>
-            <Armchair className="w-5 h-5 text-green-600" />
-            <span className="text-xs font-semibold text-green-600 dark:text-green-400">Réserver Siège</span>
+            <Armchair className="w-5 h-5 text-primary" />
+            <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground">Réserver Siège</span>
           </Button>
           <Button 
             variant="outline" 
-            className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2 border-violet-500/50 bg-violet-500/5 relative overflow-hidden"
+            className="h-14 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border border-border bg-card relative overflow-hidden group"
             onClick={() => navigate("/book", { state: { preselectedMode: "confort-partage" } })}
           >
-            <span className="absolute top-0 right-0 px-1.5 py-0.5 bg-violet-500 text-white text-[8px] font-bold rounded-bl-lg">
+            <span className="absolute top-0 right-0 px-1.5 py-0.5 bg-secondary text-secondary-foreground text-[8px] font-bold rounded-bl-lg">
               ÉCONOMIQUE
             </span>
-            <Users className="w-5 h-5 text-violet-500" />
-            <span className="text-xs font-semibold text-violet-600 dark:text-violet-400">Partagé</span>
+            <Users className="w-5 h-5 text-primary" />
+            <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground">Partagé</span>
           </Button>
           <Button 
             variant="outline" 
-            className="h-16 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border-2 border-amber-500/50 bg-amber-500/5"
+            className="h-14 rounded-xl flex flex-col items-center justify-center gap-1 hover-scale border border-border bg-card group"
             onClick={() => navigate("/schedule")}
           >
-            <Calendar className="w-5 h-5 text-amber-500" />
-            <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">Programmer</span>
+            <Calendar className="w-5 h-5 text-primary" />
+            <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground">Programmer</span>
           </Button>
         </div>
       </div>
