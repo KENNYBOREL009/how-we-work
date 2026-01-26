@@ -12,7 +12,7 @@ const MobileLayout = ({ children, showNav = true, showThemeToggle = true }: Mobi
   return (
     <div className="min-h-screen bg-background flex flex-col max-w-lg mx-auto relative">
       {showThemeToggle && (
-        <div className="fixed bottom-28 right-4 z-40">
+        <div className="fixed bottom-24 right-4 z-40">
           <ThemeToggle />
         </div>
       )}
