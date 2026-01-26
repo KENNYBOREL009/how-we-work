@@ -4,40 +4,9 @@ import { useAuth } from './useAuth';
 import { useWallet } from './useWallet';
 import { useToast } from './use-toast';
 
-export interface Trip {
-  id: string;
-  user_id: string;
-  vehicle_id?: string;
-  trip_type: string;
-  origin?: string;
-  destination?: string;
-  fare?: number;
-  status: string;
-  current_status: string;
-  payment_status: string;
-  is_shared_ride: boolean;
-  driver_rating?: number;
-  driver_comment?: string;
-  pickup_location?: string;
-  pickup_lat?: number;
-  pickup_lng?: number;
-  started_at?: string;
-  completed_at?: string;
-  created_at: string;
-}
-
-export interface SharedRidePassenger {
-  id: string;
-  trip_id: string;
-  user_id: string;
-  first_name?: string;
-  avatar_url?: string;
-  pickup_location?: string;
-  dropoff_location?: string;
-  fare_amount: number;
-  joined_at: string;
-  status: string;
-}
+// Re-export types from centralized types
+import type { Trip, SharedRidePassenger } from '@/types';
+export type { Trip, SharedRidePassenger };
 
 export const useActiveTrip = () => {
   const { user } = useAuth();

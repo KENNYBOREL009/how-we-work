@@ -47,30 +47,44 @@ export interface BusRoute {
 // TRIP TYPES
 // =============================================
 
-export type TripType = 'taxi' | 'reservation' | 'confort-partage' | 'privatisation' | 'scheduled';
-export type TripStatus = 'searching' | 'driver_assigned' | 'driver_arriving' | 'driver_arrived' | 'picked_up' | 'in_progress' | 'arriving_destination' | 'arrived' | 'completed' | 'cancelled';
+// Trip types aligned with Flutter TripModel
+export type TripType = 'standard' | 'shared' | 'private' | 'taxi' | 'reservation' | 'confort-partage' | 'privatisation' | 'scheduled';
+export type TripStatus = 'pending' | 'accepted' | 'pickup' | 'onboard' | 'completed' | 'cancelled' | 'searching' | 'driver_assigned' | 'driver_arriving' | 'driver_arrived' | 'picked_up' | 'in_progress' | 'arriving_destination' | 'arrived';
 export type PaymentStatus = 'pending' | 'paid' | 'refunded';
 
 export interface Trip {
   id: string;
-  user_id: string;
+  user_id: string;  // passenger_id in Flutter
+  driver_id?: string;
   vehicle_id?: string;
   trip_type: TripType;
   origin?: string;
   destination?: string;
-  fare?: number;
+  // Coordinates
+  origin_lat?: number;
+  origin_lng?: number;
+  destination_lat?: number;
+  destination_lng?: number;
+  // Legacy pickup fields (backward compatibility)
+  pickup_location?: string;
+  pickup_lat?: number;
+  pickup_lng?: number;
+  // Fare structure
+  estimated_fare?: number;
+  final_fare?: number;
+  fare?: number;  // Legacy field
+  // Status
   status: string;
   current_status: TripStatus;
   payment_status: PaymentStatus;
   is_shared_ride: boolean;
+  // Rating
   driver_rating?: number;
   driver_comment?: string;
-  pickup_location?: string;
-  pickup_lat?: number;
-  pickup_lng?: number;
+  // Timestamps
+  created_at: string;
   started_at?: string;
   completed_at?: string;
-  created_at: string;
 }
 
 export interface SharedRidePassenger {
