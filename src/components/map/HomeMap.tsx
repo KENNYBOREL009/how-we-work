@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { useVehicles, Vehicle } from '@/hooks/useVehicles';
 import { MapContributorFAB } from '@/components/map-contributor';
+import { createFullVehicleMarkerHTML, getDestinationColor } from './VehicleMarker';
 
 interface HomeMapProps {
   onLocationFound?: (coords: { lat: number; lng: number }) => void;
@@ -13,19 +14,6 @@ interface HomeMapProps {
   /** Rayon en km pour filtrer les taxis visibles (défaut: 2km) */
   visibilityRadius?: number;
 }
-
-const statusColors: Record<string, string> = {
-  available: '#22c55e',
-  full: '#f59e0b',
-  private: '#FFD42F',
-  offline: '#6b7280',
-};
-
-const rideModeColors: Record<string, string> = {
-  'standard': '#22c55e',
-  'confort-partage': '#8b5cf6', // Violet pour shared
-  'privatisation': '#FFD42F',
-};
 
 // Calcule la distance entre deux points en km (formule Haversine)
 const calculateDistance = (
@@ -191,182 +179,17 @@ const HomeMap: React.FC<HomeMapProps> = ({
       const isSharedRide = vehicle.ride_mode === 'confort-partage';
       const isPrivate = vehicle.ride_mode === 'privatisation';
       const availableSeats = (vehicle.capacity || 4) - (vehicle.current_passengers || 0);
-      const occupancy = (vehicle.current_passengers || 0) / (vehicle.capacity || 4);
       const canJoin = isSharedRide && availableSeats > 0 && vehicle.destination;
-      const hasDestination = Boolean(vehicle.destination);
       
-      // Couleur basée sur le remplissage pour les taxis collectifs
-      let fillStatusColor = '#22c55e'; // Vert - Vide
-      let fillStatusLabel = 'Vide';
-      if (availableSeats === 0) {
-        fillStatusColor = '#ef4444'; // Rouge - Plein
-        fillStatusLabel = 'Plein';
-      } else if (occupancy >= 0.5) {
-        fillStatusColor = '#f59e0b'; // Orange - Partiellement rempli
-        fillStatusLabel = `${availableSeats} place${availableSeats > 1 ? 's' : ''}`;
-      }
-      
-      // Couleur du marqueur principal
+      // Couleur basée sur la destination
       const markerColor = isSharedRide 
         ? '#8b5cf6'
-        : isPrivate 
-        ? '#f59e0b'
-        : '#FFD42F';
+        : getDestinationColor(vehicle.destination);
 
-      // Rotation pour la flèche de direction
-      const heading = vehicle.heading || 0;
-
+      // Créer l'élément du marqueur avec le nouveau design
       const el = document.createElement('div');
-      el.className = 'taxi-marker-enhanced';
-      el.innerHTML = `
-        <div style="
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
-        ">
-          ${hasDestination ? `
-            <div style="
-              position: absolute;
-              bottom: 100%;
-              left: 50%;
-              transform: translateX(-50%);
-              margin-bottom: 4px;
-              background: linear-gradient(135deg, ${isSharedRide ? '#8b5cf6' : '#1a1a2e'} 0%, ${isSharedRide ? '#7c3aed' : '#414042'} 100%);
-              color: ${isSharedRide ? '#fff' : '#FFD42F'};
-              font-size: 11px;
-              font-weight: 700;
-              padding: 6px 10px;
-              border-radius: 10px;
-              white-space: nowrap;
-              max-width: 140px;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-              border: 2px solid ${isSharedRide ? '#a78bfa' : '#FFD42F'};
-              animation: float 2s ease-in-out infinite;
-            ">
-              <span style="display: flex; align-items: center; gap: 4px;">
-                ${isSharedRide ? '<span style="font-size: 12px;">👥</span>' : '<span style="font-size: 12px;">📍</span>'}
-                ${vehicle.destination}
-              </span>
-            </div>
-            <div style="
-              width: 0;
-              height: 0;
-              border-left: 6px solid transparent;
-              border-right: 6px solid transparent;
-              border-top: 8px solid ${isSharedRide ? '#8b5cf6' : '#1a1a2e'};
-              margin-bottom: -2px;
-            "></div>
-          ` : ''}
-          
-          <!-- Flèche de direction -->
-          ${hasDestination ? `
-            <div style="
-              position: absolute;
-              top: -20px;
-              left: 50%;
-              transform: translateX(-50%) rotate(${heading}deg);
-              width: 0;
-              height: 0;
-              border-left: 8px solid transparent;
-              border-right: 8px solid transparent;
-              border-bottom: 14px solid ${fillStatusColor};
-              filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-              z-index: 5;
-            "></div>
-          ` : ''}
-          
-          <div style="
-            position: relative;
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(145deg, ${markerColor}, ${isSharedRide ? '#7c3aed' : isPrivate ? '#d97706' : '#e6c029'});
-            border: 3px solid #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 
-              0 4px 15px rgba(0,0,0,0.3),
-              inset 0 2px 4px rgba(255,255,255,0.3);
-            transition: all 0.3s ease;
-          ">
-            <!-- Indicateur de remplissage -->
-            <div style="
-              position: absolute;
-              top: -4px;
-              right: -4px;
-              background: ${fillStatusColor};
-              width: 16px;
-              height: 16px;
-              border-radius: 50%;
-              border: 2px solid white;
-              z-index: 10;
-              ${availableSeats === 0 ? '' : 'animation: pulse 2s infinite;'}
-            "></div>
-            
-            ${isSharedRide ? `
-              <div style="
-                position: absolute;
-                bottom: -4px;
-                right: -4px;
-                background: linear-gradient(135deg, #22c55e, #16a34a);
-                color: white;
-                font-size: 10px;
-                font-weight: 800;
-                width: 20px;
-                height: 20px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border: 2px solid white;
-                z-index: 10;
-                box-shadow: 0 2px 8px rgba(34, 197, 94, 0.5);
-              ">
-                ${availableSeats}
-              </div>
-            ` : ''}
-            
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="${isSharedRide ? '#fff' : '#1a1a2e'}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0H3m4 0h10m0 0a2 2 0 104 0m-4 0a2 2 0 114 0m0 0h2M3 11l2-5h9l4 5h1a2 2 0 012 2v4h-2"/>
-            </svg>
-          </div>
-          
-          ${!hasDestination ? `
-            <div style="
-              margin-top: 4px;
-              background: ${fillStatusColor};
-              color: white;
-              font-size: 9px;
-              font-weight: 700;
-              padding: 3px 8px;
-              border-radius: 6px;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-            ">
-              ${fillStatusLabel}
-            </div>
-          ` : ''}
-        </div>
-        <style>
-          @keyframes float {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-3px); }
-          }
-          @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.1); }
-          }
-          .taxi-marker-enhanced:hover > div > div:last-of-type {
-            transform: scale(1.1);
-          }
-        </style>
-      `;
+      el.className = 'taxi-marker-uber-style';
+      el.innerHTML = createFullVehicleMarkerHTML(vehicle);
 
       el.addEventListener('click', () => onVehicleClick?.(vehicle));
 
@@ -402,25 +225,27 @@ const HomeMap: React.FC<HomeMapProps> = ({
               width: 40px;
               height: 40px;
               border-radius: 12px;
-              background: linear-gradient(135deg, ${markerColor}, ${isSharedRide ? '#7c3aed' : '#e6c029'});
+              background: linear-gradient(135deg, ${markerColor}, ${markerColor}cc);
               display: flex;
               align-items: center;
               justify-content: center;
             ">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${isSharedRide ? '#fff' : '#1a1a2e'}" stroke-width="2.5">
-                <path d="M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m-4 0H3m4 0h10m0 0a2 2 0 104 0m-4 0a2 2 0 114 0m0 0h2M3 11l2-5h9l4 5h1a2 2 0 012 2v4h-2"/>
+              <svg width="20" height="28" viewBox="0 0 40 56" fill="none">
+                <path d="M8 48 C8 52 12 54 20 54 C28 54 32 52 32 48 L32 18 C32 10 28 4 20 4 C12 4 8 10 8 18 L8 48 Z" fill="${markerColor}" stroke="#fff" stroke-width="2"/>
+                <path d="M12 36 L12 20 C12 14 15 10 20 10 C25 10 28 14 28 20 L28 36 C28 38 26 40 20 40 C14 40 12 38 12 36 Z" fill="#1a1a2e" opacity="0.9"/>
               </svg>
             </div>
             <div>
               <strong style="color: #1a1a2e; font-size: 15px; display: block;">${vehicle.plate_number}</strong>
               <span style="font-size: 11px; color: #666;">
-                ${isSharedRide ? '👥 Confort Partagé' : isPrivate ? '⭐ Privé' : '🚕 Taxi Standard'}
+                ${isSharedRide ? '👥 Confort Partagé' : isPrivate ? '⭐ Privé' : '🚕 Taxi Collectif'}
               </span>
             </div>
           </div>
           ${vehicle.destination ? `
             <div style="
-              background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+              background: linear-gradient(135deg, ${markerColor}20, ${markerColor}10);
+              border: 1px solid ${markerColor}40;
               border-radius: 10px;
               padding: 10px;
               margin-bottom: 10px;
@@ -441,7 +266,7 @@ const HomeMap: React.FC<HomeMapProps> = ({
               text-align: center;
             ">
               <p style="margin: 0; font-size: 13px; color: #155724; font-weight: 600;">
-                ✅ Disponible
+                ✅ Disponible - Définissez la destination
               </p>
             </div>
           `}
@@ -472,14 +297,14 @@ const HomeMap: React.FC<HomeMapProps> = ({
             style="
               width: 100%;
               padding: 12px;
-              background: linear-gradient(135deg, ${isSharedRide ? '#8b5cf6' : '#FFD42F'}, ${isSharedRide ? '#7c3aed' : '#e6c029'});
+              background: linear-gradient(135deg, ${markerColor}, ${markerColor}dd);
               color: ${isSharedRide ? '#fff' : '#1a1a2e'};
               border: none;
               border-radius: 12px;
               font-weight: 700;
               font-size: 14px;
               cursor: pointer;
-              box-shadow: 0 4px 12px ${isSharedRide ? 'rgba(139, 92, 246, 0.4)' : 'rgba(255, 212, 47, 0.4)'};
+              box-shadow: 0 4px 12px ${markerColor}40;
             "
           >
             ${canJoin ? '👥 Rejoindre la course' : '🚕 Choisir ce taxi'}
