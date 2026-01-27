@@ -2,22 +2,18 @@ import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MobileLayout from "@/components/layout/MobileLayout";
 import { Button } from "@/components/ui/button";
-import { DestinationSearch } from "@/components/signal/DestinationSearch";
+import { DestinationSearch, Destination } from "@/components/signal/DestinationSearch";
 import { RideOptions, RideMode, rideModes } from "@/components/signal/RideOptions";
 import { PassengerSelector } from "@/components/signal/PassengerSelector";
 import { PrivateRideOptions, vehicleClasses } from "@/components/signal/PrivateRideOptions";
 import { DriverSearchAnimation } from "@/components/signal/DriverSearchAnimation";
+import { MapDestinationPicker } from "@/components/map";
 import { ChevronLeft, MapPin, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-type BookingStep = "destination" | "options" | "searching";
-
-interface Destination {
-  name: string;
-  distance: number;
-}
+type BookingStep = "destination" | "map-pick" | "options" | "searching";
 
 const Book = () => {
   const navigate = useNavigate();
@@ -32,6 +28,15 @@ const Book = () => {
   const [passengerCount, setPassengerCount] = useState(1);
   const [selectedClass, setSelectedClass] = useState("berline");
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Try to get user location on mount
+  useState(() => {
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => setUserLocation({ lat: 4.0511, lng: 9.7043 }) // Default Douala
+    );
+  });
 
   const handleDestinationSelect = (dest: Destination) => {
     setDestination(dest);
@@ -90,13 +95,48 @@ const Book = () => {
   };
 
   const handleBack = () => {
-    if (step === "options") {
+    if (step === "map-pick") {
+      setStep("destination");
+    } else if (step === "options") {
       setStep("destination");
       setSelectedMode(preselectedMode || null);
     } else {
       navigate(-1);
     }
   };
+
+  const handleMapConfirm = (location: { lat: number; lng: number; name: string }) => {
+    // Estimate distance based on location (simple calculation)
+    const estimatedDistance = userLocation 
+      ? Math.round(
+          Math.sqrt(
+            Math.pow((location.lat - userLocation.lat) * 111, 2) +
+            Math.pow((location.lng - userLocation.lng) * 111 * Math.cos(userLocation.lat * Math.PI / 180), 2)
+          ) * 10
+        ) / 10
+      : 5;
+    
+    setDestination({
+      name: location.name,
+      distance: estimatedDistance,
+      lat: location.lat,
+      lng: location.lng
+    });
+    setStep("options");
+  };
+
+  // Map picker view
+  if (step === "map-pick") {
+    return (
+      <MobileLayout showNav={false} showThemeToggle={false}>
+        <MapDestinationPicker
+          onConfirm={handleMapConfirm}
+          onCancel={() => setStep("destination")}
+          initialCenter={userLocation || { lat: 4.0511, lng: 9.7043 }}
+        />
+      </MobileLayout>
+    );
+  }
 
   if (step === "searching") {
     return (
@@ -133,8 +173,7 @@ const Book = () => {
           </Button>
           <div className="flex-1">
             <h1 className="text-lg font-bold">
-              {step === "destination" && "Où allons-nous ?"}
-              {step === "options" && "Choisir le mode"}
+              {step === "destination" ? "Où allons-nous ?" : "Choisir le mode"}
             </h1>
             {destination && step !== "destination" && (
               <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -148,7 +187,10 @@ const Book = () => {
         {/* Content */}
         <div className="flex-1 overflow-auto p-4">
           {step === "destination" && (
-            <DestinationSearch onSelect={handleDestinationSelect} />
+            <DestinationSearch 
+              onSelect={handleDestinationSelect}
+              onMapSelect={() => setStep("map-pick")}
+            />
           )}
 
           {step === "options" && destination && (

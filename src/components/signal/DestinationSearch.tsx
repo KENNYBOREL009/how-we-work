@@ -1,22 +1,25 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { MapPin, Search, Navigation, Clock, Home, Briefcase, Star, Mic, MicOff } from "lucide-react";
+import { MapPin, Search, Navigation, Clock, Home, Briefcase, Star, Mic, MicOff, Map } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { toast } from "sonner";
 
-interface Destination {
+export interface Destination {
   name: string;
   distance: number;
   recent?: boolean;
   type?: "saved" | "recent" | "popular";
+  lat?: number;
+  lng?: number;
 }
 
 interface DestinationSearchProps {
   onSelect: (destination: Destination) => void;
+  onMapSelect?: () => void;
   className?: string;
 }
 
@@ -42,7 +45,7 @@ const addressTypeIcons: Record<string, React.ReactNode> = {
   other: <Star className="w-5 h-5 text-muted-foreground" />,
 };
 
-export const DestinationSearch = ({ onSelect, className }: DestinationSearchProps) => {
+export const DestinationSearch = ({ onSelect, onMapSelect, className }: DestinationSearchProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
   const { user } = useAuth();
@@ -140,6 +143,22 @@ export const DestinationSearch = ({ onSelect, className }: DestinationSearchProp
           </p>
         )}
       </div>
+
+      {/* Map Selection Button */}
+      {onMapSelect && (
+        <button 
+          className="flex items-center gap-4 p-4 rounded-2xl bg-accent/50 border border-accent mb-4 hover:bg-accent/70 transition-colors"
+          onClick={onMapSelect}
+        >
+          <div className="w-12 h-12 rounded-2xl bg-accent flex items-center justify-center">
+            <Map className="w-5 h-5 text-accent-foreground" />
+          </div>
+          <div className="text-left">
+            <p className="font-semibold text-foreground">Choisir sur la carte</p>
+            <p className="text-sm text-muted-foreground">Positionnez votre destination manuellement</p>
+          </div>
+        </button>
+      )}
 
       {/* Current Location */}
       <button 
