@@ -104,9 +104,18 @@ export const useTrafficIntelligence = () => {
       return data?.data;
     } catch (error: any) {
       console.error('Error predicting traffic:', error);
+      
+      // Check for specific error types
+      const isCreditsError = error?.context?.status === 402 || error?.message?.includes('402');
+      const isRateLimitError = error?.context?.status === 429 || error?.message?.includes('429');
+      
       toast({
-        title: "Erreur d'analyse",
-        description: error.message || "Impossible d'analyser le trafic",
+        title: isCreditsError ? "Crédits IA épuisés" : isRateLimitError ? "Limite atteinte" : "Erreur d'analyse",
+        description: isCreditsError 
+          ? "Rechargez vos crédits dans Settings → Workspace → Usage" 
+          : isRateLimitError 
+            ? "Veuillez réessayer dans quelques minutes"
+            : error.message || "Impossible d'analyser le trafic",
         variant: "destructive",
       });
       return null;
