@@ -35,6 +35,7 @@ import NotFound from "./pages/NotFound";
 import SharedComfortBooking from "./pages/SharedComfortBooking";
 import Rewards from "./pages/Rewards";
 import DriverCockpitPage from "./pages/DriverCockpit";
+import AdminDashboard from "./pages/AdminDashboard";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -75,6 +76,7 @@ const App = () => (
                   <Route path="/about" element={<About />} />
                   <Route path="/shared-comfort" element={<SharedComfortBooking />} />
                     <Route path="/rewards" element={<Rewards />} />
+                    <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                 </BrowserRouter>

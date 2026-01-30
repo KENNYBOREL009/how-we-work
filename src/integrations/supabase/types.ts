@@ -2425,22 +2425,69 @@ export type Database = {
       }
     }
     Views: {
-      admin_dashboard_stats: {
-        Row: {
-          active_vehicles: number | null
-          pending_reservations: number | null
-          revenue_today: number | null
-          total_fleet_owners: number | null
-          total_users: number | null
-          trips_today: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       add_user_points: {
         Args: { p_action: string; p_points: number; p_user_id: string }
         Returns: undefined
+      }
+      admin_assign_role: {
+        Args: {
+          p_role: Database["public"]["Enums"]["app_role"]
+          p_user_id: string
+        }
+        Returns: boolean
+      }
+      admin_get_trips: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          completed_at: string
+          created_at: string
+          destination: string
+          fare: number
+          id: string
+          origin: string
+          status: string
+          trip_type: string
+          user_id: string
+          user_name: string
+        }[]
+      }
+      admin_get_users: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          created_at: string
+          first_name: string
+          id: string
+          last_name: string
+          phone_number: string
+          roles: string[]
+        }[]
+      }
+      admin_get_vehicles: {
+        Args: never
+        Returns: {
+          capacity: number
+          created_at: string
+          current_passengers: number
+          destination: string
+          driver_id: string
+          driver_name: string
+          id: string
+          is_active: boolean
+          plate_number: string
+          status: string
+          vehicle_type: string
+        }[]
+      }
+      admin_remove_role: {
+        Args: {
+          p_role: Database["public"]["Enums"]["app_role"]
+          p_user_id: string
+        }
+        Returns: boolean
       }
       calculate_surge_multiplier: {
         Args: { p_demand_count: number; p_driver_count: number }
@@ -2514,6 +2561,7 @@ export type Database = {
           vehicle_lng: number
         }[]
       }
+      get_admin_dashboard_stats: { Args: never; Returns: Json }
       get_driver_avg_rating: { Args: { p_driver_id: string }; Returns: number }
       get_fleet_owner_id: { Args: { p_user_id: string }; Returns: string }
       get_predicted_demand: {

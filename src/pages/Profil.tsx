@@ -25,6 +25,7 @@ import {
   Info,
   X,
   Gift,
+  Shield,
 } from "lucide-react";
 
 interface Profile {
@@ -39,6 +40,7 @@ const Profil = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { userPoints } = useMapContributions();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
@@ -53,8 +55,19 @@ const Profil = () => {
   useEffect(() => {
     if (user) {
       fetchProfile();
+      checkAdminStatus();
     }
   }, [user]);
+
+  const checkAdminStatus = async () => {
+    if (!user) return;
+    try {
+      const { data } = await supabase.rpc('is_admin', { _user_id: user.id });
+      setIsAdmin(data === true);
+    } catch {
+      setIsAdmin(false);
+    }
+  };
 
   const fetchProfile = async () => {
     if (!user) return;
@@ -263,6 +276,24 @@ const Profil = () => {
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </Button>
           </div>
+
+          {/* Admin Section */}
+          {isAdmin && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-semibold text-muted-foreground px-1">Administration</h3>
+              <Button
+                variant="ghost"
+                className="w-full justify-between h-14 px-4 rounded-xl border border-red-500/20 bg-red-500/5"
+                onClick={() => navigate("/admin")}
+              >
+                <span className="flex items-center gap-3">
+                  <Shield className="w-5 h-5 text-red-500" />
+                  Tableau de bord Admin
+                </span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </div>
+          )}
 
           {/* Support */}
           <div className="space-y-2">
