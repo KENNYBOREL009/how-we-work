@@ -3,10 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { RefreshCw, Shield, Users, Car, MapPin, ArrowLeft } from 'lucide-react';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { 
+  RefreshCw, Shield, Users, Car, MapPin, ArrowLeft, 
+  Building2, Bus, MapPinned, Gift, Wallet, CalendarClock 
+} from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
+import { useAdminExtended } from '@/hooks/useAdminExtended';
 import { useAuth } from '@/hooks/useAuth';
-import { AdminStatsCards, AdminUsersTable, AdminVehiclesTable, AdminTripsTable } from '@/components/admin';
+import { 
+  AdminStatsCards, 
+  AdminUsersTable, 
+  AdminVehiclesTable, 
+  AdminTripsTable,
+  AdminFleetTable,
+  AdminBusTable,
+  AdminZonesTable,
+  AdminContributionsTable,
+  AdminFinanceCard,
+  AdminScheduledTripsTable,
+  AdminRewardsTable,
+} from '@/components/admin';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -23,12 +40,38 @@ const AdminDashboard = () => {
     refreshData,
   } = useAdmin();
 
+  const {
+    fleetOwners,
+    busRoutes,
+    busStops,
+    cityZones,
+    contributions,
+    scheduledTrips,
+    rewards,
+    financialStats,
+    isLoading: extendedLoading,
+    refreshAllExtendedData,
+    toggleFleetVerification,
+    validateContribution,
+  } = useAdminExtended();
+
   // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
     }
   }, [authLoading, user, navigate]);
+
+  // Load extended data when admin
+  useEffect(() => {
+    if (isAdmin) {
+      refreshAllExtendedData();
+    }
+  }, [isAdmin, refreshAllExtendedData]);
+
+  const handleRefresh = async () => {
+    await Promise.all([refreshData(), refreshAllExtendedData()]);
+  };
 
   // Loading state
   if (authLoading || isLoading) {
@@ -87,13 +130,13 @@ const AdminDashboard = () => {
                 <Shield className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h1 className="font-bold text-lg">Admin Dashboard</h1>
-                <p className="text-xs text-muted-foreground">Gestion Lokebo</p>
+                <h1 className="font-bold text-lg">Admin Lokebo</h1>
+                <p className="text-xs text-muted-foreground">Centre de contrôle</p>
               </div>
             </div>
           </div>
-          <Button onClick={refreshData} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button onClick={handleRefresh} variant="outline" size="sm" disabled={extendedLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${extendedLoading ? 'animate-spin' : ''}`} />
             Actualiser
           </Button>
         </div>
@@ -104,22 +147,52 @@ const AdminDashboard = () => {
         {/* Stats */}
         <AdminStatsCards stats={stats} />
 
+        {/* Finance Overview */}
+        <AdminFinanceCard stats={financialStats} />
+
         {/* Tabs */}
         <Tabs defaultValue="users" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Utilisateurs</span>
-            </TabsTrigger>
-            <TabsTrigger value="vehicles" className="flex items-center gap-2">
-              <Car className="h-4 w-4" />
-              <span className="hidden sm:inline">Véhicules</span>
-            </TabsTrigger>
-            <TabsTrigger value="trips" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              <span className="hidden sm:inline">Trajets</span>
-            </TabsTrigger>
-          </TabsList>
+          <ScrollArea className="w-full whitespace-nowrap">
+            <TabsList className="inline-flex w-auto">
+              <TabsTrigger value="users" className="flex items-center gap-1.5">
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Utilisateurs</span>
+              </TabsTrigger>
+              <TabsTrigger value="vehicles" className="flex items-center gap-1.5">
+                <Car className="h-4 w-4" />
+                <span className="hidden sm:inline">Véhicules</span>
+              </TabsTrigger>
+              <TabsTrigger value="trips" className="flex items-center gap-1.5">
+                <MapPin className="h-4 w-4" />
+                <span className="hidden sm:inline">Courses</span>
+              </TabsTrigger>
+              <TabsTrigger value="reservations" className="flex items-center gap-1.5">
+                <CalendarClock className="h-4 w-4" />
+                <span className="hidden sm:inline">Réservations</span>
+              </TabsTrigger>
+              <TabsTrigger value="fleet" className="flex items-center gap-1.5">
+                <Building2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Flottes</span>
+              </TabsTrigger>
+              <TabsTrigger value="bus" className="flex items-center gap-1.5">
+                <Bus className="h-4 w-4" />
+                <span className="hidden sm:inline">Bus</span>
+              </TabsTrigger>
+              <TabsTrigger value="zones" className="flex items-center gap-1.5">
+                <MapPinned className="h-4 w-4" />
+                <span className="hidden sm:inline">Zones</span>
+              </TabsTrigger>
+              <TabsTrigger value="contributions" className="flex items-center gap-1.5">
+                <MapPin className="h-4 w-4" />
+                <span className="hidden sm:inline">Contributions</span>
+              </TabsTrigger>
+              <TabsTrigger value="rewards" className="flex items-center gap-1.5">
+                <Gift className="h-4 w-4" />
+                <span className="hidden sm:inline">Récompenses</span>
+              </TabsTrigger>
+            </TabsList>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
 
           <TabsContent value="users" className="mt-4">
             <AdminUsersTable
@@ -135,6 +208,36 @@ const AdminDashboard = () => {
 
           <TabsContent value="trips" className="mt-4">
             <AdminTripsTable trips={trips} />
+          </TabsContent>
+
+          <TabsContent value="reservations" className="mt-4">
+            <AdminScheduledTripsTable trips={scheduledTrips} />
+          </TabsContent>
+
+          <TabsContent value="fleet" className="mt-4">
+            <AdminFleetTable 
+              fleetOwners={fleetOwners} 
+              onToggleVerification={toggleFleetVerification} 
+            />
+          </TabsContent>
+
+          <TabsContent value="bus" className="mt-4">
+            <AdminBusTable routes={busRoutes} stops={busStops} />
+          </TabsContent>
+
+          <TabsContent value="zones" className="mt-4">
+            <AdminZonesTable zones={cityZones} />
+          </TabsContent>
+
+          <TabsContent value="contributions" className="mt-4">
+            <AdminContributionsTable 
+              contributions={contributions} 
+              onValidate={validateContribution} 
+            />
+          </TabsContent>
+
+          <TabsContent value="rewards" className="mt-4">
+            <AdminRewardsTable rewards={rewards} />
           </TabsContent>
         </Tabs>
       </main>
