@@ -2439,6 +2439,105 @@ export type Database = {
         }
         Returns: boolean
       }
+      admin_get_bus_routes: {
+        Args: never
+        Returns: {
+          color: string
+          end_point: string
+          id: string
+          is_active: boolean
+          name: string
+          route_number: string
+          schedules_count: number
+          start_point: string
+          stops_count: number
+        }[]
+      }
+      admin_get_bus_stops: {
+        Args: never
+        Returns: {
+          address: string
+          id: string
+          is_active: boolean
+          latitude: number
+          longitude: number
+          name: string
+          routes_count: number
+        }[]
+      }
+      admin_get_city_zones: {
+        Args: never
+        Returns: {
+          active_signals_count: number
+          center_lat: number
+          center_lng: number
+          demand_score: number
+          id: string
+          is_active: boolean
+          name: string
+          radius_km: number
+        }[]
+      }
+      admin_get_contributions: {
+        Args: never
+        Returns: {
+          contribution_type: string
+          contributor_name: string
+          created_at: string
+          id: string
+          local_name: string
+          official_name: string
+          points_awarded: number
+          status: string
+          user_id: string
+          votes_negative: number
+          votes_positive: number
+        }[]
+      }
+      admin_get_financial_stats: { Args: never; Returns: Json }
+      admin_get_fleet_owners: {
+        Args: never
+        Returns: {
+          company_name: string
+          contact_email: string
+          contact_phone: string
+          created_at: string
+          driver_count: number
+          id: string
+          is_active: boolean
+          is_verified: boolean
+          user_id: string
+          vehicle_count: number
+        }[]
+      }
+      admin_get_rewards: {
+        Args: never
+        Returns: {
+          category: string
+          description: string
+          id: string
+          is_active: boolean
+          name: string
+          points_cost: number
+          redemptions_count: number
+          stock: number
+          value_fcfa: number
+        }[]
+      }
+      admin_get_scheduled_trips: {
+        Args: never
+        Returns: {
+          client_name: string
+          created_at: string
+          destination: string
+          driver_name: string
+          estimated_fare: number
+          id: string
+          origin: string
+          scheduled_at: string
+          status: string
+        }[]
+      }
       admin_get_trips: {
         Args: { p_limit?: number; p_offset?: number }
         Returns: {
@@ -2487,6 +2586,14 @@ export type Database = {
           p_role: Database["public"]["Enums"]["app_role"]
           p_user_id: string
         }
+        Returns: boolean
+      }
+      admin_toggle_fleet_verification: {
+        Args: { p_fleet_owner_id: string }
+        Returns: boolean
+      }
+      admin_validate_contribution: {
+        Args: { p_approve: boolean; p_contribution_id: string }
         Returns: boolean
       }
       calculate_surge_multiplier: {
