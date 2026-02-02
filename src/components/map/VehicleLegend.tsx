@@ -8,22 +8,12 @@ interface VehicleLegendProps {
 }
 
 const VehicleLegend: React.FC<VehicleLegendProps> = ({ className, compact = false }) => {
-  // Destinations principales avec leurs couleurs
-  const destinationLegends = [
-    { destination: 'Bonanjo', color: DESTINATION_COLORS['Bonanjo'] },
-    { destination: 'Akwa', color: DESTINATION_COLORS['Akwa'] },
-    { destination: 'Deido', color: DESTINATION_COLORS['Deido'] },
-    { destination: 'Bonapriso', color: DESTINATION_COLORS['Bonapriso'] },
-    { destination: 'Makepe', color: DESTINATION_COLORS['Makepe'] },
-    { destination: 'Bonaberi', color: DESTINATION_COLORS['Bonaberi'] },
-  ];
-
   const vehicleTypes = [
     {
       color: '#FFD42F',
-      label: 'Taxi Collectif',
+      label: 'Taxi Jaune',
       icon: '🚕',
-      description: 'Taxi jaune standard'
+      description: 'Taxi collectif classique'
     },
     {
       color: '#8b5cf6',
@@ -83,27 +73,6 @@ const VehicleLegend: React.FC<VehicleLegendProps> = ({ className, compact = fals
                 <p className="font-medium text-sm">{type.label}</p>
                 <p className="text-xs text-muted-foreground">{type.description}</p>
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Couleurs par destination */}
-      <div className="pt-3 border-t border-border">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-          Couleurs par destination
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          {destinationLegends.map((item) => (
-            <div key={item.destination} className="flex items-center gap-2">
-              <div
-                className="w-4 h-6 rounded-sm shadow-sm"
-                style={{ 
-                  backgroundColor: item.color,
-                  clipPath: 'polygon(20% 0%, 80% 0%, 100% 15%, 100% 100%, 0% 100%, 0% 15%)'
-                }}
-              />
-              <span className="text-xs font-medium">{item.destination}</span>
             </div>
           ))}
         </div>
