@@ -1,41 +1,17 @@
 import React from 'react';
 import { Vehicle } from '@/hooks/useVehicles';
 
-// Palette de couleurs distinctes pour les destinations
+// Couleurs simplifiées : Taxi jaune vs VTC Confort violet
 const DESTINATION_COLORS: Record<string, string> = {
-  'Bonanjo': '#3b82f6',      // Bleu
-  'Akwa': '#22c55e',         // Vert
-  'Deido': '#f97316',        // Orange
-  'Bonapriso': '#ec4899',    // Rose
-  'Makepe': '#8b5cf6',       // Violet
-  'Bali': '#06b6d4',         // Cyan
-  'Bonaberi': '#eab308',     // Jaune
-  'Ndokoti': '#ef4444',      // Rouge
-  'Logbessou': '#14b8a6',    // Teal
-  'Kotto': '#f59e0b',        // Ambre
-  'Yassa': '#6366f1',        // Indigo
-  'Douala Airport': '#a855f7', // Pourpre
-  'default': '#FFD42F',      // Jaune taxi par défaut
+  'default': '#FFD42F', // Jaune taxi classique
 };
 
-// Génère une couleur cohérente basée sur le nom de la destination
-const getDestinationColor = (destination: string | null): string => {
-  if (!destination) return DESTINATION_COLORS.default;
-  
-  // Cherche une correspondance exacte ou partielle
-  for (const [key, color] of Object.entries(DESTINATION_COLORS)) {
-    if (destination.toLowerCase().includes(key.toLowerCase())) {
-      return color;
-    }
-  }
-  
-  // Génère une couleur basée sur le hash du texte
-  let hash = 0;
-  for (let i = 0; i < destination.length; i++) {
-    hash = destination.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 70%, 50%)`;
+// Retourne la couleur selon le type de véhicule (simplifié)
+const getDestinationColor = (destination: string | null, vehicleType?: string, rideMode?: string): string => {
+  // VTC en mode confort partagé = violet
+  if (rideMode === 'confort-partage') return '#8b5cf6';
+  // Tous les taxis = jaune
+  return '#FFD42F';
 };
 
 interface VehicleMarkerProps {
@@ -50,11 +26,10 @@ interface VehicleMarkerProps {
 export const createVehicleMarkerHTML = (vehicle: Vehicle): string => {
   const isSharedRide = vehicle.ride_mode === 'confort-partage';
   const heading = vehicle.heading || 0;
-  const destination = vehicle.destination;
   const availableSeats = (vehicle.capacity || 4) - (vehicle.current_passengers || 0);
   
-  // Couleur basée sur la destination pour les taxis
-  const destinationColor = isSharedRide ? '#8b5cf6' : getDestinationColor(destination);
+  // Couleur simplifiée : violet pour VTC partagé, jaune pour taxi
+  const destinationColor = isSharedRide ? '#8b5cf6' : '#FFD42F';
   
   // Couleur de statut (remplissage)
   let statusColor = '#22c55e'; // Vert - Disponible
@@ -187,7 +162,8 @@ export const createVehicleMarkerHTML = (vehicle: Vehicle): string => {
 export const createDestinationLabelHTML = (vehicle: Vehicle): string => {
   const isSharedRide = vehicle.ride_mode === 'confort-partage';
   const destination = vehicle.destination;
-  const destinationColor = isSharedRide ? '#8b5cf6' : getDestinationColor(destination);
+  // Couleur simplifiée
+  const destinationColor = isSharedRide ? '#8b5cf6' : '#FFD42F';
   
   if (!destination) return '';
   
@@ -248,8 +224,8 @@ export const createFullVehicleMarkerHTML = (vehicle: Vehicle): string => {
   const destination = vehicle.destination;
   const availableSeats = (vehicle.capacity || 4) - (vehicle.current_passengers || 0);
   
-  // Couleur basée sur la destination
-  const destinationColor = isSharedRide ? '#8b5cf6' : getDestinationColor(destination);
+  // Couleur simplifiée : violet pour VTC partagé, jaune pour taxi
+  const destinationColor = isSharedRide ? '#8b5cf6' : '#FFD42F';
   
   // Couleur de statut
   let statusColor = '#22c55e';
