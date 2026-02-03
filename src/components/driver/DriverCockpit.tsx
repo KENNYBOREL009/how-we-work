@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -30,6 +31,7 @@ import {
   CornerDownLeft,
   ArrowUp,
   Volume2,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -110,6 +112,8 @@ export const DriverCockpit = ({
   onChatClient,
   onEndDay,
 }: DriverCockpitProps) => {
+  const navigate = useNavigate();
+  
   // State
   const [cockpitState, setCockpitState] = useState<CockpitState>('idle');
   const [tripStage, setTripStage] = useState<TripStage>('pickup');
@@ -253,6 +257,22 @@ export const DriverCockpit = ({
     <div className="flex flex-col h-screen bg-background">
       {/* ========== HEADER FIXE ========== */}
       <header className="sticky top-0 z-50 bg-background border-b">
+        {/* Mode switcher - Accès rapide Taxi Classique */}
+        <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-amber-500/10 to-purple-500/10 border-b border-border/50">
+          <button
+            onClick={() => navigate('/driver/classic')}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500 text-white text-xs font-semibold hover:bg-amber-600 transition-colors shadow-sm"
+          >
+            <Car className="w-3.5 h-3.5" />
+            Mode Taxi Classique
+          </button>
+          
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+            <span>Interface VTC Premium</span>
+          </div>
+        </div>
+
         {/* Main header row */}
         <div className="flex items-center justify-between p-4">
           {/* Online toggle */}
