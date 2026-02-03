@@ -15,6 +15,7 @@ import {
   DriverStatsGrid,
   ActiveRideCard,
   ReliabilityScoreCard,
+  InterfaceLevelSelector,
 } from '@/components/driver';
 import { SmartHotspotMap } from '@/components/driver/SmartHotspotMap';
 import { AITrafficPanel } from '@/components/driver/AITrafficPanel';
@@ -281,32 +282,37 @@ const DriverDashboardV2 = () => {
 
               {/* TAB PLANNING */}
               <TabsContent value="planning" className="p-4 space-y-4 mt-0">
-                <Button
-                  variant="outline"
-                  className="w-full justify-between h-14"
-                  onClick={() => navigate('/driver/planning')}
-                >
-                  <span>📅 Gérer mes disponibilités</span>
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
+                {/* Sélecteur de mode interface */}
+                <InterfaceLevelSelector />
 
-                <Button
-                  variant="outline"
-                  className="w-full justify-between h-14"
-                  onClick={() => navigate('/driver/reports')}
-                >
-                  <span>📊 Rapports quotidiens</span>
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
+                <div className="border-t pt-4 space-y-2">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between h-14"
+                    onClick={() => navigate('/driver/planning')}
+                  >
+                    <span>📅 Gérer mes disponibilités</span>
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
 
-                <Button
-                  variant="outline"
-                  className="w-full justify-between h-14"
-                  onClick={() => navigate('/driver/analytics')}
-                >
-                  <span>📈 Statistiques détaillées</span>
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between h-14"
+                    onClick={() => navigate('/driver/reports')}
+                  >
+                    <span>📊 Rapports quotidiens</span>
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between h-14"
+                    onClick={() => navigate('/driver/analytics')}
+                  >
+                    <span>📈 Statistiques détaillées</span>
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
+                </div>
               </TabsContent>
             </div>
           </Tabs>
