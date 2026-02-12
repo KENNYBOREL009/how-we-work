@@ -226,6 +226,61 @@ export const useVehicles = () => {
       },
     ];
 
+    // Ajouter des bus simulés actifs pour la démo
+    const mockBuses: Vehicle[] = [
+      {
+        id: 'bus-socatur-1',
+        vehicle_type: 'bus',
+        plate_number: 'CE 001 SC',
+        capacity: 70,
+        destination: 'Bonabéri',
+        status: 'available',
+        operator: 'SOCATUR',
+        ride_mode: 'standard',
+        current_passengers: 32,
+        shared_ride_origin: null,
+        shared_ride_fare_per_km: 0,
+        latitude: 4.0540,
+        longitude: 9.7060,
+        heading: 250,
+        speed: 22,
+      },
+      {
+        id: 'bus-socatur-2',
+        vehicle_type: 'bus',
+        plate_number: 'CE 002 SC',
+        capacity: 70,
+        destination: 'Akwa',
+        status: 'available',
+        operator: 'SOCATUR',
+        ride_mode: 'standard',
+        current_passengers: 55,
+        shared_ride_origin: null,
+        shared_ride_fare_per_km: 0,
+        latitude: 4.0470,
+        longitude: 9.7110,
+        heading: 70,
+        speed: 18,
+      },
+      {
+        id: 'bus-socatur-3',
+        vehicle_type: 'bus',
+        plate_number: 'CE 003 SC',
+        capacity: 50,
+        destination: 'Ndokoti',
+        status: 'full',
+        operator: 'SOCATUR',
+        ride_mode: 'standard',
+        current_passengers: 50,
+        shared_ride_origin: null,
+        shared_ride_fare_per_km: 0,
+        latitude: 4.0580,
+        longitude: 9.7030,
+        heading: 160,
+        speed: 15,
+      },
+    ];
+
     // Ajouter des VTC partagés simulés pour la démo
     const mockSharedVTCs: Vehicle[] = [
       {
@@ -281,7 +336,7 @@ export const useVehicles = () => {
       },
     ];
 
-    setVehicles([...vehiclesWithPositions, ...mockYellowTaxis, ...mockSharedVTCs]);
+    setVehicles([...vehiclesWithPositions, ...mockYellowTaxis, ...mockBuses, ...mockSharedVTCs]);
   };
 
   const fetchBusStops = async () => {
