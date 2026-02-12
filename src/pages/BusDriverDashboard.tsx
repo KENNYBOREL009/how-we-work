@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Bus,
@@ -18,26 +17,28 @@ import {
   Navigation,
   AlertTriangle,
   CheckCircle2,
-  ChevronRight,
   Wallet,
   TrendingUp,
   Plus,
   Minus,
   BarChart3,
-  Fuel,
   FileText,
   Armchair,
-  Timer,
-  CircleDot,
   Play,
   Square,
   SkipForward,
-  Bell,
-  Ban,
+  Brain,
+  Flame,
+  Star,
+  Eye,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { useClientSignals } from '@/hooks/useClientSignals';
+import { useTrafficIntelligence } from '@/hooks/useTrafficIntelligence';
+import { DriverHotspotMap } from '@/components/driver/DriverHotspotMap';
 
 // Types
 interface BusStop {
@@ -50,15 +51,13 @@ interface BusStop {
   passengersOff: number;
 }
 
-interface BusServiceReport {
-  totalPassengers: number;
-  totalRevenue: number;
-  tripsCompleted: number;
-  delays: number;
-  incidents: number;
-  distanceKm: number;
-  startTime: string;
-  currentTime: string;
+interface FrequentPassenger {
+  id: string;
+  name: string;
+  tripCount: number;
+  lastSeen: string;
+  favoriteStop: string;
+  totalSpent: number;
 }
 
 type ServiceState = 'idle' | 'en_route' | 'at_stop' | 'completed';
@@ -81,10 +80,22 @@ const INITIAL_STOPS: BusStop[] = [
   { id: '6', name: 'Gare Bonabéri', address: 'Bonabéri Centre', arrivalTime: '07:05', status: 'upcoming', passengersOn: 0, passengersOff: 0 },
 ];
 
+const MOCK_FREQUENT_PASSENGERS: FrequentPassenger[] = [
+  { id: '1', name: 'Jean Kamga', tripCount: 47, lastSeen: 'Aujourd\'hui', favoriteStop: 'Ndokoti', totalSpent: 23500 },
+  { id: '2', name: 'Marie Onana', tripCount: 32, lastSeen: 'Hier', favoriteStop: 'Deido', totalSpent: 16000 },
+  { id: '3', name: 'Paul Etoga', tripCount: 28, lastSeen: 'Aujourd\'hui', favoriteStop: 'Akwa', totalSpent: 14000 },
+  { id: '4', name: 'Aminatou B.', tripCount: 21, lastSeen: 'Il y a 2j', favoriteStop: 'Bessengue', totalSpent: 10500 },
+  { id: '5', name: 'David Ngo', tripCount: 15, lastSeen: 'Il y a 3j', favoriteStop: 'Bonabéri', totalSpent: 7500 },
+];
+
 const BusDriverDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const driverName = user?.email?.split('@')[0] || 'Conducteur';
+
+  // Hooks
+  const { clusters, totalPeopleWaiting, hotspotCount, isLoading: signalsLoading } = useClientSignals();
+  const { predictions, recommendations, isAnalyzing, predictTraffic, getRecommendations, lastAnalysis } = useTrafficIntelligence();
 
   // State
   const [isOnDuty, setIsOnDuty] = useState(false);
@@ -99,7 +110,6 @@ const BusDriverDashboard = () => {
   const [totalRevenue, setTotalRevenue] = useState(34000);
   const [walletBalance] = useState(85000);
   const [incidents, setIncidents] = useState(0);
-  const [delays, setDelays] = useState(0);
   const [distanceKm, setDistanceKm] = useState(18.4);
   const [startTime] = useState('06:00');
   const [reservedSeats] = useState(3);
@@ -137,7 +147,6 @@ const BusDriverDashboard = () => {
     setPassengersOnBoard(Math.max(0, newOnBoard));
     setTotalRevenue(prev => prev + tempBoardingCount * 250);
 
-    // Update stops
     setStops(prev => prev.map((stop, idx) => {
       if (idx === currentStopIndex) {
         return { ...stop, status: 'completed' as const, passengersOn: tempBoardingCount, passengersOff: tempAlightingCount };
@@ -153,7 +162,6 @@ const BusDriverDashboard = () => {
       setServiceState('en_route');
       toast.info('🚌 En route vers le prochain arrêt');
     } else {
-      // Trip completed
       setServiceState('completed');
       setTripCount(prev => prev + 1);
       setDistanceKm(prev => prev + 12.5);
@@ -238,8 +246,8 @@ const BusDriverDashboard = () => {
                 <span>{totalRevenue.toLocaleString()} F</span>
               </div>
               <div className="flex items-center gap-1">
-                <Armchair className="w-3.5 h-3.5 text-purple-600" />
-                <span>{reservedSeats} rés.</span>
+                <Flame className="w-3.5 h-3.5 text-red-500" />
+                <span>{totalPeopleWaiting} signaux</span>
               </div>
             </div>
           )}
@@ -279,6 +287,22 @@ const BusDriverDashboard = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Client signals preview in idle */}
+            {totalPeopleWaiting > 0 && (
+              <Card className="w-full max-w-sm mb-4 border-orange-500/30">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-orange-600 mb-2">
+                    <Flame className="w-4 h-4" />
+                    {totalPeopleWaiting} personnes signalées en attente
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {hotspotCount} zone(s) avec des clients potentiels sur votre ligne
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
             <Button size="lg" className="h-14 px-8 text-lg bg-blue-600 hover:bg-blue-700" onClick={handleToggleDuty}>
               <Play className="w-5 h-5 mr-2" />
               Démarrer le service
@@ -287,7 +311,7 @@ const BusDriverDashboard = () => {
         ) : (
           /* Active service */
           <Tabs defaultValue="route" className="flex-1 flex flex-col">
-            <TabsList className="grid grid-cols-4 mx-3 mt-2">
+            <TabsList className="grid grid-cols-5 mx-3 mt-2">
               <TabsTrigger value="route" className="text-xs gap-1">
                 <Navigation className="w-3.5 h-3.5" />
                 Route
@@ -295,6 +319,10 @@ const BusDriverDashboard = () => {
               <TabsTrigger value="passengers" className="text-xs gap-1">
                 <Users className="w-3.5 h-3.5" />
                 Passagers
+              </TabsTrigger>
+              <TabsTrigger value="traffic" className="text-xs gap-1">
+                <Brain className="w-3.5 h-3.5" />
+                Trafic IA
               </TabsTrigger>
               <TabsTrigger value="finance" className="text-xs gap-1">
                 <Wallet className="w-3.5 h-3.5" />
@@ -348,6 +376,17 @@ const BusDriverDashboard = () => {
                           </div>
                         )}
                       </div>
+
+                      {/* Show nearby client signals for next stop */}
+                      {totalPeopleWaiting > 0 && (
+                        <div className="flex items-center gap-2 p-2 bg-orange-500/10 rounded-lg mb-3">
+                          <Flame className="w-4 h-4 text-orange-500" />
+                          <span className="text-xs text-orange-700 font-medium">
+                            {totalPeopleWaiting} personne(s) signalées à proximité de la ligne
+                          </span>
+                        </div>
+                      )}
+
                       <Button className="w-full h-12 bg-blue-600 hover:bg-blue-700" onClick={handleArriveAtStop}>
                         <MapPin className="w-5 h-5 mr-2" />
                         Je suis à l'arrêt
@@ -367,60 +406,41 @@ const BusDriverDashboard = () => {
 
                       {/* Boarding / Alighting counters */}
                       <div className="grid grid-cols-2 gap-3">
-                        {/* Montées */}
                         <div className="p-3 bg-green-500/10 rounded-xl text-center">
                           <p className="text-xs font-medium text-green-700 mb-2">🟢 Montées</p>
                           <div className="flex items-center justify-center gap-3">
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              className="w-10 h-10 rounded-full"
+                            <Button size="icon" variant="outline" className="w-10 h-10 rounded-full"
                               onClick={() => setTempBoardingCount(prev => Math.max(0, prev - 1))}
-                              disabled={tempBoardingCount === 0}
-                            >
+                              disabled={tempBoardingCount === 0}>
                               <Minus className="w-5 h-5" />
                             </Button>
                             <span className="text-3xl font-black text-green-600">{tempBoardingCount}</span>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              className="w-10 h-10 rounded-full"
+                            <Button size="icon" variant="outline" className="w-10 h-10 rounded-full"
                               onClick={() => setTempBoardingCount(prev => prev + 1)}
-                              disabled={passengersOnBoard + tempBoardingCount - tempAlightingCount >= busCapacity}
-                            >
+                              disabled={passengersOnBoard + tempBoardingCount - tempAlightingCount >= busCapacity}>
                               <Plus className="w-5 h-5" />
                             </Button>
                           </div>
                         </div>
 
-                        {/* Descentes */}
                         <div className="p-3 bg-red-500/10 rounded-xl text-center">
                           <p className="text-xs font-medium text-red-700 mb-2">🔴 Descentes</p>
                           <div className="flex items-center justify-center gap-3">
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              className="w-10 h-10 rounded-full"
+                            <Button size="icon" variant="outline" className="w-10 h-10 rounded-full"
                               onClick={() => setTempAlightingCount(prev => Math.max(0, prev - 1))}
-                              disabled={tempAlightingCount === 0}
-                            >
+                              disabled={tempAlightingCount === 0}>
                               <Minus className="w-5 h-5" />
                             </Button>
                             <span className="text-3xl font-black text-red-600">{tempAlightingCount}</span>
-                            <Button
-                              size="icon"
-                              variant="outline"
-                              className="w-10 h-10 rounded-full"
+                            <Button size="icon" variant="outline" className="w-10 h-10 rounded-full"
                               onClick={() => setTempAlightingCount(prev => prev + 1)}
-                              disabled={tempAlightingCount >= passengersOnBoard}
-                            >
+                              disabled={tempAlightingCount >= passengersOnBoard}>
                               <Plus className="w-5 h-5" />
                             </Button>
                           </div>
                         </div>
                       </div>
 
-                      {/* Occupancy preview */}
                       <div className="p-2 bg-muted rounded-lg text-center text-sm">
                         <span className="text-muted-foreground">Après cet arrêt: </span>
                         <span className="font-bold">{passengersOnBoard + tempBoardingCount - tempAlightingCount}</span>
@@ -470,7 +490,7 @@ const BusDriverDashboard = () => {
                   <CardContent className="p-3">
                     <div className="relative pl-6">
                       <div className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-border" />
-                      {stops.map((stop, idx) => (
+                      {stops.map((stop) => (
                         <div key={stop.id} className="relative pb-4 last:pb-0">
                           <div className={cn(
                             "absolute left-[-18px] top-1 w-3 h-3 rounded-full border-2",
@@ -520,12 +540,8 @@ const BusDriverDashboard = () => {
                         { type: 'breakdown' as const, icon: '🔧', label: 'Panne' },
                         { type: 'accident' as const, icon: '⚠️', label: 'Accident' },
                       ]).map(imp => (
-                        <Button
-                          key={imp.type}
-                          variant="outline"
-                          className="h-14 flex-col gap-1 text-xs"
-                          onClick={() => handleReportImpediment(imp.type)}
-                        >
+                        <Button key={imp.type} variant="outline" className="h-14 flex-col gap-1 text-xs"
+                          onClick={() => handleReportImpediment(imp.type)}>
                           <span className="text-lg">{imp.icon}</span>
                           {imp.label}
                         </Button>
@@ -585,33 +601,42 @@ const BusDriverDashboard = () => {
                   </CardContent>
                 </Card>
 
-                {/* Quick passenger counter */}
+                {/* Frequent passengers */}
                 <Card>
-                  <CardContent className="p-4">
-                    <h3 className="text-sm font-semibold mb-3">Ajustement rapide</h3>
-                    <div className="flex items-center justify-center gap-6">
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        className="w-16 h-16 rounded-2xl text-2xl border-red-300 text-red-600 hover:bg-red-50"
-                        onClick={() => setPassengersOnBoard(prev => Math.max(0, prev - 1))}
-                        disabled={passengersOnBoard === 0}
-                      >
-                        <Minus className="w-8 h-8" />
-                      </Button>
-                      <div className="text-center">
-                        <p className="text-4xl font-black">{passengersOnBoard}</p>
-                        <p className="text-xs text-muted-foreground">à bord</p>
-                      </div>
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        className="w-16 h-16 rounded-2xl text-2xl border-green-300 text-green-600 hover:bg-green-50"
-                        onClick={() => setPassengersOnBoard(prev => Math.min(busCapacity, prev + 1))}
-                        disabled={passengersOnBoard >= busCapacity}
-                      >
-                        <Plus className="w-8 h-8" />
-                      </Button>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Star className="w-4 h-4 text-amber-500" />
+                      Passagers fréquents
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3">
+                    <div className="space-y-2">
+                      {MOCK_FREQUENT_PASSENGERS.map((passenger) => (
+                        <div key={passenger.id} className="flex items-center justify-between p-2.5 bg-muted rounded-lg">
+                          <div className="flex items-center gap-2.5">
+                            <div className="relative">
+                              <Avatar className="w-9 h-9">
+                                <AvatarFallback className="text-xs bg-amber-500/10 text-amber-700">
+                                  {passenger.name.split(' ').map(n => n[0]).join('')}
+                                </AvatarFallback>
+                              </Avatar>
+                              {passenger.tripCount >= 30 && (
+                                <Star className="w-3 h-3 text-amber-500 absolute -top-0.5 -right-0.5 fill-amber-500" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{passenger.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {passenger.tripCount} trajets • {passenger.favoriteStop}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs font-semibold text-green-600">{passenger.totalSpent.toLocaleString()} F</p>
+                            <p className="text-[10px] text-muted-foreground">{passenger.lastSeen}</p>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -633,9 +658,126 @@ const BusDriverDashboard = () => {
                 </Card>
               </TabsContent>
 
+              {/* ===== TAB TRAFFIC IA ===== */}
+              <TabsContent value="traffic" className="p-3 space-y-3 mt-0">
+                {/* Heatmap des clients signalés */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Flame className="w-4 h-4 text-orange-500" />
+                      Clients signalés en route
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <DriverHotspotMap height="250px" />
+                    <div className="p-3 flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">
+                        {totalPeopleWaiting} personne(s) • {hotspotCount} zone(s) active(s)
+                      </span>
+                      {signalsLoading && <Loader2 className="w-3 h-3 animate-spin" />}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* AI Traffic Analysis */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Brain className="w-4 h-4 text-purple-600" />
+                        Analyse IA du trafic
+                      </CardTitle>
+                      <Button size="sm" variant="outline" onClick={() => predictTraffic()} disabled={isAnalyzing}>
+                        {isAnalyzing ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
+                        Analyser
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-3 space-y-2">
+                    {lastAnalysis && (
+                      <p className="text-[10px] text-muted-foreground">
+                        Dernière analyse : {lastAnalysis.toLocaleTimeString('fr-FR')}
+                      </p>
+                    )}
+
+                    {predictions.length > 0 ? (
+                      predictions.slice(0, 4).map((pred, i) => (
+                        <div key={i} className="flex items-center justify-between p-2.5 bg-muted rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <div className={cn(
+                              "w-2.5 h-2.5 rounded-full",
+                              pred.predicted_demand > 70 ? "bg-red-500" : pred.predicted_demand > 40 ? "bg-amber-500" : "bg-green-500"
+                            )} />
+                            <div>
+                              <p className="text-sm font-medium">{pred.zone_name}</p>
+                              <p className="text-xs text-muted-foreground">{pred.reason}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <Badge variant={pred.predicted_demand > 70 ? "destructive" : "secondary"} className="text-xs">
+                              {pred.predicted_demand}%
+                            </Badge>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-sm text-muted-foreground">
+                        <Brain className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                        <p>Lancez une analyse pour voir les prédictions de trafic</p>
+                        <p className="text-xs mt-1">Données partagées entre bus et taxis</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* AI Recommendations */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-green-600" />
+                        Recommandations
+                      </CardTitle>
+                      <Button size="sm" variant="outline" onClick={() => getRecommendations()} disabled={isAnalyzing}>
+                        Actualiser
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-3 space-y-2">
+                    {recommendations.length > 0 ? (
+                      recommendations.slice(0, 3).map((rec) => (
+                        <div key={rec.id} className="p-3 border rounded-lg">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant={
+                              rec.priority === 'urgent' ? 'destructive' : 
+                              rec.priority === 'high' ? 'default' : 'secondary'
+                            } className="text-xs">
+                              {rec.priority}
+                            </Badge>
+                            <span className="text-sm font-semibold">{rec.title}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{rec.description}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-2">
+                        Aucune recommandation active
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <div className="p-3 bg-blue-500/5 rounded-lg border border-blue-500/20">
+                  <p className="text-xs text-blue-700 font-medium mb-1">💡 Données cross-mode</p>
+                  <p className="text-xs text-muted-foreground">
+                    Les données de trafic sont partagées entre les conducteurs de bus et les chauffeurs de taxi. 
+                    Les embouteillages signalés par les taxis apparaissent ici, et vice versa.
+                  </p>
+                </div>
+              </TabsContent>
+
               {/* ===== TAB FINANCE ===== */}
               <TabsContent value="finance" className="p-3 space-y-3 mt-0">
-                {/* Wallet balance */}
                 <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
                   <CardContent className="p-4">
                     <p className="text-xs text-muted-foreground mb-1">Mon Solde</p>
@@ -655,7 +797,6 @@ const BusDriverDashboard = () => {
                   </CardContent>
                 </Card>
 
-                {/* Today earnings */}
                 <Card>
                   <CardContent className="p-4">
                     <h3 className="text-sm font-semibold mb-3">Recettes du jour</h3>
@@ -672,7 +813,6 @@ const BusDriverDashboard = () => {
                   </CardContent>
                 </Card>
 
-                {/* Payment history */}
                 <Card>
                   <CardContent className="p-4">
                     <h3 className="text-sm font-semibold mb-3">Dernières transactions</h3>
@@ -729,7 +869,6 @@ const BusDriverDashboard = () => {
                   </CardContent>
                 </Card>
 
-                {/* Stop-by-stop summary */}
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Détail par arrêt</CardTitle>
@@ -755,17 +894,36 @@ const BusDriverDashboard = () => {
                   </CardContent>
                 </Card>
 
-                {/* End of day button */}
-                <Button
-                  variant="destructive"
-                  className="w-full h-12"
-                  onClick={() => {
-                    setIsOnDuty(false);
-                    setServiceState('idle');
-                    toast.success('Rapport de fin de journée généré');
-                    navigate('/');
-                  }}
-                >
+                {/* Frequent passengers summary in report */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Star className="w-4 h-4 text-amber-500" />
+                      Top passagers (analytique)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3">
+                    <div className="space-y-1.5">
+                      {MOCK_FREQUENT_PASSENGERS.slice(0, 3).map((p, i) => (
+                        <div key={p.id} className="flex items-center justify-between text-sm py-1">
+                          <span className="flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-amber-500/10 text-amber-700 text-xs flex items-center justify-center font-bold">
+                              {i + 1}
+                            </span>
+                            {p.name}
+                          </span>
+                          <span className="text-xs text-muted-foreground">{p.tripCount} trajets • {p.totalSpent.toLocaleString()} F</span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-2 text-center">
+                      Basé sur les paiements et la fréquence de montée
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Button variant="destructive" className="w-full h-12"
+                  onClick={() => { setIsOnDuty(false); setServiceState('idle'); toast.success('Rapport de fin de journée généré'); navigate('/'); }}>
                   <Square className="w-4 h-4 mr-2" />
                   Terminer la journée
                 </Button>
@@ -774,13 +932,11 @@ const BusDriverDashboard = () => {
           </Tabs>
         )}
 
-        {/* Bottom nav */}
-        <div className="p-3 border-t bg-background flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={() => navigate('/')}>
-            Mode passager
-          </Button>
-          <Button variant="outline" className="flex-1" onClick={() => navigate('/driver')}>
-            Mode Taxi
+        {/* Bottom nav - bus only */}
+        <div className="p-3 border-t bg-background">
+          <Button variant="outline" className="w-full" onClick={() => navigate('/')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Retour accueil
           </Button>
         </div>
       </div>
