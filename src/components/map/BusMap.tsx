@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { Vehicle, BusStop } from '@/hooks/useVehicles';
+import { createBusMarkerHTML } from './BusMarker';
 
 interface BusMapProps {
   vehicles: Vehicle[];
@@ -101,67 +102,18 @@ const BusMap: React.FC<BusMapProps> = ({
       markersRef.current.push(marker);
     });
 
-    // Add only BUS markers (pas de taxis)
+    // Add only BUS markers with realistic visuals
     buses.forEach((vehicle) => {
       if (!vehicle.latitude || !vehicle.longitude) return;
 
-      const color = statusColors[vehicle.status] || statusColors.offline;
-
       const el = document.createElement('div');
-      el.className = 'vehicle-marker';
-      el.innerHTML = `
-        <div style="
-          width: 36px;
-          height: 36px;
-          background: ${color};
-          border: 3px solid #fff;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          box-shadow: 0 3px 12px rgba(0,0,0,0.4);
-          transform: rotate(${vehicle.heading || 0}deg);
-          transition: transform 0.3s ease;
-        ">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#414042" stroke-width="2">
-            <path d="M8 6v2m8-2v2M4 9h16M6 18v2m12-2v2M4 6h16a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2z"/>
-          </svg>
-        </div>
-      `;
+      el.className = 'bus-vehicle-marker';
+      el.innerHTML = createBusMarkerHTML(vehicle);
 
       el.addEventListener('click', () => onVehicleClick?.(vehicle));
 
-      const popupContent = `
-        <div style="padding: 8px; min-width: 140px;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-            <span style="
-              width: 10px;
-              height: 10px;
-              border-radius: 50%;
-              background: ${color};
-            "></span>
-            <strong style="color: #414042;">${vehicle.plate_number}</strong>
-          </div>
-          <p style="margin: 0; font-size: 12px; color: #666;">
-            🚌 Bus • ${vehicle.capacity} places
-          </p>
-          ${vehicle.destination ? `
-            <p style="margin: 4px 0 0; font-size: 12px; color: #414042;">
-              → <strong>${vehicle.destination}</strong>
-            </p>
-          ` : ''}
-          ${vehicle.speed ? `
-            <p style="margin: 4px 0 0; font-size: 11px; color: #888;">
-              ${Math.round(vehicle.speed)} km/h
-            </p>
-          ` : ''}
-        </div>
-      `;
-
-      const marker = new mapboxgl.Marker({ element: el })
+      const marker = new mapboxgl.Marker({ element: el, anchor: 'bottom' })
         .setLngLat([vehicle.longitude, vehicle.latitude])
-        .setPopup(new mapboxgl.Popup({ offset: 25 }).setHTML(popupContent))
         .addTo(map.current!);
 
       markersRef.current.push(marker);

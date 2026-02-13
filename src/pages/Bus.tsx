@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import BusMap from "@/components/map/BusMap";
 import SchedulePanel from "@/components/bus/SchedulePanel";
 import BusList from "@/components/bus/BusList";
+import BusDetailDrawer from "@/components/bus/BusDetailDrawer";
 import { useVehicles, Vehicle, BusStop } from "@/hooks/useVehicles";
 import { useBusSchedule } from "@/hooks/useBusSchedule";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -18,11 +19,12 @@ const BusPage = () => {
   const { vehicles, busStops, isLoading: vehiclesLoading } = useVehicles();
   const { schedules, isLoading: schedulesLoading } = useBusSchedule();
   const { addFavoriteStop, unreadCount } = useNotifications();
+  const [selectedBus, setSelectedBus] = useState<Vehicle | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleBusClick = (vehicle: Vehicle) => {
-    toast.info(`🚌 ${vehicle.plate_number}`, {
-      description: vehicle.destination ? `Direction: ${vehicle.destination}` : 'Itinéraire non défini',
-    });
+    setSelectedBus(vehicle);
+    setDrawerOpen(true);
   };
 
   const handleStopClick = (stop: BusStop) => {
@@ -62,7 +64,7 @@ const BusPage = () => {
         </div>
       </header>
 
-      {/* Tabs - Bus uniquement */}
+      {/* Tabs */}
       <Tabs
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as typeof activeTab)}
@@ -83,7 +85,6 @@ const BusPage = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* Map Tab - Bus uniquement */}
         <TabsContent value="map" className="flex-1 flex flex-col mt-0 data-[state=inactive]:hidden">
           <div className="relative min-h-[340px] h-[340px] rounded-2xl overflow-hidden border border-border">
             <BusMap
@@ -93,8 +94,6 @@ const BusPage = () => {
               onVehicleClick={handleBusClick}
               onStopClick={handleStopClick}
             />
-
-            {/* Légende Bus uniquement */}
             <div className="absolute bottom-4 left-4 right-4 glass rounded-xl p-3 border border-border/50 z-10">
               <div className="flex items-center justify-around text-xs font-medium">
                 <div className="flex items-center gap-2">
@@ -114,14 +113,12 @@ const BusPage = () => {
           </div>
         </TabsContent>
 
-        {/* Schedule Tab */}
         <TabsContent value="schedule" className="flex-1 flex flex-col mt-0 overflow-hidden">
           <div className="flex-1 rounded-2xl border border-border bg-card overflow-hidden">
             <SchedulePanel schedules={schedules} isLoading={schedulesLoading} />
           </div>
         </TabsContent>
 
-        {/* Buses Tab - Bus uniquement */}
         <TabsContent value="buses" className="flex-1 flex flex-col mt-0 overflow-hidden">
           <div className="flex-1 rounded-2xl border border-border bg-card overflow-hidden">
             <BusList
@@ -133,7 +130,7 @@ const BusPage = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Quick Actions - Bus uniquement */}
+      {/* Quick Actions */}
       <div className="px-4 pb-4 space-y-3">
         <Button
           className="w-full h-14 text-base font-semibold rounded-xl shadow-lg bg-lokebo-dark hover:bg-lokebo-dark/90"
@@ -163,6 +160,13 @@ const BusPage = () => {
           </Button>
         </div>
       </div>
+
+      {/* Bus Detail Drawer */}
+      <BusDetailDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        vehicle={selectedBus}
+      />
     </MobileLayout>
   );
 };
