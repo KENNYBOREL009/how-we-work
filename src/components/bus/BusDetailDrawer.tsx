@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Vehicle } from '@/hooks/useVehicles';
 import { useWallet } from '@/hooks/useWallet';
+import BusPaymentMethods from './BusPaymentMethods';
 import {
   Bus,
   MapPin,
@@ -165,7 +166,7 @@ const BusDetailDrawer: React.FC<BusDetailDrawerProps> = ({
           <div className="flex gap-2">
             {[
               { key: 'info', icon: Bus, label: 'Infos' },
-              { key: 'ticket', icon: Ticket, label: 'Ticket' },
+              { key: 'ticket', icon: Ticket, label: 'Payer' },
               { key: 'alert', icon: Bell, label: 'Alertes' },
             ].map(({ key, icon: Icon, label }) => (
               <button
@@ -241,223 +242,22 @@ const BusDetailDrawer: React.FC<BusDetailDrawerProps> = ({
             </>
           )}
 
-          {/* === TICKET SECTION === */}
+          {/* === TICKET/PAYMENT SECTION === */}
           {activeSection === 'ticket' && (
-            <>
-              {ticketPurchased ? (
-                <div className="text-center py-8">
-                  <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4 animate-in zoom-in">
-                    <Check className="w-10 h-10 text-green-500" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">Ticket validé !</h3>
-                  <p className="text-muted-foreground text-sm">
-                    {ticketCount} ticket{ticketCount > 1 ? 's' : ''} • {vehicle.plate_number}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Présentez ce ticket au chauffeur
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {/* Ticket visuel */}
-                  <div className="relative">
-                    <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-background z-10" />
-                    <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-background z-10" />
-                    <div className="bg-gradient-to-br from-lokebo-dark to-[#2d2d2f] text-primary-foreground rounded-2xl p-5 text-center border-2 border-dashed border-primary/40">
-                      <p className="text-xs opacity-70 uppercase tracking-widest mb-1">Ticket de bus</p>
-                      <p className="text-3xl font-black text-primary">
-                        {BUS_TICKET_PRICE} <span className="text-lg">FCFA</span>
-                      </p>
-                      <p className="text-[11px] opacity-60 mt-1">
-                        {vehicle.operator || 'SOCATUR'} • {vehicle.plate_number}
-                      </p>
-                      {vehicle.destination && (
-                        <p className="text-xs mt-2 text-primary/80">→ {vehicle.destination}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Nombre de tickets */}
-                  <div className="flex items-center justify-between bg-muted/50 rounded-xl p-3">
-                    <span className="text-sm font-medium">Nombre de tickets</span>
-                    <div className="flex items-center gap-3">
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="w-8 h-8 rounded-full"
-                        onClick={() => setTicketCount(Math.max(1, ticketCount - 1))}
-                        disabled={ticketCount <= 1}
-                      >
-                        <Minus className="w-3 h-3" />
-                      </Button>
-                      <span className="text-xl font-bold w-8 text-center">{ticketCount}</span>
-                      <Button
-                        size="icon"
-                        variant="outline"
-                        className="w-8 h-8 rounded-full"
-                        onClick={() => setTicketCount(Math.min(10, ticketCount + 1))}
-                        disabled={ticketCount >= 10 || ticketCount >= availableSeats}
-                      >
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Réservation de place */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between bg-muted/50 rounded-xl p-3">
-                      <div className="flex items-center gap-2">
-                        <Armchair className="w-4 h-4 text-primary" />
-                        <div>
-                          <span className="text-sm font-medium">Réserver une place</span>
-                          <p className="text-[10px] text-muted-foreground">+100 FCFA de supplément</p>
-                        </div>
-                      </div>
-                      <Switch
-                        checked={wantSeatReservation}
-                        onCheckedChange={setWantSeatReservation}
-                      />
-                    </div>
-
-                    {wantSeatReservation && (
-                      <div className="bg-card border rounded-xl p-3">
-                        <p className="text-xs font-semibold mb-2 flex items-center gap-1">
-                          <Armchair className="w-3 h-3" /> Choisissez votre rangée
-                        </p>
-                        {/* Simplified bus seat layout */}
-                        <div className="space-y-1">
-                          <div className="flex justify-center mb-1">
-                            <div className="bg-muted text-[9px] text-muted-foreground px-3 py-1 rounded-t-lg">
-                              🚌 Avant du bus
-                            </div>
-                          </div>
-                          <div className="grid gap-1" style={{ maxHeight: '140px', overflowY: 'auto' }}>
-                            {Array.from({ length: Math.min(busRows, 8) }, (_, row) => (
-                              <div key={row} className="flex items-center gap-1">
-                                {/* Left seats */}
-                                {[0, 1].map(col => {
-                                  const seatId = `${row}-${col}`;
-                                  const isOccupied = occupiedSeats.has(seatId);
-                                  const isSelected = selectedSeat === seatId;
-                                  return (
-                                    <button
-                                      key={seatId}
-                                      disabled={isOccupied}
-                                      onClick={() => setSelectedSeat(isSelected ? null : seatId)}
-                                      className={cn(
-                                        "w-8 h-6 rounded text-[8px] font-bold transition-all",
-                                        isOccupied
-                                          ? "bg-muted text-muted-foreground/40 cursor-not-allowed"
-                                          : isSelected
-                                          ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-1"
-                                          : "bg-green-500/20 text-green-700 dark:text-green-400 hover:bg-green-500/30"
-                                      )}
-                                    >
-                                      {isOccupied ? '✕' : isSelected ? '✓' : `${row + 1}${String.fromCharCode(65 + col)}`}
-                                    </button>
-                                  );
-                                })}
-                                {/* Aisle */}
-                                <div className="w-4" />
-                                {/* Right seats */}
-                                {[2, 3].map(col => {
-                                  const seatId = `${row}-${col}`;
-                                  const isOccupied = occupiedSeats.has(seatId);
-                                  const isSelected = selectedSeat === seatId;
-                                  return (
-                                    <button
-                                      key={seatId}
-                                      disabled={isOccupied}
-                                      onClick={() => setSelectedSeat(isSelected ? null : seatId)}
-                                      className={cn(
-                                        "w-8 h-6 rounded text-[8px] font-bold transition-all",
-                                        isOccupied
-                                          ? "bg-muted text-muted-foreground/40 cursor-not-allowed"
-                                          : isSelected
-                                          ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-1"
-                                          : "bg-green-500/20 text-green-700 dark:text-green-400 hover:bg-green-500/30"
-                                      )}
-                                    >
-                                      {isOccupied ? '✕' : isSelected ? '✓' : `${row + 1}${String.fromCharCode(65 + col)}`}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            ))}
-                          </div>
-                          <div className="flex justify-center items-center gap-3 mt-1 text-[9px] text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <span className="w-3 h-3 rounded bg-green-500/20 inline-block" /> Libre
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <span className="w-3 h-3 rounded bg-primary inline-block" /> Sélectionné
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <span className="w-3 h-3 rounded bg-muted inline-block" /> Occupé
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Récapitulatif */}
-                  <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">
-                        {ticketCount} ticket{ticketCount > 1 ? 's' : ''} × {BUS_TICKET_PRICE} FCFA
-                      </span>
-                      <span className="font-medium">{BUS_TICKET_PRICE * ticketCount} FCFA</span>
-                    </div>
-                    {wantSeatReservation && (
-                      <div className="flex justify-between text-sm text-amber-600">
-                        <span>Réservation place</span>
-                        <span className="font-medium">+100 FCFA</span>
-                      </div>
-                    )}
-                    <div className="border-t pt-2 flex justify-between text-base font-bold">
-                      <span>Total</span>
-                      <span className="text-primary">{totalPrice} FCFA</span>
-                    </div>
-                  </div>
-
-                  {/* Wallet balance */}
-                  <div className={cn(
-                    "flex items-center gap-2 text-sm rounded-xl p-3 border",
-                    !hasSufficientBalance
-                      ? "bg-destructive/10 border-destructive/30 text-destructive"
-                      : "bg-muted/30 border-transparent text-muted-foreground"
-                  )}>
-                    {!hasSufficientBalance ? (
-                      <>
-                        <AlertTriangle className="w-4 h-4" />
-                        <span>Solde insuffisant : <strong>{availableBalance} FCFA</strong></span>
-                      </>
-                    ) : (
-                      <>
-                        <Wallet className="w-4 h-4" />
-                        <span>Solde : <strong className="text-foreground">{availableBalance} FCFA</strong></span>
-                      </>
-                    )}
-                  </div>
-
-                  <Button
-                    className="w-full h-14 rounded-xl font-bold text-base"
-                    onClick={handlePurchaseTicket}
-                    disabled={isProcessing || !hasSufficientBalance || (wantSeatReservation && !selectedSeat)}
-                  >
-                    {isProcessing ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <>
-                        <CreditCard className="w-5 h-5 mr-2" />
-                        Payer {totalPrice} FCFA
-                      </>
-                    )}
-                  </Button>
-                </>
-              )}
-            </>
+            <BusPaymentMethods
+              vehicle={vehicle}
+              ticketCount={ticketCount}
+              totalPrice={totalPrice}
+              onPaymentComplete={(method, code) => {
+                setTicketPurchased(true);
+                setTimeout(() => {
+                  setTicketPurchased(false);
+                  setTicketCount(1);
+                  setWantSeatReservation(false);
+                  setSelectedSeat(null);
+                }, 5000);
+              }}
+            />
           )}
 
           {/* === ALERT SECTION === */}
