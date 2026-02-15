@@ -38,7 +38,9 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useClientSignals } from '@/hooks/useClientSignals';
 import { useTrafficIntelligence } from '@/hooks/useTrafficIntelligence';
+import { useMockTrafficData } from '@/hooks/useMockTrafficData';
 import { DriverHotspotMap } from '@/components/driver/DriverHotspotMap';
+import BusDriverRevenueView from '@/components/bus/BusDriverRevenueView';
 
 // Types
 interface BusStop {
@@ -95,7 +97,11 @@ const BusDriverDashboard = () => {
 
   // Hooks
   const { clusters, totalPeopleWaiting, hotspotCount, isLoading: signalsLoading } = useClientSignals();
-  const { predictions, recommendations, isAnalyzing, predictTraffic, getRecommendations, lastAnalysis } = useTrafficIntelligence();
+  const { predictions: realPredictions, recommendations, isAnalyzing, predictTraffic, getRecommendations, lastAnalysis } = useTrafficIntelligence();
+  const { mockPredictions, revenueEntries, isSimulating, simulateTrafficAnalysis, totalMockRevenue, cashRevenue, digitalRevenue } = useMockTrafficData();
+
+  // Use mock predictions if real ones are empty
+  const predictions = realPredictions.length > 0 ? realPredictions : mockPredictions;
 
   // State
   const [isOnDuty, setIsOnDuty] = useState(false);
@@ -687,8 +693,11 @@ const BusDriverDashboard = () => {
                         <Brain className="w-4 h-4 text-purple-600" />
                         Analyse IA du trafic
                       </CardTitle>
-                      <Button size="sm" variant="outline" onClick={() => predictTraffic()} disabled={isAnalyzing}>
-                        {isAnalyzing ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
+                      <Button size="sm" variant="outline" onClick={async () => {
+                        await simulateTrafficAnalysis();
+                        predictTraffic();
+                      }} disabled={isAnalyzing || isSimulating}>
+                        {(isAnalyzing || isSimulating) ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
                         Analyser
                       </Button>
                     </div>
@@ -778,69 +787,14 @@ const BusDriverDashboard = () => {
 
               {/* ===== TAB FINANCE ===== */}
               <TabsContent value="finance" className="p-3 space-y-3 mt-0">
-                <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-                  <CardContent className="p-4">
-                    <p className="text-xs text-muted-foreground mb-1">Mon Solde</p>
-                    <p className="text-3xl font-bold text-primary">
-                      {walletBalance.toLocaleString()} <span className="text-base">FCFA</span>
-                    </p>
-                    <div className="flex gap-2 mt-3">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <TrendingUp className="w-4 h-4 mr-1" />
-                        Retirer
-                      </Button>
-                      <Button size="sm" className="flex-1">
-                        <Wallet className="w-4 h-4 mr-1" />
-                        Recharger
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <h3 className="text-sm font-semibold mb-3">Recettes du jour</h3>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 bg-green-500/10 rounded-xl text-center">
-                        <p className="text-2xl font-bold text-green-600">{totalRevenue.toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">Total collecté</p>
-                      </div>
-                      <div className="p-3 bg-amber-500/10 rounded-xl text-center">
-                        <p className="text-2xl font-bold text-amber-600">{(reservedSeats * 250).toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">Réservations</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <h3 className="text-sm font-semibold mb-3">Dernières transactions</h3>
-                    <div className="space-y-2">
-                      {[
-                        { desc: 'Trajet Akwa → Bonabéri', amount: 17500, time: '08:30' },
-                        { desc: 'Trajet Bonabéri → Akwa', amount: 16500, time: '07:15' },
-                        { desc: 'Carburant', amount: -12000, time: '06:45' },
-                      ].map((tx, i) => (
-                        <div key={i} className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                          <div>
-                            <p className="text-sm font-medium">{tx.desc}</p>
-                            <p className="text-xs text-muted-foreground">{tx.time}</p>
-                          </div>
-                          <span className={cn(
-                            "text-sm font-bold",
-                            tx.amount >= 0 ? "text-green-600" : "text-red-600"
-                          )}>
-                            {tx.amount >= 0 ? '+' : ''}{tx.amount.toLocaleString()} F
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                <BusDriverRevenueView
+                  entries={revenueEntries}
+                  totalRevenue={totalMockRevenue}
+                  cashRevenue={cashRevenue}
+                  digitalRevenue={digitalRevenue}
+                  tripCount={tripCount}
+                />
               </TabsContent>
-
-              {/* ===== TAB REPORT ===== */}
               <TabsContent value="report" className="p-3 space-y-3 mt-0">
                 <Card>
                   <CardHeader className="pb-2">
