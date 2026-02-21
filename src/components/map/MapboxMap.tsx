@@ -22,7 +22,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ onLocationFound, className = '' }
       try {
         const { data, error } = await supabase.functions.invoke('get-mapbox-token');
         if (error) throw error;
-        setMapboxToken(data.token);
+    setMapboxToken(data.token);
       } catch (err) {
         console.error('Error fetching Mapbox token:', err);
         setError('Impossible de charger la carte');
